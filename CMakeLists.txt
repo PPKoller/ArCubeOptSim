@@ -80,6 +80,8 @@ target_link_libraries(ArgonCubeOptPh-PVlist ${Geant4_LIBRARIES} ${ROOT_LIBRARIES
 add_executable(ArgonCubeOptPh-LVlist ${PROJECT_SOURCE_DIR}/prog/ArCubeOptPh-LVlist.cpp ${sources} ${headers})
 target_link_libraries(ArgonCubeOptPh-LVlist ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 
+add_executable(ArgonCubeOptPh-GeomInfo ${PROJECT_SOURCE_DIR}/prog/ArCubeOptPh-GeomInfo.cpp ${sources} ${headers})
+target_link_libraries(ArgonCubeOptPh-GeomInfo ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
 # build the applications. This is so that we can run the executable directly because it
