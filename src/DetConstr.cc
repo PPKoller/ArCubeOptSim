@@ -90,7 +90,7 @@ using std::ofstream;
 /////////////////////////////////////////////////////////////////////////////////////////
 // constructor
 
-DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename):fWorld(NULL), fDetectorMessenger(NULL)
+DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename):fWorld(NULL), fDetectorMessenger(NULL), fVerbose(0)
 {
 	fGDMLParser = new G4GDMLParser;
 	
@@ -123,7 +123,8 @@ DetConstrOptPh::~DetConstrOptPh()
 G4VPhysicalVolume *DetConstrOptPh::Construct()
 {
 	if(fWorld){
-		DefineOptProperties();
+		BuildOpticalSurfaces();
+		DefaultOptProperties();
 	}
 	
 	G4cout<<"Finished construction "<<G4endl;
@@ -137,14 +138,49 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::DefineOptProperties()
+void DetConstrOptPh::DefaultOptProperties()
 {
+	SetLArRindex(1.369); //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
+	SetLArRayleighScLen(91.0); //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
+	
+	SetLArAbsLen(10*m); //Depends on the purity
+	
+	SetResKaptonRefl(0); //By default all the photons are absorbed
+	
+	
+	
+	
+	SetArCLightRefl(0); //Absorbs all the VUV photons
+	
 	
 }
 
 
-void SetLArRindex(G4double dRindex)
+void BuildOpticalSurfaces()
 {
+	//volTPB_PV, volTPB -> volDC (volDC_PV) -> volWLS (volWLS_PV) -> volArCLight (volArCLight_PV) -> volOpticalDet (volOpticalDet_PV)
+}
+
+
+void DetConstrOptPh::SetLArRindex(G4double dRindex)
+{
+	G4Material *pLArMaterial = G4Material::GetMaterial(G4String("LAr"));
+	
+	if(!pLArMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetLArRindex(...): LAr materials not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pLArPropertiesTable = pLArMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetLArRindex(...): Setting LAr refraction index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double LAr_PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double LAr_RIND[iNbEntries] = {dRindex};
+	pLArPropertiesTable->RemoveProperty("RINDEX");
+	pLArPropertiesTable->AddProperty("RINDEX", LAr_PP, LAr_RIND, iNbEntries);
 	
 }
 
@@ -152,37 +188,34 @@ void SetLArRindex(G4double dRindex)
 /////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::SetLArAbsLen(G4double dLength)
 {
-    G4Material *pLArMaterial = G4Material::GetMaterial(G4String("LiquidArgon"));
-    
-    if(pLArMaterial)
-    {
-        G4cout << "----> Setting LAr absorbtion length to " << dLength/cm << " cm" << G4endl;
-        
-        G4MaterialPropertiesTable *pLArPropertiesTable = pLArMaterial->GetMaterialPropertiesTable();
-        
-        const G4int iNbEntries = 1;
-        
-        G4double LAr_PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
-        G4double LAr_ABSL[iNbEntries] = {dLength};
-        pLArPropertiesTable->RemoveProperty("ABSLENGTH");
-        pLArPropertiesTable->AddProperty("ABSLENGTH", LAr_PP, LAr_ABSL, iNbEntries);
-    }
-    else
-    {
-        G4cout << "ls!> LAr materials not found!" << G4endl;
-        //exit(-1);
-    }
+	G4Material *pLArMaterial = G4Material::GetMaterial(G4String("LAr"));
+	
+	if(pLArMaterial){
+		if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetLArAbsLen(...): Setting LAr absorbtion length to " << dLength/cm << " cm" << G4endl;
+		
+		G4MaterialPropertiesTable *pLArPropertiesTable = pLArMaterial->GetMaterialPropertiesTable();
+		
+		const G4int iNbEntries = 1;
+		
+		G4double LAr_PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+		G4double LAr_ABSL[iNbEntries] = {dLength};
+		pLArPropertiesTable->RemoveProperty("ABSLENGTH");
+		pLArPropertiesTable->AddProperty("ABSLENGTH", LAr_PP, LAr_ABSL, iNbEntries);
+	}else{
+		G4cout << "ls!> LAr materials not found!" << G4endl;
+		//exit(-1);
+	}
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::SetLArRayleighScLen(G4double dLength)
 {
-    G4Material *pLArMaterial = G4Material::GetMaterial(G4String("LiquidArgon"));
+    G4Material *pLArMaterial = G4Material::GetMaterial(G4String("LAr"));
     
     if(pLArMaterial){
         
-        G4cout << "----> Setting LAr scattering length to " << dLength/cm << " cm" << G4endl;
+        if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetLArRayleighScLen(...): Setting LAr scattering length to " << dLength/cm << " cm" << G4endl;
         
         G4MaterialPropertiesTable *pLArPropertiesTable = pLArMaterial->GetMaterialPropertiesTable();
         
@@ -200,18 +233,119 @@ void DetConstrOptPh::SetLArRayleighScLen(G4double dLength)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::SetG10Refl(G4double dReflectivity){
+void DetConstrOptPh::SetG10Refl(G4double dReflectivity)
+{
+	G4Material *pMaterial = G4Material::GetMaterial(G4String("G10"));
+	
+	if(!pMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetG10Refl(...): G10 material not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pPropertiesTable = pMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetG10Refl(...): Setting G10 reflectivity index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double REFL[iNbEntries] = {dRindex};
+	pPropertiesTable->RemoveProperty("REFLECTIVITY");
+	pPropertiesTable->AddProperty("REFLECTIVITY", PP, REFL, iNbEntries);
+}
+
+
+void DetConstrOptPh::SetG10Rindex(G4double dReflectivity)
+{
+	G4Material *pMaterial = G4Material::GetMaterial(G4String("G10"));
+	
+	if(!pMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetG10Rindex(...): G10 materials not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pPropertiesTable = pMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetG10Rindex(...): Setting G10 refraction index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double RIND[iNbEntries] = {dRindex};
+	pPropertiesTable->RemoveProperty("RINDEX");
+	pPropertiesTable->AddProperty("RINDEX", PP, RIND, iNbEntries);
+}
+
+
+void DetConstrOptPh::SetResKaptonRefl(G4double dReflectivity)
+{
+	G4Material *pMaterial = G4Material::GetMaterial(G4String("G10kapton"));
+	
+	if(!pMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetResKaptonRefl(...): G10kapton material not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pPropertiesTable = pMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetResKaptonRefl(...): Setting G10kapton reflectivity index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double REFL[iNbEntries] = {dRindex};
+	pPropertiesTable->RemoveProperty("REFLECTIVITY");
+	pPropertiesTable->AddProperty("REFLECTIVITY", PP, REFL, iNbEntries);
+}
+
+
+void DetConstrOptPh::SetArCLightSurfRough(G4double dAlpha)
+{
 	
 }
 
 
-void DetConstrOptPh::SetG10Rindex(G4double dReflectivity){
+void DetConstrOptPh::SetFF4Refl(G4double dReflectivity)
+{
+	G4Material *pMaterial = G4Material::GetMaterial(G4String("FF4"));
 	
+	if(!pMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetFF4Refl(...): FF4 material not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pPropertiesTable = pMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetFF4Refl(...): Setting FF4 reflectivity index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double REFL[iNbEntries] = {dRindex};
+	pPropertiesTable->RemoveProperty("REFLECTIVITY");
+	pPropertiesTable->AddProperty("REFLECTIVITY", PP, REFL, iNbEntries);
 }
 
 
-void DetConstrOptPh::SetResKaptonRefl(G4double dReflectivity){
+void DetConstrOptPh::SetFF4Rindex(G4double dReflectivity)
+{
+	G4Material *pMaterial = G4Material::GetMaterial(G4String("FF4"));
 	
+	if(!pMaterial){
+		G4cout << "ERROR ---> DetConstrOptPh::SetFF4Rindex(...): FF4 materials not found!" << G4endl;
+		return;
+	}
+	
+	G4MaterialPropertiesTable *pPropertiesTable = pMaterial->GetMaterialPropertiesTable();
+	
+	if(fVerbosity>1) G4cout << "Debug ---> DetConstrOptPh::SetFF4Rindex(...): Setting FF4 refraction index to " << dRindex << G4endl;
+	
+	const G4int iNbEntries = 1;
+	
+	G4double PP[iNbEntries] = {9.69*eV}; //128 nm optical photons
+	G4double RIND[iNbEntries] = {dRindex};
+	pPropertiesTable->RemoveProperty("RINDEX");
+	pPropertiesTable->AddProperty("RINDEX", PP, RIND, iNbEntries);
 }
 
 

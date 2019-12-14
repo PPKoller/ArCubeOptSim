@@ -35,13 +35,21 @@ public:
 	const G4GDMLParser* GetGdmlParser() const {return fGDMLParser;};
 	const G4VPhysicalVolume* GetWorldVolume() const {return fWorld;};
 	
-	void SetG10Refl(G4double dReflectivity);
-	void SetG10Rindex(G4double dRindex);
-	void SetResKaptonRefl(G4double dReflectivity);
 	void SetLArRindex(G4double dRindex);
 	void SetLArAbsLen(G4double dLength);
 	void SetLArRayleighScLen(G4double dLength);
-	void SetArCLightRefl(G4double dReflectivity);
+	
+	void SetG10Refl(G4double dReflectivity);
+	void SetG10Rindex(G4double dRindex);
+	
+	void SetResKaptonRefl(G4double dReflectivity);//Reflectivity of the G10 laminated with the kapton resistive foil
+	
+	void SetArCLightRefl(G4double dReflectivity);//This is actually the reflectivity of the TPB coated on the ArCLight
+	void SetArCLightSurfRough(G4double dAlpha);
+	
+	
+	void SetVerbosity(G4int _verb){fVerbosity=_verb;};
+	
 	
 	// functions to communicate with DetectorMessenger
 	//void SetCheckOverlap(G4bool dCheckOverlap){pCheckOverlap = dCheckOverlap;};
@@ -55,7 +63,7 @@ public:
 	
 private:
 	//Here also all the optical surfaces are defined
-	void DefineOptProperties();
+	void DefaultOptProperties();
 	
 	
 private:
@@ -65,11 +73,13 @@ private:
 	//static map<G4String, G4double> fGeometryParams;
 	//map<G4String, G4LogicalVolume*> fLogVolumes;
 	
-	
+	G4int fVerbose;
 	
 	G4GDMLParser *fGDMLParser;
 	G4VPhysicalVolume *fWorld;
 	DetectorMessenger *fDetectorMessenger;
+	
+	//
 };
 
 
