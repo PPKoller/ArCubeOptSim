@@ -25,20 +25,20 @@
 DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 :fDetector(pDetector)
 { 
-	fDetectorDir = new G4UIdirectory("/arcube/detector/");
+	fDetectorDir = new G4UIdirectory("/argoncube/detector/");
 	fDetectorDir->SetGuidance("ArgonCube detector geometry and material properties control.");
 	
-	fDetectorOptDir = new G4UIdirectory("/arcube/detector/optical/");
+	fDetectorOptDir = new G4UIdirectory("/argoncube/detector/optical/");
 	fDetectorOptDir->SetGuidance("ArgonCube optical properties setup controls.");
 	
-	fLArAbsorbtionLengthCmd = new G4UIcmdWithADoubleAndUnit("/arcube/detector/optical/setLArAbsorbtionLength", this);
+	fLArAbsorbtionLengthCmd = new G4UIcmdWithADoubleAndUnit("/argoncube/detector/optical/setLArAbsorbtionLength", this);
 	fLArAbsorbtionLengthCmd->SetGuidance("Define LXe absorbtion length.");
 	fLArAbsorbtionLengthCmd->SetParameterName("AbsL", false);
 	fLArAbsorbtionLengthCmd->SetRange("AbsL >= 0.");
 	fLArAbsorbtionLengthCmd->SetUnitCategory("Length");
 	fLArAbsorbtionLengthCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 
-	fLArRayScatterLengthCmd = new G4UIcmdWithADoubleAndUnit("/arcube/detector/optical/setLArRayScatterLength", this);
+	fLArRayScatterLengthCmd = new G4UIcmdWithADoubleAndUnit("/argoncube/detector/optical/setLArRayScatterLength", this);
 	fLArRayScatterLengthCmd->SetGuidance("Define LAr Rayleigh Scattering length.");
 	fLArRayScatterLengthCmd->SetParameterName("ScatL", false);
 	fLArRayScatterLengthCmd->SetRange("ScatL >= 0.");
@@ -46,7 +46,7 @@ DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 	fLArRayScatterLengthCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
 	
-	fPhysVolCoordCmd = new G4UIcmdWithAString("/arcube/detector/optical/PhysVolCoord", this);
+	fPhysVolCoordCmd = new G4UIcmdWithAString("/argoncube/detector/optical/PhysVolCoord", this);
 	fPhysVolCoordCmd->SetParameterName("physvol", false);
 	fPhysVolCoordCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 }

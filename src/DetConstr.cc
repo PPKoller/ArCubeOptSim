@@ -226,38 +226,56 @@ void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 	
 	G4int Nvolumes = pPhysVolStore->size();
 	
-	G4VPhysicalVolume *pPhysVol = NULL;
+	//Take the physical volume pointer you want
+	std::vector<G4VPhysicalVolume *> vPhysVols;
 	for(G4int i=0; i<Nvolumes; i++){
 		G4String tmp_name = pPhysVolStore->at(i)->GetName();
 		if(tmp_name==hVolName){
-			pPhysVol = pPhysVolStore->at(i);
+			vPhysVols.push_back(pPhysVolStore->at(i));
 		}
 	}
 	
-	if(!pPhysVol){
+	if(vPhysVols.size()==0){
 		G4cout << "Physical Volume \"" << hVolName << "\" not found!!!" << G4endl;
-		return;
+		return(0);
+	}else{
+		G4cout << "There are " << vPhysVols.size() << " instances of the physical volume \"" << hVolName << "\"" << G4endl;
 	}
 	
 	G4cout << G4endl << G4endl;
 	
-	G4ThreeVector ShiftGlob = pPhysVol->GetTranslation();
-
-	while(pPhysVol->GetMotherLogical()){
-		//Find the mother phys volume
-		G4VPhysicalVolume *pAncPhysVol;
+	G4double mass = (pPhysVol->GetLogicalVolume()->GetMass(false,false))/kg;
+	G4double density = (pPhysVol->GetLogicalVolume()->GetMaterial()->GetDensity())/(kg/m3);
+	G4double volume = mass/density;
+	G4cout << "Mass of physical volume \"" << pPhysVol->GetName() << "\" = " << mass << " kg" << G4endl;
+	G4cout << "Volume of physical volume \"" << pPhysVol->GetName() << "\" = " << volume << " m^3" << G4endl;
+	G4cout << G4endl << G4endl;
 	
-		for(G4int i=0; i<Nvolumes; i++){
-			if(pPhysVolStore->at(i)->GetLogicalVolume()->IsDaughter(pPhysVol)){
-				pAncPhysVol = pPhysVolStore->at(i);
+	
+	for(G4int iVol=0; iVol<vPhysVols.size(); iVol++){
+		G4cout << "\n\nInstance " << iVol << ":" << G4endl;
+		
+		G4VPhysicalVolume *pPhysVol = vPhysVols.at(iVol);
+		
+		G4ThreeVector ShiftGlob = pPhysVol->GetTranslation();
+		
+		while( pPhysVol->GetMotherLogical() ){
+			//Find the mother phys volume
+			G4VPhysicalVolume *pAncPhysVol;
+			
+			for(G4int i=0; i<Nvolumes; i++){
+				if(pPhysVolStore->at(i)->GetLogicalVolume()->IsDaughter(pPhysVol)){
+					pAncPhysVol = pPhysVolStore->at(i);
+				}
 			}
+			G4cout << "Shift of physical volume \"" << pPhysVol->GetName() << "\" with respect to \"" << pAncPhysVol->GetName() << "\" =  " << pPhysVol->GetTranslation()/mm << " mm" << G4endl;
+			pPhysVol = pAncPhysVol;
+			ShiftGlob = ShiftGlob + pPhysVol->GetTranslation();
 		}
-		G4cout << "Shift of physical volume \"" << pPhysVol->GetName() << "\" respect to \"" << pAncPhysVol->GetName() << "\" =  " << pPhysVol->GetTranslation()/mm << " mm" << G4endl;
-		pPhysVol = pAncPhysVol;
-		ShiftGlob = ShiftGlob + pPhysVol->GetTranslation();
+		
+		G4cout << "\nGlobal shift of physical volume \"" << hVolName << "\" (inst. " << iVol << ") =  " << ShiftGlob/mm << " mm" << G4endl;
+		
 	}
-
-	G4cout << G4endl << "Global shift of physical volume \"" << hVolName << "\" =  " << ShiftGlob/mm << " mm" << G4endl;
 	
 	return;
 }

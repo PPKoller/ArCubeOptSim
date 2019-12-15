@@ -13,13 +13,13 @@
 PhysListOptPhMessenger::PhysListOptPhMessenger(PhysListOptPh* pPhys):
   G4UImessenger(), fPhysicsList(pPhys)
 {
-  fUiDir = new G4UIdirectory("/arcube/physics/");
+  fUiDir = new G4UIdirectory("/argoncube/physics/");
   fUiDir->SetGuidance("UI commands for ArgonCube physics list setup");
 
-  fOptPhPhysDir = new G4UIdirectory("/arcube/physics/optical/");
+  fOptPhPhysDir = new G4UIdirectory("/argoncube/physics/optical/");
   fOptPhPhysDir->SetGuidance("Optical Physics List control ");
  
-  fVerboseCmd = new G4UIcmdWithAnInteger("/arcube/physics/optical/verbose",this);
+  fVerboseCmd = new G4UIcmdWithAnInteger("/argoncube/physics/optical/verbose",this);
   fVerboseCmd->SetGuidance("set verbose for optical physics processes");
   fVerboseCmd->SetParameterName("verbose",true);
   fVerboseCmd->SetDefaultValue(1);
