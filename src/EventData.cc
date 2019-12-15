@@ -34,8 +34,8 @@ EventDataOptPh::EventDataOptPh()
 	//m_pPrimaryParticleType = new vector<string>;
 	
 	m_fPrimary_momX = new vector<double>;
-	m_fPrimary_momX = new vector<double>;
-	m_fPrimary_momX = new vector<double>;
+	m_fPrimary_momY = new vector<double>;
+	m_fPrimary_momZ = new vector<double>;
 	
 	m_fPrimary_polX = new vector<double>;
 	m_fPrimary_polY = new vector<double>;
