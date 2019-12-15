@@ -237,20 +237,21 @@ void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 	
 	if(vPhysVols.size()==0){
 		G4cout << "Physical Volume \"" << hVolName << "\" not found!!!" << G4endl;
-		return(0);
+		return;
 	}else{
 		G4cout << "There are " << vPhysVols.size() << " instances of the physical volume \"" << hVolName << "\"" << G4endl;
 	}
 	
 	G4cout << G4endl << G4endl;
 	
-	G4double mass = (pPhysVol->GetLogicalVolume()->GetMass(false,false))/kg;
+	/*
+	G4double mass = (vPhysVols..at(0)->GetLogicalVolume()->GetMass(false,false))/kg;
 	G4double density = (pPhysVol->GetLogicalVolume()->GetMaterial()->GetDensity())/(kg/m3);
 	G4double volume = mass/density;
 	G4cout << "Mass of physical volume \"" << pPhysVol->GetName() << "\" = " << mass << " kg" << G4endl;
 	G4cout << "Volume of physical volume \"" << pPhysVol->GetName() << "\" = " << volume << " m^3" << G4endl;
 	G4cout << G4endl << G4endl;
-	
+	*/
 	
 	for(G4int iVol=0; iVol<vPhysVols.size(); iVol++){
 		G4cout << "\n\nInstance " << iVol << ":" << G4endl;

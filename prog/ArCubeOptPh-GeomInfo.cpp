@@ -21,6 +21,7 @@
 */
 
 #include "globals.hh"
+#include "G4SystemOfUnits.hh"
 #include "G4String.hh"
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
@@ -29,6 +30,8 @@
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 
+#include "G4PhysicalVolumeStore.hh"
+#include "G4LogicalVolumeStore.hh"
 
 using std::string;
 using std::stringstream;
@@ -46,7 +49,7 @@ int main(int argc, char **argv)
 	bool bGdmlFile = false;
 	
 	G4String hCommand, hVolName, hGdmlFileName;
-  
+	
 	// parse switches
 	while((c = getopt(argc,argv,"v:g:m")) != -1){
 		switch(c){
@@ -60,16 +63,17 @@ int main(int argc, char **argv)
 				break;
 			
 			case 'g':
-				hGdmlFileName = optarg;
-				ifstream gdmlfile(hGdmlFileName.c_str());
-				if(gdmlfile){
-					bGdmlFile = true;
-				}else{
-					G4cout << "\nERROR: cannot find/open the geometry file <" << hGdmlFileName.c_str() << ">" << G4endl;
-					exit(1);
+				{
+					hGdmlFileName = optarg;
+					ifstream gdmlfile(hGdmlFileName.c_str());
+					if(gdmlfile){
+						bGdmlFile = true;
+					}else{
+						G4cout << "\nERROR: cannot find/open the geometry file <" << hGdmlFileName.c_str() << ">" << G4endl;
+						exit(1);
+					}
+					break;
 				}
-				break;
-			
 			default:
 				usage();
 		}
@@ -88,7 +92,7 @@ int main(int argc, char **argv)
 	
 	
 	// Detector Construction (here doesn't play any role)
-	DetConstrOptPh *detector = new GeConstruction(hGdmlFileName); 
+	DetConstrOptPh *detector = new DetConstrOptPh(hGdmlFileName); 
 	detector->Construct();
 	
 	// geometry IO
@@ -119,11 +123,11 @@ int main(int argc, char **argv)
 	G4cout << G4endl << G4endl;
 	
 	if(bMassInfo){
-		G4double mass = (pPhysVol->GetLogicalVolume()->GetMass(false,false))/kg;
-		G4double density = (pPhysVol->GetLogicalVolume()->GetMaterial()->GetDensity())/(kg/m3);
+		G4double mass = (vPhysVols.at(0)->GetLogicalVolume()->GetMass(false,false))/kg;
+		G4double density = (vPhysVols.at(0)->GetLogicalVolume()->GetMaterial()->GetDensity())/(kg/m3);
 		G4double volume = mass/density;
-		G4cout << "Mass of physical volume \"" << pPhysVol->GetName() << "\" = " << mass << " kg" << G4endl;
-		G4cout << "Volume of physical volume \"" << pPhysVol->GetName() << "\" = " << volume << " m^3" << G4endl;
+		G4cout << "Mass of physical volume \"" << vPhysVols.at(0)->GetName() << "\" = " << mass << " kg" << G4endl;
+		G4cout << "Volume of physical volume \"" << vPhysVols.at(0)->GetName() << "\" = " << volume << " m^3" << G4endl;
 		G4cout << G4endl << G4endl;
 	}
 	
@@ -162,7 +166,7 @@ void usage(){
 	G4cout << "\n\nOptions:" << G4endl;
 	G4cout << "-g gdmlfile          Set the gdml file with the geometry description of the detector (mandatory)\n" << G4endl;
 	G4cout << "-v physvolname       Name of the physical volume to search geometry info for (mandagtory)\n" << G4endl;
-	G4cout << "-m                   Prints out the m ass of the specific volume (optional)\n"
+	G4cout << "-m                   Prints out the m ass of the specific volume (optional)\n" << G4endl;
 	exit(0);
 }
 
