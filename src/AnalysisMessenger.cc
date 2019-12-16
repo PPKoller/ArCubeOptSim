@@ -11,11 +11,11 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 { 
 	fAnManager = pAnManager;
 	
-	fAnalysisDir = new G4UIdirectory("/arcube/analysis/");
+	fAnalysisDir = new G4UIdirectory("/argoncube/analysis/");
 	fAnalysisDir->SetGuidance("ArgonCube analysis manager settings.");
 	
 	
-	fVerboseCmd = new G4UIcmdWithAnInteger("/arcube/analysis/verbose",this);
+	fVerboseCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/verbose",this);
 	fVerboseCmd->SetGuidance("Set verbosity of the analysis manager");
 	fVerboseCmd->SetGuidance(" Default 1");
 	fVerboseCmd->SetParameterName("Verb", true);
@@ -23,23 +23,23 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	fVerboseCmd->SetRange("Verb>=0 && Verb<=2");
 	fVerboseCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
-	fPrintModuloCmd = new G4UIcmdWithAnInteger("/arcube/analysis/PrintModulo",this);
+	fPrintModuloCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/PrintModulo",this);
 	fPrintModuloCmd->SetGuidance("Prints the start of event every \"PrMod\"");
 	fPrintModuloCmd->SetParameterName("PrMod", false);
 	fPrintModuloCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 
-	fStepDebugCmd = new G4UIcmdWithABool("/arcube/analysis/stepsDebug", this);
+	fStepDebugCmd = new G4UIcmdWithABool("/argoncube/analysis/stepsDebug", this);
 	fStepDebugCmd->SetGuidance("Activates debugging controls and messages at step level.");
 	fStepDebugCmd->SetParameterName("DebugSteps", false);
 	fStepDebugCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
-	fSaveDataCmd = new G4UIcmdWithAnInteger("/arcube/analysis/SaveData", this);
+	fSaveDataCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/SaveData", this);
 	fSaveDataCmd->SetGuidance("Control for data tree saving: 0 to not save; 1 standard analysis variables (default); 2 extended tracking info for debugging (slow and heavy)");
 	fSaveDataCmd->SetParameterName("Save", true);
 	fSaveDataCmd->SetDefaultValue(1);
 	fSaveDataCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
-	fFileNameCmd = new G4UIcmdWithAString("/arcube/analysis/FileName",this);
+	fFileNameCmd = new G4UIcmdWithAString("/argoncube/analysis/FileName",this);
 	fFileNameCmd->SetGuidance("Set the file name where data tree will be saved.");
 	fFileNameCmd->SetParameterName("filename", false);
 	fFileNameCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
