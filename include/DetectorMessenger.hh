@@ -32,12 +32,12 @@ private:
 	
 	G4UIdirectory *fDetectorDir, *fDetectorOptDir;
 	
-	G4UIcmdWithADoubleAndUnit *fLArAbsorbtionLengthCmd;
-	G4UIcmdWithADoubleAndUnit *fLArRayScatterLengthCmd;
+	//G4UIcmdWithADoubleAndUnit *fLArAbsorbtionLengthCmd;
+	//G4UIcmdWithADoubleAndUnit *fLArRayScatterLengthCmd;
 	
 	G4UIcmdWithAString *fPhysVolCoordCmd;
 	
-	//G4UIcmdWithADoubleAndUnit *fLArLevelCmd;
+	G4UIcmdWithAString *fLoadOpticalSettingsFile;
 	
 };
 

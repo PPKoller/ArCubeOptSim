@@ -5,6 +5,7 @@
 #include "G4VUserDetectorConstruction.hh"
 
 #include "G4GDMLParser.hh"
+#include "G4Material.hh"
 
 #include <vector>
 #include <map>
@@ -31,27 +32,14 @@ public:
 	G4VPhysicalVolume* Construct();
 	
 	
-	
 	const G4GDMLParser* GetGdmlParser() const {return fGDMLParser;};
 	const G4VPhysicalVolume* GetWorldVolume() const {return fWorld;};
 	
-	void SetLArRindex(G4double dRindex);
-	void SetLArAbsLen(G4double dLength);
-	void SetLArRayleighScLen(G4double dLength);
 	
-	void SetG10Refl(G4double dReflectivity);
-	void SetG10Rindex(G4double dRindex);
-	
-	void SetResKaptonRefl(G4double dReflectivity);//Reflectivity of the G10 laminated with the kapton resistive foil
-	
-	void SetArCLightRefl(G4double dReflectivity);//This is actually the reflectivity of the TPB coated on the ArCLight
-	void SetArCLightSurfRough(G4double dAlpha);
+	inline void SetVerbosity(G4int _verb){fVerbose=_verb;};
 	
 	
-	void SetVerbosity(G4int _verb){fVerbosity=_verb;};
-	
-	
-	// functions to communicate with DetectorMessenger
+	// functions used moslty by the DetectorMessenger
 	//void SetCheckOverlap(G4bool dCheckOverlap){pCheckOverlap = dCheckOverlap;};
 	
 	//static bool GetGeometryParameter(G4String szParameter, G4double& outval);
@@ -61,26 +49,26 @@ public:
 	void PrintListOfPhysVols();
 	void PrintListOfLogVols();
 	
-private:
+protected:
+	//These methods are only used at the startup as default (and to debug)
+	//They should go away when the full user interface for optical setting
 	//Here also all the optical surfaces are defined
-	void DefaultOptProperties();
+	virtual void BuildDefaultOpticalSurfaces();
+	virtual void DefaultOptProperties();
 	
 	
 private:
 	
-	//G4bool   pCheckOverlap;
-
-	//static map<G4String, G4double> fGeometryParams;
-	//map<G4String, G4LogicalVolume*> fLogVolumes;
-	
-	G4int fVerbose;
+	DetectorMessenger *fDetectorMessenger;
 	
 	G4GDMLParser *fGDMLParser;
 	G4VPhysicalVolume *fWorld;
-	DetectorMessenger *fDetectorMessenger;
 	
-	//
+	G4int fVerbose;
 };
+
+
+
 
 
 #endif
