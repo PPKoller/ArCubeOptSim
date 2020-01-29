@@ -8,6 +8,11 @@ project(ArgonCubeOptPh)
 # You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
 # to build a batch mode only executable
 #
+
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV(HOME)/software/nlohmann_json/lib/cmake")
+#find_package(nlohmann_json REQUIRED)
+
+
 option(WITH_GEANT4_UIVIS "Build the ArgonCube simulation code for optical photons with Geant4 UI and Vis drivers" ON)
 if(WITH_GEANT4_UIVIS)
   find_package(Geant4 REQUIRED ui_all vis_all)
@@ -15,8 +20,11 @@ else()
   find_package(Geant4 REQUIRED)
 endif()
 
-set(CMAKE_MODULE_PATH $ENV{ROOTSYS}/etc/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{ROOTSYS}/etc/cmake")
 find_package(ROOT REQUIRED)
+
+
+
 
 #----------------------------------------------------------------------------
 # Setup Geant4 include directories and compile definitions

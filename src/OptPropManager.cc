@@ -33,6 +33,8 @@ OptPropManager* OptPropManager::gThis = NULL;
 
 OptPropManager::OptPropManager()
 {
+	fVerbosity = 0;
+	
 	//Map of the optical surfaces models
 	(OptPropManager::OptSurfModelMap)["glisur"] = glisur;
 	(OptPropManager::OptSurfModelMap)["unified"] = unified;
@@ -95,6 +97,16 @@ OptPropManager::OptPropManager()
 	(OptPropManager::OptSurfFinishMap)["PolishedESRGrease_LUT"] = PolishedESRGrease_LUT;
 	
 	(OptPropManager::OptSurfFinishMap)["Detector_LUT"] = Detector_LUT;
+	
+	
+	json_proc_tab["setmatprop"] = &OptPropManager::setmatprop;
+	json_proc_tab["setoptsurf"] = &OptPropManager::setoptsurf;
+	json_proc_tab["setbordersurf"] = &OptPropManager::setbordersurf;
+	json_proc_tab["setskinsurf"] = &OptPropManager::setskinsurf;
+	json_proc_tab["buildoptsurf"] = &OptPropManager::buildoptsurf;
+	json_proc_tab["buildbordersurface"] = &OptPropManager::buildbordersurface;
+	json_proc_tab["buildskinsurf"] = &OptPropManager::buildskinsurf;
+	
 }
 
 
@@ -104,6 +116,731 @@ OptPropManager* OptPropManager::OptPropManagerInstance()
 	if(!gThis) gThis = new OptPropManager;
 	return gThis;
 }
+
+
+
+void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
+{
+	json jsonObj;
+	std::ifstream infile( jsonfilename.c_str() );
+	if(!infile) return;
+	
+	infile >> jsonObj;
+	
+	
+	for (json::iterator it = jsonObj.begin(); it != jsonObj.end(); ++it){
+		if( it.value().is_object() ){
+			if( json_proc_tab.find(it.key()) != json_proc_tab.end() ){
+				json_proc_memfunc fncptr = json_proc_tab.at( it.key() );
+				(this->*fncptr)( it.value() );
+			}
+		}
+	}
+}
+
+
+
+G4LogicalBorderSurface* OptPropManager::FindBorderSurf(const G4String& logsurfname)
+{
+	const G4LogicalBorderSurfaceTable* surftab = G4LogicalBorderSurface::GetSurfaceTable();
+	size_t nSurf = G4LogicalBorderSurface::GetNumberOfBorderSurfaces();
+	
+	if(!surftab) return NULL;
+	
+	for(size_t iSurf=0; iSurf<nSurf; iSurf++){
+		if(surftab->at(iSurf)->GetName() == logsurfname){
+			return surftab->at(iSurf);
+		}
+	}
+	
+	return NULL;
+}
+
+
+G4LogicalSkinSurface* OptPropManager::FindSkinSurf(const G4String& logsurfname)
+{
+	const G4LogicalSkinSurfaceTable* surftab = G4LogicalSkinSurface::GetSurfaceTable();
+	size_t nSurf = G4LogicalSkinSurface::GetNumberOfSkinSurfaces();
+	
+	if(!surftab) return NULL;
+	
+	for(size_t iSurf=0; iSurf<nSurf; iSurf++){
+		if(surftab->at(iSurf)->GetName() == logsurfname){
+			return surftab->at(iSurf);
+		}
+	}
+	
+	return NULL;
+}
+
+
+G4OpticalSurface* OptPropManager::FindOptSurf(const G4String& optsurfname)
+{
+	G4SurfacePropertyTable* surftab = (G4SurfacePropertyTable*)G4OpticalSurface::GetSurfacePropertyTable();
+	size_t nSurf = G4OpticalSurface::GetNumberOfSurfaceProperties();
+		
+	if( (!surftab) || (nSurf<=0) ) return NULL;
+	
+	for(size_t iSurf=0; iSurf<nSurf; iSurf++){
+		if(surftab->at(iSurf)->GetName() == optsurfname){
+			return dynamic_cast<G4OpticalSurface*> (surftab->at(iSurf));
+		}
+	}
+	
+	return NULL;
+}
+
+
+G4Material* OptPropManager::FindMaterial(const G4String& materialname)
+{
+	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
+	size_t nMat = G4Material::GetNumberOfMaterials();
+	
+	if( (!pMatTable) || (nMat<=0) ) return NULL;
+	
+	for(size_t iMat=0; iMat<nMat; iMat++){
+		if( (pMatTable->at(iMat)->GetName()) == materialname ){
+			return pMatTable->at(iMat);
+		}
+	}
+	
+	return NULL;
+}
+
+
+G4VPhysicalVolume* OptPropManager::FindPhysVol(const G4String& physvolname)
+{
+	G4PhysicalVolumeStore *pPhysVolStore = G4PhysicalVolumeStore::GetInstance();
+	
+	G4VPhysicalVolume *vol=NULL;
+	
+	size_t nVols = pPhysVolStore->size();
+	
+	for(size_t iVol=0; iVol<nVols; iVol++){
+		if( (pPhysVolStore->at(iVol)->GetName())==physvolname){
+			if(vol){
+				std::cout << "\nWARNING --> OptPropManager::FindPhysVol(...): There is more than one physical volume named " << physvolname << ". Using this volume might result in unexpected behaviour.\n" << std::endl;
+			}
+			vol = pPhysVolStore->at(iVol);
+		}
+	}
+	
+	return vol;
+}
+
+
+void OptPropManager::ReadValuesFromFile(const G4String& filename, std::vector<G4double>& ph_en, std::vector<G4double>& vals)
+{
+	ph_en.resize(0);
+	vals.resize(0);
+	
+	std::ifstream infile(filename.c_str());
+	
+	if(!infile) return;
+	
+	std::string str;
+	std::stringstream ss_tmp;
+	
+	
+	while(getline(infile,str)){
+		ss_tmp.clear(); ss_tmp.str("");
+		ss_tmp << str;
+		
+		ss_tmp >> str;
+		G4double ph_en_d = std::stod(str);
+		
+		if(ss_tmp){//There is only one value while the file format is defined with 2 columns
+			ph_en.resize(0);
+			vals.resize(0);
+			return;
+		}
+		ss_tmp >> str;
+		G4double val_d = std::stod(str);
+		
+		ph_en.push_back(ph_en_d);
+		vals.push_back(val_d);
+	}
+	
+}
+
+
+
+void OptPropManager::setmatprop(const json keyval)
+{
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setmatprop(...): start of routine." << std::endl;
+	}
+	
+	//Requirements are that the material must exist, otherwise return with an error
+	if( !keyval.contains("matname") ){
+		std::cout << "\nERROR --> OptPropManager::setmatprop(...): the json object doesn't contain the \"matname\" key. Cannot set material optical properties without knowing the material name!" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("matname").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::setmatprop(...): The \"matname\" keymust be a string!" << std::endl;
+		return;
+	}
+	
+	
+	G4Material* mat = FindMaterial(keyval.at("matname").get<std::string>());
+	
+	if(!mat){
+		std::cout << "\nERROR --> OptPropManager::setmatprop(...): Cannot find the material \""<< keyval.at("matname") <<"\" in table of the instanced materials!" << std::endl;
+		return;
+	}
+	
+	//The materials object have only the key "propfile", containing a list of keys that link a property to a specific text file
+	
+	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+		json propObj = keyval.at("propfiles");
+		
+		std::vector<G4double> en_vec(0), val_vec(0);
+		
+		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+			if(!it.value().is_string()){
+				std::cout << "\nERROR --> OptPropManager::setmatprop(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
+				continue;
+			}
+			
+			en_vec.clear(); en_vec.resize(0);
+			val_vec.clear(); val_vec.resize(0);
+			
+			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
+			
+			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+				continue;
+			}
+			
+			if(fVerbosity>0){
+				std::cout << "Info --> OptPropManager::setmatprop(...): Setting property " << it.key() << " for \"" << mat->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
+			}
+			
+			if(mat->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
+				mat->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			}
+			mat->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+		}
+	}
+	
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setmatprop(...): end of routine." << std::endl;
+	}
+}
+
+
+void OptPropManager::setoptsurf(const json keyval)
+{
+
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setoptsurf(...): start of routine." << std::endl;
+	}
+	
+	//Requirements are that the optical surface exist, otherwise return with an error
+	if( !keyval.contains("surfname") ){
+		std::cout << "\nERROR --> OptPropManager::setoptsurf(...): the json object doesn't contain the \"surfname\" key. Cannot change settings of an optical surface without knowing its name!" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("surfname").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::setoptsurf(...): The \"surfname\" key must be a string!" << std::endl;
+		return;
+	}
+	
+	
+	G4OpticalSurface* optsurf = FindOptSurf(keyval.at("surfname").get<std::string>());
+	
+	if(!optsurf){
+		std::cout << "\nERROR --> OptPropManager::setoptsurf(...): Cannot find the optical surface \""<< keyval.at("surfname").get<std::string>() <<"\" in table of the instanced optical surfaces!" << std::endl;
+		return;
+	}
+	
+	
+	if(keyval.contains("model")){
+		if( keyval.at("model").is_string() && (OptSurfModelMap.find(keyval.at("model").get<std::string>())!=OptSurfModelMap.end()) ){
+			optsurf->SetModel( OptSurfModelMap.at(keyval.at("model").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("type")){
+		if( keyval.at("type").is_string() && (OptSurfTypeMap.find(keyval.at("type").get<std::string>())!=OptSurfTypeMap.end()) ){
+			optsurf->SetType( OptSurfTypeMap.at(keyval.at("type").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("finish")){
+		if( keyval.at("finish").is_string() && (OptSurfFinishMap.find(keyval.at("finish").get<std::string>())!=OptSurfFinishMap.end()) ){
+			optsurf->SetFinish( OptSurfFinishMap.at(keyval.at("finish").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("sigma_alpha")){
+		if( keyval.at("sigma_alpha").is_number_float() ){
+			optsurf->SetSigmaAlpha( keyval.at("sigma_alpha").get<G4double>() );
+		}
+	}
+	
+	
+	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+		
+		json propObj = keyval.at("propfiles");
+		
+		std::vector<G4double> en_vec(0), val_vec(0);
+		
+		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+			if(!it.value().is_string()){
+				std::cout << "\nERROR --> OptPropManager::setoptsurf(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
+				continue;
+			}
+			
+			en_vec.clear(); en_vec.resize(0);
+			val_vec.clear(); val_vec.resize(0);
+			
+			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
+			
+			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+				continue;
+			}
+			
+			if(fVerbosity>0){
+				std::cout << "Info --> OptPropManager::setoptsurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
+			}
+			
+			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
+				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			}
+			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+		}
+		
+	}
+	
+	
+	
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setoptsurf(...): end of routine." << std::endl;
+	}
+}
+
+
+void OptPropManager::setbordersurf(const json keyval)
+{
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setbordersurf(...): start of routine." << std::endl;
+	}
+	
+	
+	//Requirements are that the logical border surface exists, otherwise return with an error
+	if( !keyval.contains("surfname") ){
+		std::cout << "\nERROR --> OptPropManager::setbordersurf(...): the json object doesn't contain the \"surfname\" key. Cannot change settings of alogical border surface without knowing its name!\n" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("surfname").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The \"surfname\" key must be a string!\n" << std::endl;
+		return;
+	}
+	
+	
+	G4LogicalBorderSurface* logsurf = FindBorderSurf(keyval.at("surfname").get<std::string>());
+	
+	if(!logsurf){
+		std::cout << "\nERROR --> OptPropManager::setbordersurf(...): Cannot find the logical border surface \""<< keyval.at("surfname").get<std::string>() <<"\" in the table of the instanced logical border surfaces!\n" << std::endl;
+		return;
+	}
+	
+	
+	bool setVol1=false, setVol2=false;
+	
+	
+	
+	if( keyval.contains("vol1") ){
+		if( keyval.at("vol1").is_string() ){
+			setVol1 = true;
+		}else{
+			std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The \"vol1\" key must be a json string type!\n" << std::endl;
+		}
+	}
+	
+	if( keyval.contains("vol2") ){
+		if( keyval.at("vol2").is_string() ){
+			setVol2 = true;
+		}else{
+			std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The \"vol2\" key must be a json string type!\n" << std::endl;
+		}
+	}
+	
+	if(setVol1 && setVol2){
+		if(keyval.at("vol1").get<std::string>() == keyval.at("vol2").get<std::string>()){
+			setVol1 = false;
+			setVol2 = false;
+			std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The \"vol1\" and \"vol2\" are the same. A logical border surface must be defined with 2 different logical volumes!\n" << std::endl;
+		}
+	}
+	
+	if(setVol1){
+		G4VPhysicalVolume *vol1 = FindPhysVol( keyval.at("vol1").get<std::string>() );
+		if(vol1){
+			logsurf->SetVolume1(vol1);
+		}else{
+			std::cout << "\nWARNING --> OptPropManager::setbordersurf(...):Could not find the physical volume \"" << keyval.at("vol1").get<std::string>() << "\". The vol1 of the \"" << logsurf->GetName() << "\" logical border surface will not be reset to any new volume." << std::endl;
+		}
+	}
+	
+	
+	if(setVol2){
+		G4VPhysicalVolume *vol2 = FindPhysVol( keyval.at("vol2").get<std::string>() );
+		if(vol2){
+			logsurf->SetVolume2(vol2);
+		}else{
+			std::cout << "\nWARNING --> OptPropManager::setbordersurf(...):Could not find the physical volume \"" << keyval.at("vol2").get<std::string>() << "\". The vol2 of the \"" << logsurf->GetName() << "\" logical border surface will not be reset to any new volume." << std::endl;
+		}
+	}
+	
+	if( keyval.contains("optsurf") ){
+		if( keyval.at("optsurf").is_string() ){
+			
+			G4OpticalSurface *optsurf = FindOptSurf( keyval.at("optsurf").get<std::string>() );
+			
+			if(optsurf){
+				logsurf->SetSurfaceProperty(optsurf);
+			}else{
+				std::cout << "\nWARNING --> OptPropManager::setbordersurf(...):Could not find the optical surface \"" << keyval.at("optsurf").get<std::string>() << "\". The optical surface of the \"" << logsurf->GetName() << "\" logical border surface will not be changed." << std::endl;
+			}
+			
+		}else{
+			std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The \"optsurf\" key must be a string!\n" << std::endl;
+		}
+	}
+	
+	
+	G4OpticalSurface *optsurf = dynamic_cast<G4OpticalSurface*> (logsurf->GetSurfaceProperty());
+	
+	if(!optsurf){
+		std::cout << "\nWARNING --> OptPropManager::setbordersurf(...): The logical border surface \"" << logsurf->GetName() << "\" has not any optical surface set (null pointer)." << std::endl;
+		return;
+	}
+	
+	
+	if(keyval.contains("model")){
+		if( keyval.at("model").is_string() && (OptSurfModelMap.find(keyval.at("model").get<std::string>())!=OptSurfModelMap.end()) ){
+			optsurf->SetModel( OptSurfModelMap.at(keyval.at("model").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("type")){
+		if( keyval.at("type").is_string() && (OptSurfTypeMap.find(keyval.at("type").get<std::string>())!=OptSurfTypeMap.end()) ){
+			optsurf->SetType( OptSurfTypeMap.at(keyval.at("type").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("finish")){
+		if( keyval.at("finish").is_string() && (OptSurfFinishMap.find(keyval.at("finish").get<std::string>())!=OptSurfFinishMap.end()) ){
+			optsurf->SetFinish( OptSurfFinishMap.at(keyval.at("finish").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("sigma_alpha")){
+		if( keyval.at("sigma_alpha").is_number_float() ){
+			optsurf->SetSigmaAlpha( keyval.at("sigma_alpha").get<double>() );
+		}
+	}
+	
+	
+	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+		
+		json propObj = keyval.at("propfiles");
+		
+		std::vector<G4double> en_vec(0), val_vec(0);
+		
+		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+			if(!it.value().is_string()){
+				std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
+				continue;
+			}
+			
+			en_vec.clear(); en_vec.resize(0);
+			val_vec.clear(); val_vec.resize(0);
+			
+			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
+			
+			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+				continue;
+			}
+			
+			if(fVerbosity>0){
+				std::cout << "Info --> OptPropManager::setbordersurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
+			}
+			
+			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
+				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			}
+			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+		}
+		
+	}
+	
+	
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::setbordersurf(...): end of routine." << std::endl;
+	}
+}
+
+
+void OptPropManager::setskinsurf(const json keyval)
+{}
+
+
+void OptPropManager::buildoptsurf(const json keyval)
+{
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::buildoptsurf(...): start of routine." << std::endl;
+	}
+	
+	
+	//Requirements are that the optical surface does not aready exist, otherwise return with an error
+	if( !keyval.contains("surfname") ){
+		std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): the json object doesn't contain the \"surfname\" key. Cannot change settings of an optical surface without knowing its name!" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("surfname").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The \"surfname\" key must be a string!" << std::endl;
+		return;
+	}
+	
+	G4OpticalSurface* optsurf = FindOptSurf(keyval.at("surfname").get<std::string>());
+	
+	if(optsurf){
+		std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The optical surface \"" << keyval.at("surfname").get<std::string>() << "\" already exists!" << std::cout;
+		return;
+	}
+	
+	
+	optsurf = new G4OpticalSurface( keyval.at("surfname").get<std::string>() );
+	
+	if(keyval.contains("model")){
+		if( keyval.at("model").is_string() && (OptSurfModelMap.find(keyval.at("model").get<std::string>())!=OptSurfModelMap.end()) ){
+			optsurf->SetModel( OptSurfModelMap.at(keyval.at("model").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("type")){
+		if( keyval.at("type").is_string() && (OptSurfTypeMap.find(keyval.at("type").get<std::string>())!=OptSurfTypeMap.end()) ){
+			optsurf->SetType( OptSurfTypeMap.at(keyval.at("type").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("finish")){
+		if( keyval.at("finish").is_string() && (OptSurfFinishMap.find(keyval.at("finish").get<std::string>())!=OptSurfFinishMap.end()) ){
+			optsurf->SetFinish( OptSurfFinishMap.at(keyval.at("finish").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("sigma_alpha")){
+		if( keyval.at("sigma_alpha").is_number_float() ){
+			optsurf->SetSigmaAlpha( keyval.at("sigma_alpha").get<double>() );
+		}
+	}
+	
+	
+	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+		
+		json propObj = keyval.at("propfiles");
+		
+		std::vector<G4double> en_vec(0), val_vec(0);
+		
+		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+			if(!it.value().is_string()){
+				std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
+				continue;
+			}
+			
+			en_vec.clear(); en_vec.resize(0);
+			val_vec.clear(); val_vec.resize(0);
+			
+			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
+			
+			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+				continue;
+			}
+			
+			if(fVerbosity>0){
+				std::cout << "Info --> OptPropManager::buildoptsurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
+			}
+			
+			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
+				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			}
+			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+		}
+		
+	}
+	
+	
+	
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::buildoptsurf(...): end of routine." << std::endl;
+	}
+}
+
+
+void OptPropManager::buildbordersurface(const json keyval)
+{
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::buildbordersurface(...): start of routine." << std::endl;
+	}
+	
+	
+	//Requirements are that the logical border surface does not exist, otherwise return with an error
+	if( !keyval.contains("surfname") ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): the json object doesn't contain the \"surfname\" key. Cannot change settings of alogical border surface without knowing its name!\n" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("surfname").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"surfname\" key must be a string!\n" << std::endl;
+		return;
+	}
+	
+	
+	if( FindBorderSurf( keyval.at("surfname").get<std::string>() ) ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The logical border surface \""<< keyval.at("surfname").get<std::string>() <<"\" already exists!\n" << std::endl;
+		return;
+	}
+	
+	
+	if( !keyval.contains("vol1") ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"vol1\" key is mandatory to build a new logical border surface! The surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+	}
+	
+	if( !keyval.at("vol1").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"vol1\" key must be a json string type! The surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+		return;
+	}
+	
+	
+	if( !keyval.contains("vol2") ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"vol2\" key is mandatory to build a new logical border surface! The surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("vol2").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"vol2\" key must be a json string type! The surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+		return;
+	}
+	
+	
+	if( keyval.at("vol1").get<std::string>() == keyval.at("vol2").get<std::string>() ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"vol1\" and \"vol2\" are the same. A logical border surface can be built only with 2 different physical volumes!\n" << std::endl;
+		return;
+	}
+	
+	G4VPhysicalVolume *vol1 = FindPhysVol(keyval.at("vol1").get<std::string>());
+	
+	if(!vol1){
+		std::cout << "\nWARNING --> OptPropManager::buildbordersurface(...):Could not find the \"vol1\" physical volume with name \"" << keyval.at("vol1").get<std::string>() << "\". The logical border surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!" << std::endl;
+		return;
+	}
+	
+	G4VPhysicalVolume *vol2 = FindPhysVol(keyval.at("vol2").get<std::string>());
+	
+	if(!vol2){
+		std::cout << "\nWARNING --> OptPropManager::buildbordersurface(...):Could not find the \"vol2\" physical volume with name \"" << keyval.at("vol2").get<std::string>() << "\". The logical border surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!" << std::endl;
+		return;
+	}
+	
+	
+	
+	if( !keyval.contains("optsurf") ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"optsurf\" key is mandatory! The logical border surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+		return;
+	}
+	
+	if( !keyval.at("optsurf").is_string() ){
+		std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The \"optsurf\" key must be a string!\n" << std::endl;
+		return;
+	}
+	
+	
+	G4OpticalSurface *optsurf = FindOptSurf( keyval.at("optsurf").get<std::string>() );
+	
+	if(!optsurf){
+		std::cout << "\nWARNING --> OptPropManager::buildbordersurface(...): Could not find the optical surface \"" << keyval.at("optsurf").get<std::string>() << "\".  The logical border surface \"" << keyval.at("surfname").get<std::string>() << "\" will not be built!\n" << std::endl;
+	}
+	
+	
+	G4LogicalBorderSurface *logsurf = new G4LogicalBorderSurface( keyval.at("surfname").get<std::string>(), vol1, vol2, optsurf );
+	
+	
+	if(keyval.contains("model")){
+		if( keyval.at("model").is_string() && (OptSurfModelMap.find(keyval.at("model").get<std::string>())!=OptSurfModelMap.end()) ){
+			optsurf->SetModel( OptSurfModelMap.at(keyval.at("model").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("type")){
+		if( keyval.at("type").is_string() && (OptSurfTypeMap.find(keyval.at("type").get<std::string>())!=OptSurfTypeMap.end()) ){
+			optsurf->SetType( OptSurfTypeMap.at(keyval.at("type").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("finish")){
+		if( keyval.at("finish").is_string() && (OptSurfFinishMap.find(keyval.at("finish").get<std::string>())!=OptSurfFinishMap.end()) ){
+			optsurf->SetFinish( OptSurfFinishMap.at(keyval.at("finish").get<std::string>()) );
+		}
+	}
+	
+	if(keyval.contains("sigma_alpha")){
+		if( keyval.at("sigma_alpha").is_number_float() ){
+			optsurf->SetSigmaAlpha( keyval.at("sigma_alpha").get<double>() );
+		}
+	}
+	
+	
+	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+		
+		json propObj = keyval.at("propfiles");
+		
+		std::vector<G4double> en_vec(0), val_vec(0);
+		
+		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+			if(!it.value().is_string()){
+				std::cout << "\nERROR --> OptPropManager::buildbordersurface(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
+				continue;
+			}
+			
+			en_vec.clear(); en_vec.resize(0);
+			val_vec.clear(); val_vec.resize(0);
+			
+			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
+			
+			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+				continue;
+			}
+			
+			if(fVerbosity>0){
+				std::cout << "Info --> OptPropManager::buildbordersurface(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
+			}
+			
+			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
+				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			}
+			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+		}
+		
+	}
+	
+	
+	
+	if(fVerbosity>1){
+		std::cout << "Debug --> OptPropManager::buildbordersurface(...): end of routine." << std::endl;
+	}
+}
+
+
+void OptPropManager::buildskinsurf(const json keyval)
+{}
+
 
 
 
@@ -127,7 +864,6 @@ void OptPropManager::SetSurfSigmaAlpha(const G4String& logsurfname, const G4doub
 		}
 	}
 }
-
 
 
 void OptPropManager::SetMaterialRindex(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* rindexes)
@@ -200,6 +936,7 @@ void OptPropManager::SetOpticalSurfaceModel(const G4String& logsurfname, const G
 {
 	G4LogicalBorderSurfaceTable* surftab = (G4LogicalBorderSurfaceTable*)G4LogicalBorderSurface::GetSurfaceTable();
 	size_t nLogSurf = G4LogicalBorderSurface::GetNumberOfBorderSurfaces();
+	
 	if( (!surftab) || (nLogSurf==0) ) return;
 	
 	if(OptSurfModelMap.find(model)==OptSurfModelMap.end()) return;

@@ -188,7 +188,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	//  Interface between TPB and EJ280 WLS  //
 	// --------------------------------------//
 	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
 	if( vol1 && vol2){
 		
 		//As a default the surface is defined as polished and front painted.
