@@ -84,6 +84,12 @@ DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 		fDetectorMessenger = new DetectorMessenger(this);
 	}
 	
+	fOptPropManager = OptPropManager::GetInstance();
+	
+	if(!fOptPropManager){
+		G4Exception("DetConstrOptPh::DetConstrOptPh(...)","Geom.001", FatalException,"Cannot get \"OptPropManager\" pointer.");
+	}
+	
 	fVerbose = 0;
 }
 
@@ -124,9 +130,13 @@ void DetConstrOptPh::DefaultOptProperties()
 	G4double lar_rayleigh_len[1] = {91.0}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
 	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
 	
-	OptPropManager::OptPropManagerInstance()->SetMaterialRindex("LAr", 1, opt_ph_en, lar_rindex ); 
-	OptPropManager::OptPropManagerInstance()->SetMaterialAbsLenght("LAr", 1, opt_ph_en, lar_abs_len );
-	OptPropManager::OptPropManagerInstance()->SetMaterialRayleighLenght("LAr", 1, opt_ph_en, lar_rayleigh_len );
+	if(!fOptPropManager){
+		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
+	}
+	
+	fOptPropManager->SetMaterialRindex("LAr", 1, opt_ph_en, lar_rindex ); 
+	fOptPropManager->SetMaterialAbsLenght("LAr", 1, opt_ph_en, lar_abs_len );
+	fOptPropManager->SetMaterialRayleighLenght("LAr", 1, opt_ph_en, lar_rayleigh_len );
 	
 	
 	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
@@ -134,12 +144,12 @@ void DetConstrOptPh::DefaultOptProperties()
 	G4double tpb_abs_len[1] = {400*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	
-	OptPropManager::OptPropManagerInstance()->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
-	OptPropManager::OptPropManagerInstance()->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
+	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
+	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
 	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
 	
-	OptPropManager::OptPropManagerInstance()->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
-	OptPropManager::OptPropManagerInstance()->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
+	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
+	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	
 	
 }

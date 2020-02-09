@@ -24,7 +24,7 @@
 
 DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 :fDetector(pDetector)
-{ 
+{
 	fDetectorDir = new G4UIdirectory("/argoncube/detector/");
 	fDetectorDir->SetGuidance("ArgonCube detector geometry and material properties control.");
 	
@@ -47,7 +47,7 @@ DetectorMessenger::~DetectorMessenger()
 {
 	//delete fLArAbsorbtionLengthCmd;
 	//delete fLArRayScatterLengthCmd;
-
+	
 	delete fPhysVolCoordCmd;
 	delete fLoadOpticalSettingsFile;
 	delete fDetectorOptDir;
@@ -59,7 +59,7 @@ void DetectorMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewValue)
 	if(pUIcommand == fPhysVolCoordCmd) fDetector->PrintVolumeCoordinates( hNewValue );
 	
 	if(pUIcommand == fLoadOpticalSettingsFile){
-		OptPropManager::OptPropManagerInstance()->ProcessJsonFile( hNewValue );
+		OptPropManager::GetInstance()->ProcessJsonFile( hNewValue );
 	}
 }
 

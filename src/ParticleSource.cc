@@ -43,7 +43,7 @@ ParticleSourceOptPh::ParticleSourceOptPh(PrimaryGeneratorActionOptPh *primGenAct
 	fMessenger = new ParticleSourceOptPhMessenger(this);
 	fNavigator = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
 	
-	G4cout << G4endl << "Particle source initialized." << G4endl;
+	G4cout << "\nParticle source initialized." << G4endl;
 }
 
 

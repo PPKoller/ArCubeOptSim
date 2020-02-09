@@ -21,6 +21,7 @@ class G4LogicalVolume;
 class G4VPhysicalVolume;
 class G4SubtractionSolid;
 class DetectorMessenger;
+class OptPropManager;
 
 
 class DetConstrOptPh: public G4VUserDetectorConstruction
@@ -60,6 +61,8 @@ protected:
 private:
 	
 	DetectorMessenger *fDetectorMessenger;
+	
+	OptPropManager *fOptPropManager;
 	
 	G4GDMLParser *fGDMLParser;
 	G4VPhysicalVolume *fWorld;

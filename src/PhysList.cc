@@ -76,7 +76,10 @@ PhysListOptPh::~PhysListOptPh()
 
 void PhysListOptPh::ConstructParticle()
 {
-	ConstructMyBosons();
+	G4Geantino::GeantinoDefinition();
+	//G4ChargedGeantino::ChargedGeantinoDefinition();
+	
+	G4OpticalPhoton::OpticalPhotonDefinition();
 }
 
 
@@ -87,14 +90,6 @@ void PhysListOptPh::ConstructProcess()
 }
 
 
-void PhysListOptPh::ConstructMyBosons()
-{
-	G4Geantino::GeantinoDefinition();
-	//G4ChargedGeantino::ChargedGeantinoDefinition();
-
-	G4OpticalPhoton::OpticalPhotonDefinition();
-
-}
 
 
 
@@ -136,8 +131,8 @@ PhysListOptPh::ConstructOptical()
 	
 	G4ParticleTable::G4PTblDicIterator* theParticleIterator = GetParticleIterator();
 	theParticleIterator->reset();
-	while( (*theParticleIterator)() )
-	{
+	
+	while( (*theParticleIterator)() ){
 		G4ParticleDefinition *particle = theParticleIterator->value();
 		G4ProcessManager *pmanager = particle->GetProcessManager();
 		G4String particleName = particle->GetParticleName();

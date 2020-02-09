@@ -111,7 +111,7 @@ OptPropManager::OptPropManager()
 
 
 
-OptPropManager* OptPropManager::OptPropManagerInstance()
+OptPropManager* OptPropManager::GetInstance()
 {
 	if(!gThis) gThis = new OptPropManager;
 	return gThis;
@@ -316,10 +316,17 @@ void OptPropManager::setmatprop(const json keyval)
 				std::cout << "Info --> OptPropManager::setmatprop(...): Setting property " << it.key() << " for \"" << mat->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
 			}
 			
-			if(mat->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
-				mat->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+			
+			if(!propTab){
+				propTab = new G4MaterialPropertiesTable();
+				mat->SetMaterialPropertiesTable(propTab);
 			}
-			mat->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+			
+			if(propTab->GetProperty( it.key().c_str() )){
+				propTab->RemoveProperty( it.key().c_str() );
+			}
+			propTab->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
 		}
 	}
 	
@@ -406,10 +413,19 @@ void OptPropManager::setoptsurf(const json keyval)
 				std::cout << "Info --> OptPropManager::setoptsurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
 			}
 			
-			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
-				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			
+			G4MaterialPropertiesTable* propTab = optsurf->GetMaterialPropertiesTable();
+			
+			if(!propTab){
+				propTab = new G4MaterialPropertiesTable();
+				optsurf->SetMaterialPropertiesTable(propTab);
 			}
-			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+			
+			
+			if(propTab->GetProperty( it.key().c_str() )){
+				propTab->RemoveProperty( it.key().c_str() );
+			}
+			propTab->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
 		}
 		
 	}
@@ -571,10 +587,17 @@ void OptPropManager::setbordersurf(const json keyval)
 				std::cout << "Info --> OptPropManager::setbordersurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
 			}
 			
-			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
-				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			G4MaterialPropertiesTable* propTab = optsurf->GetMaterialPropertiesTable();
+			
+			if(!propTab){
+				propTab = new G4MaterialPropertiesTable();
+				optsurf->SetMaterialPropertiesTable(propTab);
 			}
-			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+			
+			if(propTab->GetProperty( it.key().c_str() )){
+				propTab->RemoveProperty( it.key().c_str() );
+			}
+			propTab->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
 		}
 		
 	}
@@ -611,7 +634,7 @@ void OptPropManager::buildoptsurf(const json keyval)
 	G4OpticalSurface* optsurf = FindOptSurf(keyval.at("surfname").get<std::string>());
 	
 	if(optsurf){
-		std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The optical surface \"" << keyval.at("surfname").get<std::string>() << "\" already exists!" << std::cout;
+		std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The optical surface \"" << keyval.at("surfname").get<std::string>() << "\" already exists!" << std::endl;
 		return;
 	}
 	
@@ -668,10 +691,17 @@ void OptPropManager::buildoptsurf(const json keyval)
 				std::cout << "Info --> OptPropManager::buildoptsurf(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
 			}
 			
-			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
-				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			G4MaterialPropertiesTable* propTab = optsurf->GetMaterialPropertiesTable();
+			
+			if(!propTab){
+				propTab = new G4MaterialPropertiesTable();
+				optsurf->SetMaterialPropertiesTable(propTab);
 			}
-			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+			
+			if(propTab->GetProperty( it.key().c_str() )){
+				propTab->RemoveProperty( it.key().c_str() );
+			}
+			propTab->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
 		}
 		
 	}
@@ -822,10 +852,17 @@ void OptPropManager::buildbordersurface(const json keyval)
 				std::cout << "Info --> OptPropManager::buildbordersurface(...): Setting property " << it.key() << " for \"" << optsurf->GetName() << "\" from file \"" << it.value().get<std::string>() << "\"" << std::endl;
 			}
 			
-			if(optsurf->GetMaterialPropertiesTable()->GetProperty( it.key().c_str() )){
-				optsurf->GetMaterialPropertiesTable()->RemoveProperty( it.key().c_str() );
+			G4MaterialPropertiesTable* propTab = optsurf->GetMaterialPropertiesTable();
+			
+			if(!propTab){
+				propTab = new G4MaterialPropertiesTable();
+				optsurf->SetMaterialPropertiesTable(propTab);
 			}
-			optsurf->GetMaterialPropertiesTable()->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
+			
+			if(propTab->GetProperty( it.key().c_str() )){
+				propTab->RemoveProperty( it.key().c_str() );
+			}
+			propTab->AddProperty( it.key().c_str() ,(G4double*)&en_vec.at(0), (G4double*)&val_vec.at(0), en_vec.size() );
 		}
 		
 	}
@@ -873,9 +910,23 @@ void OptPropManager::SetMaterialRindex(const G4String& materialname, const G4int
 	
 	if(pMatTable && (nMat>0)){
 		for(size_t iMat=0; iMat<nMat;iMat++){
-			if( (pMatTable->at(iMat)->GetName()) == materialname ){
-				if(pMatTable->at(iMat)->GetMaterialPropertiesTable()->GetProperty("RINDEX")) pMatTable->at(iMat)->GetMaterialPropertiesTable()->RemoveProperty("RINDEX");
-					pMatTable->at(iMat)->GetMaterialPropertiesTable()->AddProperty("RINDEX",(G4double*)photonenergies,(G4double*)rindexes,Nentries);
+			G4Material *mat = pMatTable->at(iMat);
+			
+			if( mat->GetName() == materialname ){
+				
+				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+				
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					mat->SetMaterialPropertiesTable(propTab);
+				}
+				
+				
+				if(propTab->GetProperty("RINDEX")){
+					propTab->RemoveProperty("RINDEX");
+				}
+				propTab->AddProperty("RINDEX",(G4double*)photonenergies,(G4double*)rindexes,Nentries);
 			}
 		}
 	}
@@ -895,9 +946,20 @@ void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4
 	
 	if(pMatTable && (nMat>0)){
 		for(size_t iMat=0; iMat<nMat;iMat++){
-			if( (pMatTable->at(iMat)->GetName()) == materialname ){
-				if(pMatTable->at(iMat)->GetMaterialPropertiesTable()->GetProperty("ABSLENGTH")) pMatTable->at(iMat)->GetMaterialPropertiesTable()->RemoveProperty("ABSLENGTH");
-					pMatTable->at(iMat)->GetMaterialPropertiesTable()->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
+			G4Material *mat = pMatTable->at(iMat);
+			if( mat->GetName() == materialname ){
+				
+				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					mat->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("ABSLENGTH")){
+					propTab->RemoveProperty("ABSLENGTH");
+				}
+				propTab->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
 			}
 		}
 	}
@@ -917,9 +979,21 @@ void OptPropManager::SetMaterialRayleighLenght(const G4String& materialname, con
 	
 	if(pMatTable && (nMat>0)){
 		for(size_t iMat=0; iMat<nMat;iMat++){
-			if( (pMatTable->at(iMat)->GetName()) == materialname ){
-				if(pMatTable->at(iMat)->GetMaterialPropertiesTable()->GetProperty("RAYLEIGH")) pMatTable->at(iMat)->GetMaterialPropertiesTable()->RemoveProperty("RAYLEIGH");
-					pMatTable->at(iMat)->GetMaterialPropertiesTable()->AddProperty("RAYLEIGH",(G4double*)photonenergies,(G4double*)rayleighlenghts,Nentries);
+			G4Material *mat = pMatTable->at(iMat);
+			
+			if( mat->GetName() == materialname ){
+				
+				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					mat->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("RAYLEIGH")){
+					propTab->RemoveProperty("RAYLEIGH");
+				}
+				propTab->AddProperty("RAYLEIGH",(G4double*)photonenergies,(G4double*)rayleighlenghts,Nentries);
 			}
 		}
 	}

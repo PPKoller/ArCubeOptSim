@@ -30,7 +30,7 @@ typedef void (OptPropManager::*json_proc_memfunc)(const json keyval);
 class OptPropManager
 {
 public:
-	static OptPropManager* OptPropManagerInstance();
+	static OptPropManager* GetInstance();
 	
 	void ProcessJsonFile(const G4String& jsonfilename);
 	
