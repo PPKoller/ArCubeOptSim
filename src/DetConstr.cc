@@ -127,7 +127,7 @@ void DetConstrOptPh::DefaultOptProperties()
 {
 	G4double opt_ph_en[1] = {9.69*eV};
 	G4double lar_rindex[1] = {1.369}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-	G4double lar_rayleigh_len[1] = {91.0}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
+	G4double lar_rayleigh_len[1] = {0.91*m}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
 	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
 	
 	if(!fOptPropManager){
@@ -143,11 +143,17 @@ void DetConstrOptPh::DefaultOptProperties()
 	//G4double tpb_rayleigh_len[1] = {91.0};
 	G4double tpb_abs_len[1] = {400*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
+  G4double tpb_wls_abs_len[1] = {400*nm};
+  G4double tpb_wls_emission[1] = {425*nm};
+  G4double tpb_wls_delay[1] = {0.5*ns};
 	
 	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
-	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
+	//fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
+	fOptPropManager->SetMaterialWLSAbsLenght("TPB", 1, opt_ph_en, tpb_wls_abs_len );
+  fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
+  fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
 	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
-	
+
 	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
 	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	

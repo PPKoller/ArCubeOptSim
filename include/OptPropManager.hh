@@ -44,6 +44,18 @@ public:
 	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
 	void SetMaterialAbsLenght(const G4String& materialname, const G4String& asciifilename);
 	
+	//loads the WLS absorption lenght from a 2 column ascii file and gives it to a material if this exists
+	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
+	void SetMaterialWLSAbsLenght(const G4String& materialname, const G4String& asciifilename);
+	
+	//loads the WLS emission from a 2 column ascii file and gives it to a material if this exists
+	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
+	void SetMaterialWLSEmission(const G4String& materialname, const G4String& asciifilename);
+	
+	//loads the WLS delay from a 2 column ascii file and gives it to a material if this exists
+	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
+	void SetMaterialWLSDelay(const G4String& materialname, const G4String& asciifilename);
+	
 	//loads the Rayleigh scattering lenght from a 2 column ascii file and gives it to a material if this exists
 	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
 	void SetMaterialRayleighLenght(const G4String& materialname, const G4String& asciifilename);
@@ -55,6 +67,18 @@ public:
 	
 	void SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* abslenghts);
 	void SetMaterialAbsLenght(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& abslenghts);
+	
+	
+	void SetMaterialWLSAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* wlsabslenghts);
+	void SetMaterialWLSAbsLenght(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& wlsabslenghts);
+	
+	
+	void SetMaterialWLSEmission(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* wlsemission);
+	void SetMaterialWLSEmission(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& wlsemission);
+	
+	
+	void SetMaterialWLSDelay(const G4String& materialname, const G4double* wlsdelay);
+	void SetMaterialWLSDelay(const G4String& materialname, const std::vector<G4double>& wlsdelay);
 	
 	
 	void SetMaterialRayleighLenght(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* rayleighlenghts);
