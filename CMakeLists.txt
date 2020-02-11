@@ -37,9 +37,9 @@ include(${Geant4_USE_FILE})
 # Locate sources and headers for this project
 # NB: headers are included so they will show up in IDEs
 #
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include 
-                    ${Geant4_INCLUDE_DIR} 
-				    #$ENV{ROOTSYS}/include 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include
+                    ${Geant4_INCLUDE_DIR}
+				    $ENV{ROOTSYS}/include
 					${ROOT_INCLUDE_DIR}
 				)
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
@@ -59,7 +59,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #  ${PROJECT_SOURCE_DIR}/src/RunAction.cc
 #  ${PROJECT_SOURCE_DIR}/src/SteppingAction.cc
 #  )
-  
+
 #  set(headers
 #  ${PROJECT_SOURCE_DIR}/include/AnalysisManager.hh
 #  ${PROJECT_SOURCE_DIR}/include/AnalysisMessenger.hh

@@ -34,6 +34,7 @@
 #include "G4ios.hh"
 
 #include "G4OpAbsorption.hh"
+#include "G4OpWLS.hh"
 #include "G4OpRayleigh.hh"
 #include "G4OpMieHG.hh"
 #include "G4OpBoundaryProcess.hh"
@@ -45,6 +46,7 @@ const G4double PhysListOptPh::fDefaultCutValue = 1. * mm;
 G4ThreadLocal G4int PhysListOptPh::fVerboseLevel = 0;
 //G4ThreadLocal G4int PhysListOptPh::fOpVerbLevel = 0;
 G4ThreadLocal G4OpAbsorption* PhysListOptPh::fAbsorptionProcess = NULL;
+G4ThreadLocal G4OpWLS* PhysListOptPh::fWLSProcess = NULL;
 G4ThreadLocal G4OpRayleigh* PhysListOptPh::fRayleighScatteringProcess = NULL;
 //G4ThreadLocal G4OpMieHG* PhysListOptPh::fMieHGScatteringProcess = NULL;
 G4ThreadLocal G4OpBoundaryProcess* PhysListOptPh::fBoundaryProcess = NULL;
@@ -109,14 +111,17 @@ PhysListOptPh::ConstructOptical()
 	
 	// optical processes
 	fAbsorptionProcess = new G4OpAbsorption();
+	fWLSProcess = new G4OpWLS();
 	fRayleighScatteringProcess = new G4OpRayleigh();
 	//fMieHGScatteringProcess = new G4OpMieHG();
 	fBoundaryProcess = new G4OpBoundaryProcess();
 	
 	//  theAbsorptionProcess->DumpPhysicsTable();
+	//  theWLSProcess->DumpPhysicsTable();
 	//  theRayleighScatteringProcess->DumpPhysicsTable();
 	
 	fAbsorptionProcess->SetVerboseLevel(PhysListOptPh::fVerboseLevel);
+	fWLSProcess->SetVerboseLevel(PhysListOptPh::fVerboseLevel);
 	fRayleighScatteringProcess->SetVerboseLevel(PhysListOptPh::fVerboseLevel);
 	fBoundaryProcess->SetVerboseLevel(PhysListOptPh::fVerboseLevel);
 	//fMieHGScatteringProcess->SetVerboseLevel(PhysListOptPh::fVerboseLevel);
@@ -143,11 +148,13 @@ PhysListOptPh::ConstructOptical()
 		{
 			if(fVerboseLevel>1) G4cout << " Adding DiscreteProcesses for \"opticalphoton\" particle" << G4endl;
 			//pmanager->AddDiscreteProcess(fAbsorptionProcess);
+			//pmanager->AddDiscreteProcess(fWLSProcess);
 			//pmanager->AddDiscreteProcess(fRayleighScatteringProcess);
 			//pmanager->AddDiscreteProcess(fMieHGScatteringProcess);
 			//pmanager->AddDiscreteProcess(fBoundaryProcess);
 			
 			ph->RegisterProcess(fAbsorptionProcess, particle);
+			ph->RegisterProcess(fWLSProcess, particle);
 			ph->RegisterProcess(fRayleighScatteringProcess, particle);
 			ph->RegisterProcess(fBoundaryProcess, particle);
 		}
