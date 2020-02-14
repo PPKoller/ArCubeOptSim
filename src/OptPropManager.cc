@@ -939,39 +939,6 @@ void OptPropManager::SetMaterialRindex(const G4String& materialname, const std::
 
 
 
-void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* abslenghts)
-{
-	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
-	size_t nMat = G4Material::GetNumberOfMaterials();
-	
-	if(pMatTable && (nMat>0)){
-		for(size_t iMat=0; iMat<nMat;iMat++){
-			G4Material *mat = pMatTable->at(iMat);
-			if( mat->GetName() == materialname ){
-				
-				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
-				
-				if(!propTab){
-					propTab = new G4MaterialPropertiesTable();
-					mat->SetMaterialPropertiesTable(propTab);
-				}
-				
-				if(propTab->GetProperty("ABSLENGTH")){
-					propTab->RemoveProperty("ABSLENGTH");
-				}
-				propTab->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
-			}
-		}
-	}
-}
-
-void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& abslenghts)
-{
-	if(photonenergies.size()==abslenghts.size()) OptPropManager::SetMaterialAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &abslenghts.at(0));
-}
-
-
-
 void OptPropManager::SetMaterialRayleighLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* rayleighlenghts)
 {
 	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
@@ -1002,6 +969,39 @@ void OptPropManager::SetMaterialRayleighLenght(const G4String& materialname, con
 void OptPropManager::SetMaterialRayleighLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& rayleighlenghts)
 {
 	if(photonenergies.size()==rayleighlenghts.size()) OptPropManager::SetMaterialRayleighLenght(materialname, photonenergies.size(), &photonenergies.at(0), &rayleighlenghts.at(0));
+}
+
+
+
+void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* abslenghts)
+{
+	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
+	size_t nMat = G4Material::GetNumberOfMaterials();
+	
+	if(pMatTable && (nMat>0)){
+		for(size_t iMat=0; iMat<nMat;iMat++){
+			G4Material *mat = pMatTable->at(iMat);
+			if( mat->GetName() == materialname ){
+				
+				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					mat->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("ABSLENGTH")){
+					propTab->RemoveProperty("ABSLENGTH");
+				}
+				propTab->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
+			}
+		}
+	}
+}
+
+void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& abslenghts)
+{
+	if(photonenergies.size()==abslenghts.size()) OptPropManager::SetMaterialAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &abslenghts.at(0));
 }
 
 

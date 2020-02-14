@@ -154,7 +154,13 @@ void DetConstrOptPh::DefaultOptProperties()
   fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
 	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
 
-	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
+	
+	G4double wls_rindex[1] = {1.67}; //Same as TPB for the moment
+  
+  fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, wls_rindex );
+	
+  
+  fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
 	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	
 	
@@ -211,7 +217,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 		//This allow for some reflection while the non reflected photons are simply absorbed by the painting.
 		//Ideally this surface should be defined as dielectric_dichroic whic can be implemented later by the user.
 		
-		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polishedfrontpainted, dielectric_dielectric);
+		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polished, dielectric_dielectric);
 		
 		G4LogicalBorderSurface* TPB2EJ280_logsurf = new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
 
@@ -224,6 +230,24 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 
 		
 	}//End of interface between EJ280 WLS and ArCLight TPB coating
+	
+	
+	
+	// --------------------------------------//
+	//  Interface between EJ280 WLS and LAr  //
+	// --------------------------------------//
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
+	if( vol1 && vol2){
+		
+		//As a default the surface is defined as polished with a reflectance of +/-99% (TO-DO!!!).
+		
+		G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
+
+
+	}//End of interface between EJ280 WLS and LAr
 }
 
 
