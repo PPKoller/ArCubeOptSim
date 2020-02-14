@@ -140,15 +140,15 @@ void DetConstrOptPh::DefaultOptProperties()
 	
 	
 	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	//G4double tpb_rayleigh_len[1] = {91.0};
-	G4double tpb_abs_len[1] = {400*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
+	//G4double tpb_rayleigh_len[1] = {};
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-  G4double tpb_wls_abs_len[1] = {400*nm};
+	G4double tpb_abs_len[1] = {400/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
+  G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
   G4double tpb_wls_emission[1] = {425*nm};
   G4double tpb_wls_delay[1] = {0.5*ns};
-	
+
 	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
-	//fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
+	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
 	fOptPropManager->SetMaterialWLSAbsLenght("TPB", 1, opt_ph_en, tpb_wls_abs_len );
   fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
   fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
@@ -214,8 +214,16 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polishedfrontpainted, dielectric_dielectric);
 		
 		G4LogicalBorderSurface* TPB2EJ280_logsurf = new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
+
+
+    //Make the optical surface from EJ280 WLS to TPB
 		
-	}
+		G4OpticalSurface* EJ2802TPB_optsurf = new G4OpticalSurface("EJ2802TPB_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802TPB_logsurf = new G4LogicalBorderSurface("EJ2802TPB_logsurf",vol2,vol1,EJ2802TPB_optsurf);
+
+		
+	}//End of interface between EJ280 WLS and ArCLight TPB coating
 }
 
 
