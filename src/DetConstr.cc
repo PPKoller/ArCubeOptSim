@@ -169,10 +169,10 @@ void DetConstrOptPh::DefaultOptProperties()
 	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	
   G4double ej2802tpb_reflectivity[1] = {1.};
-  G4double ej2802lar_reflectivity[1] = {1-1E-4};
+  G4double ej2802lar_reflectivity[1] = {1.};
   G4double ej2802pvt_reflectivity[1] = {1.};
   G4double ej2802G10_reflectivity[1] = {1.};
-  G4double ej280SiPM_reflectivity[1] = {0.01};
+  G4double ej280SiPM_reflectivity[1] = {1E-9};
   
 	fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
@@ -193,7 +193,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	//  Interface between LAr and TPB layer  //
 	// --------------------------------------//
 	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
 	if( vol1 && vol2){
 		
 		//By the default the surfaces are with ground finish
@@ -223,7 +223,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between TPB and EJ280 WLS  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
 	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
 	if( vol1 && vol2){
 		
