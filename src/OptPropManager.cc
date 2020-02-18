@@ -903,6 +903,49 @@ void OptPropManager::SetSurfSigmaAlpha(const G4String& logsurfname, const G4doub
 }
 
 
+void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4int Nentries, const G4double* photonenergies, const G4double* reflectivities)
+{
+	const G4LogicalBorderSurfaceTable* surftab = G4LogicalBorderSurface::GetSurfaceTable();
+	
+	if(surftab){
+		G4LogicalSurface* Surface = NULL;
+		
+		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
+			G4String name = surftab->at(iSurf)->GetName();
+			if(name == logsurfname){
+				Surface = surftab->at(iSurf);
+			}
+		}
+		
+		if(Surface){
+			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+			if(OpticalSurface){
+				
+        G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
+				
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					OpticalSurface->SetMaterialPropertiesTable(propTab);
+				}
+				
+				
+				if(propTab->GetProperty("REFLECTIVITY")){
+					propTab->RemoveProperty("REFLECTIVITY");
+				}
+				propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
+      }
+    }
+  }
+}
+
+void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& reflectivities)
+{
+	if(photonenergies.size()==reflectivities.size()) OptPropManager::SetSurfReflectivity(logsurfname, photonenergies.size(), &photonenergies.at(0), &reflectivities.at(0));
+}
+
+
+
 void OptPropManager::SetMaterialRindex(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* rindexes)
 {
 	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
@@ -935,6 +978,39 @@ void OptPropManager::SetMaterialRindex(const G4String& materialname, const G4int
 void OptPropManager::SetMaterialRindex(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& rindexes)
 {
 	if(photonenergies.size()==rindexes.size()) OptPropManager::SetMaterialRindex(materialname, photonenergies.size(), &photonenergies.at(0), &rindexes.at(0));
+}
+
+
+
+void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* abslenghts)
+{
+	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
+	size_t nMat = G4Material::GetNumberOfMaterials();
+	
+	if(pMatTable && (nMat>0)){
+		for(size_t iMat=0; iMat<nMat;iMat++){
+			G4Material *mat = pMatTable->at(iMat);
+			if( mat->GetName() == materialname ){
+				
+				G4MaterialPropertiesTable* propTab = mat->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					mat->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("ABSLENGTH")){
+					propTab->RemoveProperty("ABSLENGTH");
+				}
+				propTab->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
+			}
+		}
+	}
+}
+
+void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& abslenghts)
+{
+	if(photonenergies.size()==abslenghts.size()) OptPropManager::SetMaterialAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &abslenghts.at(0));
 }
 
 
@@ -973,7 +1049,7 @@ void OptPropManager::SetMaterialRayleighLenght(const G4String& materialname, con
 
 
 
-void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* abslenghts)
+void OptPropManager::SetMaterialEfficiency(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* efficiencies)
 {
 	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
 	size_t nMat = G4Material::GetNumberOfMaterials();
@@ -990,23 +1066,23 @@ void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const G4
 					mat->SetMaterialPropertiesTable(propTab);
 				}
 				
-				if(propTab->GetProperty("ABSLENGTH")){
-					propTab->RemoveProperty("ABSLENGTH");
+				if(propTab->GetProperty("EFFICIENCY")){
+					propTab->RemoveProperty("EFFICIENCY");
 				}
-				propTab->AddProperty("ABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
+				propTab->AddProperty("EFFICIENCY",(G4double*)photonenergies,(G4double*)efficiencies,Nentries);
 			}
 		}
 	}
 }
 
-void OptPropManager::SetMaterialAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& abslenghts)
+void OptPropManager::SetMaterialEfficiency(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& efficiencies)
 {
-	if(photonenergies.size()==abslenghts.size()) OptPropManager::SetMaterialAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &abslenghts.at(0));
+	if(photonenergies.size()==efficiencies.size()) OptPropManager::SetMaterialEfficiency(materialname, photonenergies.size(), &photonenergies.at(0), &efficiencies.at(0));
 }
 
 
 
-void OptPropManager::SetMaterialWLSAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* abslenghts)
+void OptPropManager::SetMaterialWLSAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* wlsabslenghts)
 {
 	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
 	size_t nMat = G4Material::GetNumberOfMaterials();
@@ -1026,20 +1102,20 @@ void OptPropManager::SetMaterialWLSAbsLenght(const G4String& materialname, const
 				if(propTab->GetProperty("WLSABSLENGTH")){
 					propTab->RemoveProperty("WLSABSLENGTH");
 				}
-				propTab->AddProperty("WLSABSLENGTH",(G4double*)photonenergies,(G4double*)abslenghts,Nentries);
+				propTab->AddProperty("WLSABSLENGTH",(G4double*)photonenergies,(G4double*)wlsabslenghts,Nentries);
 			}
 		}
 	}
 }
 
-void OptPropManager::SetMaterialWLSAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& abslenghts)
+void OptPropManager::SetMaterialWLSAbsLenght(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& wlsabslenghts)
 {
-	if(photonenergies.size()==abslenghts.size()) OptPropManager::SetMaterialWLSAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &abslenghts.at(0));
+	if(photonenergies.size()==wlsabslenghts.size()) OptPropManager::SetMaterialWLSAbsLenght(materialname, photonenergies.size(), &photonenergies.at(0), &wlsabslenghts.at(0));
 }
 
 
 
-void OptPropManager::SetMaterialWLSEmission(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* wlsemission)
+void OptPropManager::SetMaterialWLSEmission(const G4String& materialname, const G4int Nentries, const G4double* photonenergies, const G4double* wlsemissions)
 {
 	G4MaterialTable *pMatTable = G4Material::GetMaterialTable();
 	size_t nMat = G4Material::GetNumberOfMaterials();
@@ -1059,15 +1135,15 @@ void OptPropManager::SetMaterialWLSEmission(const G4String& materialname, const 
 				if(propTab->GetProperty("WLSCOMPONENT")){
 					propTab->RemoveProperty("WLSCOMPONENT");
 				}
-				propTab->AddProperty("WLSCOMPONENT",(G4double*)photonenergies,(G4double*)wlsemission,Nentries);
+				propTab->AddProperty("WLSCOMPONENT",(G4double*)photonenergies,(G4double*)wlsemissions,Nentries);
 			}
 		}
 	}
 }
 
-void OptPropManager::SetMaterialWLSEmission(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& wlsemission)
+void OptPropManager::SetMaterialWLSEmission(const G4String& materialname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& wlsemissions)
 {
-	if(photonenergies.size()==wlsemission.size()) OptPropManager::SetMaterialWLSEmission(materialname, photonenergies.size(), &photonenergies.at(0), &wlsemission.at(0));
+	if(photonenergies.size()==wlsemissions.size()) OptPropManager::SetMaterialWLSEmission(materialname, photonenergies.size(), &photonenergies.at(0), &wlsemissions.at(0));
 }
 
 
