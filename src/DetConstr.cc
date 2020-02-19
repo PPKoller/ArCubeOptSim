@@ -127,9 +127,9 @@ void DetConstrOptPh::DefaultOptProperties()
 {
 	G4double opt_ph_en[1] = {9.69*eV};
 	G4double lar_rindex[1] = {1.369}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-	G4double lar_rayleigh_len[1] = {0.91*m}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
 	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
-	
+	G4double lar_rayleigh_len[1] = {0.91*m}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
+
 	if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}
@@ -140,23 +140,45 @@ void DetConstrOptPh::DefaultOptProperties()
 	
 	
 	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	//G4double tpb_rayleigh_len[1] = {91.0};
-	G4double tpb_abs_len[1] = {400*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-  G4double tpb_wls_abs_len[1] = {400*nm};
+	G4double tpb_abs_len[1] = {400/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
+  G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
   G4double tpb_wls_emission[1] = {425*nm};
   G4double tpb_wls_delay[1] = {0.5*ns};
-	
+
 	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
-	//fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
+	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
 	fOptPropManager->SetMaterialWLSAbsLenght("TPB", 1, opt_ph_en, tpb_wls_abs_len );
   fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
   fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
 	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
 
-	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
+	
+	G4double ej280_rindex[1] = {1.67}; //Same as TPB for the moment
+  //G4double ej280_wls_abs_len[1] = {0.5*nm};
+  //G4double ej280_wls_emission[1] = {500*nm};
+  //G4double ej280_wls_delay[1] = {0.5*ns};
+
+  fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, ej280_rindex );
+	//fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
+  //fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
+  //fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
+
+
+  fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
 	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	
+  G4double ej2802tpb_reflectivity[1] = {1.};
+  G4double ej2802lar_reflectivity[1] = {1.};
+  G4double ej2802pvt_reflectivity[1] = {1.};
+  G4double ej2802G10_reflectivity[1] = {1.};
+  G4double ej2802SiPM_reflectivity[1] = {0.};
+  
+	fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
+	fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
+	fOptPropManager->SetSurfReflectivity("EJ2802PVT_logsurf", 1, opt_ph_en, ej2802pvt_reflectivity );
+	fOptPropManager->SetSurfReflectivity("EJ2802G10_logsurf", 1, opt_ph_en, ej2802G10_reflectivity );
+	fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf", 1, opt_ph_en, ej2802SiPM_reflectivity );
 	
 }
 
@@ -173,7 +195,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	//  Interface between LAr and TPB layer  //
 	// --------------------------------------//
 	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
 	if( vol1 && vol2){
 		
 		//By the default the surfaces are with ground finish
@@ -203,7 +225,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between TPB and EJ280 WLS  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
 	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
 	if( vol1 && vol2){
 		
@@ -211,11 +233,166 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 		//This allow for some reflection while the non reflected photons are simply absorbed by the painting.
 		//Ideally this surface should be defined as dielectric_dichroic whic can be implemented later by the user.
 		
-		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polishedfrontpainted, dielectric_dielectric);
+		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polished, dielectric_dielectric);
 		
 		G4LogicalBorderSurface* TPB2EJ280_logsurf = new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
 		
-	}
+		TPB2EJ280_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+
+    //Make the optical surface from EJ280 WLS to TPB
+		
+		G4OpticalSurface* EJ2802TPB_optsurf = new G4OpticalSurface("EJ2802TPB_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802TPB_logsurf = new G4LogicalBorderSurface("EJ2802TPB_logsurf",vol2,vol1,EJ2802TPB_optsurf);
+		
+		EJ2802TPB_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+		
+	}//End of interface between EJ280 WLS and ArCLight TPB coating
+	
+	
+	
+	// --------------------------------------//
+	//  Interface between EJ280 WLS and LAr  //
+	// --------------------------------------//
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volOpticalDet_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
+		
+		EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }
+  
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
+		
+		EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+
+	}//End of interface between EJ280 WLS and LAr
+	
+	
+	
+	// --------------------------------------//
+	//  Interface between EJ280 WLS and PVT  //
+	// --------------------------------------//
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volPVT_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802PVT_optsurf = new G4OpticalSurface("EJ2802PVT_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802PVT_logsurf = new G4LogicalBorderSurface("EJ2802PVT_logsurf",vol1,vol2,EJ2802PVT_optsurf);
+		
+		EJ2802PVT_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+
+	}//End of interface between EJ280 WLS and PVT
+	
+	
+	
+	// --------------------------------------//
+	//  Interface between EJ280 WLS and G10  //
+	// --------------------------------------//
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCBar_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802G10_optsurf = new G4OpticalSurface("EJ2802G10_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802G10_logsurf = new G4LogicalBorderSurface("EJ2802G10_logsurf",vol1,vol2,EJ2802G10_optsurf);
+		
+		EJ2802G10_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+
+	}//End of interface between EJ280 WLS and LAr
+	
+	
+	
+	// --------------------------------------//
+	//  Interface between EJ280 WLS and SiPM  //
+	// --------------------------------------//
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM0_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }  
+
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM1_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }  
+	
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM2_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }  
+	
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM3_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }  
+	
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM4_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+  }  
+	
+  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM5_PV");
+	if( vol1 && vol2){
+		
+		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+		
+		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+		
+		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+	}//End of interface between EJ280 WLS and SiPM 
 }
 
 
