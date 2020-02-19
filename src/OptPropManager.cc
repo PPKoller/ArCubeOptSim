@@ -914,6 +914,7 @@ void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4in
 			G4String name = surftab->at(iSurf)->GetName();
 			if(name == logsurfname){
 				Surface = surftab->at(iSurf);
+        std::cout << name << std::endl;
 			}
 		}
 		
