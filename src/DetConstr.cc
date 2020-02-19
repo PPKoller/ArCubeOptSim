@@ -141,8 +141,8 @@ void DetConstrOptPh::DefaultOptProperties()
 	
 	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	G4double tpb_abs_len[1] = {400*1E10/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-  G4double tpb_wls_abs_len[1] = {400*1E10/tpb_qe[0]*nm};
+	G4double tpb_abs_len[1] = {400/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
+  G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
   G4double tpb_wls_emission[1] = {425*nm};
   G4double tpb_wls_delay[1] = {0.5*ns};
 
@@ -172,7 +172,7 @@ void DetConstrOptPh::DefaultOptProperties()
   G4double ej2802lar_reflectivity[1] = {1.};
   G4double ej2802pvt_reflectivity[1] = {1.};
   G4double ej2802G10_reflectivity[1] = {1.};
-  G4double ej280SiPM_reflectivity[1] = {1E-9};
+  G4double ej280SiPM_reflectivity[1] = {0.};
   
 	fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
