@@ -890,15 +890,16 @@ void OptPropManager::SetSurfSigmaAlpha(const G4String& logsurfname, const G4doub
 		
 		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
 			G4String name = surftab->at(iSurf)->GetName();
-			if(name == logsurfname){
+			
+      if(name == logsurfname){
 				Surface = surftab->at(iSurf);
-			}
-		}
+      }
+    }
 		
-		if(Surface){
-			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
-			if(OpticalSurface) OpticalSurface->SetSigmaAlpha(s_a);
-		}
+    if(Surface){
+      G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+      if(OpticalSurface) OpticalSurface->SetSigmaAlpha(s_a);
+    }
 	}
 }
 
@@ -909,32 +910,31 @@ void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4in
 	
 	if(surftab){
 		G4LogicalSurface* Surface = NULL;
-		
+
 		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
 			G4String name = surftab->at(iSurf)->GetName();
-			if(name == logsurfname){
+      std::cout << name << std::endl;       
+      
+      if(name == logsurfname){
 				Surface = surftab->at(iSurf);
-        std::cout << name << std::endl;
-			}
-		}
-		
-		if(Surface){
-			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
-			if(OpticalSurface){
-				
+      }
+    }
+
+    if(Surface){
+      G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+      
+      if(OpticalSurface){
         G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
-				
-				
-				if(!propTab){
-					propTab = new G4MaterialPropertiesTable();
-					OpticalSurface->SetMaterialPropertiesTable(propTab);
-				}
-				
-				
-				if(propTab->GetProperty("REFLECTIVITY")){
-					propTab->RemoveProperty("REFLECTIVITY");
-				}
-				propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
+        
+        if(!propTab){
+          propTab = new G4MaterialPropertiesTable();
+          OpticalSurface->SetMaterialPropertiesTable(propTab);
+        }
+        
+        if(propTab->GetProperty("REFLECTIVITY")){
+          propTab->RemoveProperty("REFLECTIVITY");
+        }
+        propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
       }
     }
   }
