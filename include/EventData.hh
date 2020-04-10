@@ -1,6 +1,9 @@
 #ifndef __EVENT_DATA_OPT_PH_HH__
 #define __EVENT_DATA_OPT_PH_HH__
 
+#include "TROOT.h"
+#include "TRint.h"
+
 #include <string>
 #include <vector>
 
@@ -12,56 +15,62 @@ class EventDataOptPh
 {
 public:
 	
-	/*
-	enum LdID{ //Light detector ID
-		kTop = 1,
-		kOther = 0,
-		kBot = -1
-	};
-	*/
-	
 	EventDataOptPh();
 	virtual ~EventDataOptPh();
 	
-	void Reset();
+	
+	void Reset(int primNum);
 	
 	
 	
 public:
-	int m_iEventId;								// the event ID
-	int m_iNbTotHits;						// number of all the hits for the event
+	//Use root type to be sure to match the datatype of the branch
 	
-	vector<double> *fPx, *fPy, *fPz; //I need this to determine the angle hitting the photocatode when the absorption takes place
+	Int_t fEventId; // Event ID
 	
-	//vector<EventDataOptPh::LdID> *fHitVol; //This is to distinguish the PMT of the hit without using the name
+	Long64_t fPrimaryVolumeIndex;
+	Long64_t fPrimaryVolumeCopyNum;
+	vector<Double_t> *fPrimEn;
 	
-	vector<int> *m_pTrackId;					// id of the particle
+	// Position of the primary particle
+	Double_t fPrimary_Xpos;
+	Double_t fPrimary_Ypos;
+	Double_t fPrimary_Zpos;
 	
-	//vector<int> *m_pParentId;					// id of the parent particle
-	//vector<string> *m_pParentType;				// type of particle
+	// Momentum of the primary particle
+	vector<Double_t> *fPrimary_Xmom;
+	vector<Double_t> *fPrimary_Ymom;
+	vector<Double_t> *fPrimary_Zmom;
 	
-	//vector<string> *m_pCreatorProcess;			// interaction
-	vector<string> *m_pDepositingProcess;		// energy depositing process
-	vector<string> *m_pPhysVolName;				// Name of the physical volume of the step (not the primary)
+	// Polarization of the primary particle
+	vector<Double_t> *fPrimary_Xpol;
+	vector<Double_t> *fPrimary_Ypol;
+	vector<Double_t> *fPrimary_Zpol;
 	
-	vector<double> *m_pTime;					// time of the step
-	vector<double> *fX, *fY, *fZ;						// position of the step
-	//vector<double> *m_pEnergyDeposited; 		// energy deposited in the step
-	//vector<double> *m_pKineticEnergy;			// particle kinetic energy after the step
+	// Number of all the hits for the event
+	// Quantities for hits and for making LUTs 
+	Long64_t fNbTotHits;
 	
-	double m_fPrimary_posX;						// position of the primary particle
-	double m_fPrimary_posY;
-	double m_fPrimary_posZ;
+	vector<Long64_t> *fVolIndex;
+	vector<Long64_t> *fHitVolId; //Id of the touchable where the step accurred (absorption volume if LUT table are needed)
 	
-	vector<double> *m_fPrimary_momX;			// Momentum of the primary
-	vector<double> *m_fPrimary_momY;
-	vector<double> *m_fPrimary_momZ;
+	vector<Double_t> *fTime; //Time of the step
 	
-	vector<double> *m_fPrimary_polX;			// Polarization of the primary particle
-	vector<double> *m_fPrimary_polY;
-	vector<double> *m_fPrimary_polZ;
+	vector<Long64_t> *fTrackId; //Id of the track
+	vector<Long64_t> *fPartGener; //Generation of the particle
+	//Extended hit quantities for LUTs: these quantities are general both for "extended info" data level and for more stepping details. The only difference is that in "hit mode" the stuff is saved only when there is an absorption (useful for LUTs making) while in "steping mode" they are saved always, for any kind of process
 	
-	vector<string> *m_pPrimaryVolume;
+	vector<Double_t> *fXpos, *fYpos, *fZpos; //Coordinates where the step occurred
+	vector<Double_t> *fXmom, *fYmom, *fZmom; //Momentum direction at the step
+	vector<Double_t> *fXpol, *fYpol, *fZpol; //Polarisation of the particle at the step
+	
+	
+	//Variables present only in the "step mode"
+	vector<Long64_t> *fParentId; //Id of the parent particle (-1 for primary particles)
+	
+	vector<Int_t> *fCreatProc;
+	vector<Long64_t> *fFirstParentId;
+	vector<Int_t> *fDepProc;
 };
 
 #endif

@@ -18,6 +18,7 @@ using std::vector;
 
 class PrimaryGeneratorActionOptPh;
 class ParticleSourceOptPhMessenger;
+class G4VPhysicalVolume;
 
 class ParticleSourceOptPh: public G4VPrimaryGenerator
 {
@@ -36,6 +37,7 @@ public:
 	void SetMomentum(G4double aMomentum);
 	void SetMomentum(G4ParticleMomentum aMomentum);
 	
+	void SetMaxConfineLoop(G4int _max){fMaxConfineLoop = _max;};
 	void SetPosDisType(G4String hSourcePosType) { fSourcePosType = hSourcePosType; }
 	void SetPosDisShape(G4String hShape) { fShape = hShape; }
 	void SetCenterCoords(G4ThreeVector hCenterCoords) { fCenterCoords = hCenterCoords; }
@@ -56,6 +58,7 @@ public:
 	void SetPrimNb(G4int nprim);
 	G4int GetPrimNb()const{return fPrimNb;};
 	
+	const G4VPhysicalVolume* GetPrimVol(){return fVolPrim;};
 	const G4ThreeVector& GetPrimPos()const{return fPosPrim;};
 	const vector<G4ParticleMomentum>& GetPrimMom()const{return fMomPrim;};
 	const vector<G4ThreeVector>& GetPrimPol()const{return fPolPrim;};
@@ -96,9 +99,6 @@ protected:
 	G4ParticleMomentum fMomentumDirection;
 	G4ThreeVector fPolarization;
 	
-	G4ThreeVector fPosition;
-	G4double fTime;
-	
 	
 	G4String fSourcePosType;
 	G4String fShape;
@@ -111,8 +111,16 @@ protected:
 	set<G4String> fVolumeNames;
 	G4String fAngDistType;
 	G4String fEnergyDisType;
+	G4int fMaxConfineLoop;
 	
+	//Stuff to be used internally for generating the primaries
+	G4VPhysicalVolume *fVol;
+	G4ThreeVector fPosition;
+	G4double fTime;
+	
+	//Stuff that is given to the outside world from the class interface (e.g. made for the analysis manager)
 	vector<G4double> fEnPrim;
+	G4VPhysicalVolume *fVolPrim; //This should never ever be deleted inside this class, only reassigned when needed
 	G4ThreeVector fPosPrim;
 	vector<G4ThreeVector> fPolPrim;
 	vector<G4ParticleMomentum> fMomPrim;

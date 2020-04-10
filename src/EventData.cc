@@ -3,116 +3,135 @@
 
 EventDataOptPh::EventDataOptPh()
 {
-	m_iEventId = -1;
-	m_iNbTotHits = -1;
+	fEventId = -1;
+	//fPrimaryVolume = new vector<int>;
 	
-	//m_iNbSteps = -1;
+	fPrimEn = new vector<double>;
 	
-	fPx = new vector<double>;
-	fPy = new vector<double>;
-	fPz = new vector<double>;
+	fPrimaryVolumeIndex=-1;
+	fPrimaryVolumeCopyNum=-1;
 	
-	m_pTrackId = new vector<int>;
+	fPrimary_Xmom = new vector<Double_t>;
+	fPrimary_Ymom = new vector<Double_t>;
+	fPrimary_Zmom = new vector<Double_t>;
 	
-	//m_pParentId = new vector<int>;
-	//m_pParentType = new vector<string>;
+	fPrimary_Xpol = new vector<Double_t>;
+	fPrimary_Ypol = new vector<Double_t>;
+	fPrimary_Zpol = new vector<Double_t>;
 	
-	//m_pCreatorProcess = new vector<string>;
-	m_pDepositingProcess = new vector<string>;
-	m_pPhysVolName = new vector<string>;
 	
-	m_pTime = new vector<double>;
-	fX = new vector<double>;
-	fY = new vector<double>;
-	fZ = new vector<double>;
+	fNbTotHits = -1;
 	
-	//fHitVol = new vector<EventDataOptPh::LdID>;
+	fVolIndex = new vector<Long64_t>;
+	fHitVolId = new vector<Long64_t>;
+	fTime = new vector<Double_t>;
 	
-	//m_pEnergyDeposited = new vector<double>;
-	//m_pKineticEnergy = new vector<double>;
+	fTrackId = new vector<Long64_t>;
+	fPartGener = new vector<Long64_t>;
 	
-	//m_pPrimaryParticleType = new vector<string>;
+	fParentId = new vector<Long64_t>;
 	
-	m_fPrimary_momX = new vector<double>;
-	m_fPrimary_momY = new vector<double>;
-	m_fPrimary_momZ = new vector<double>;
+	fXpos = new vector<Double_t>;
+	fYpos = new vector<Double_t>;
+	fZpos = new vector<Double_t>;
 	
-	m_fPrimary_polX = new vector<double>;
-	m_fPrimary_polY = new vector<double>;
-	m_fPrimary_polZ = new vector<double>;
+	fXmom = new vector<Double_t>;
+	fYmom = new vector<Double_t>;
+	fZmom = new vector<Double_t>;
 	
-	m_pPrimaryVolume = new vector<string>;
+	fXpol = new vector<Double_t>;
+	fYpol = new vector<Double_t>;
+	fZpol = new vector<Double_t>;
+	
+	fCreatProc = new vector<Int_t>;
+	fFirstParentId = new vector<Long64_t>;
+	fDepProc = new vector<Int_t>;
 }
 
 
 EventDataOptPh::~EventDataOptPh()
 {
-	delete m_pTrackId;
+	//delete fPrimaryVolume;
 	
-	delete fPx;
-	delete fPy;
-	delete fPz;
+	delete fPrimEn;
 	
-	//delete fHitVol;
+	delete fPrimary_Xmom;
+	delete fPrimary_Ymom;
+	delete fPrimary_Zmom;
 	
-	//delete m_pParentId;
-	//delete m_pParentType;
+	delete fPrimary_Xpol;
+	delete fPrimary_Ypol;
+	delete fPrimary_Zpol;
 	
-	//delete m_pCreatorProcess;
-	delete m_pDepositingProcess;
-	delete m_pPhysVolName;
+	delete fVolIndex;
+	delete fHitVolId;
+	delete fTime;
 	
-	delete m_pTime;
-	delete fX;
-	delete fY;
-	delete fZ;
+	delete fTrackId;
+	delete fPartGener;
 	
-	delete m_fPrimary_momX;
-	delete m_fPrimary_momY;
-	delete m_fPrimary_momZ;
+	delete fParentId;
 	
-	delete m_fPrimary_polX;
-	delete m_fPrimary_polY;
-	delete m_fPrimary_polZ;
+	delete fXpos;
+	delete fYpos;
+	delete fZpos;
 	
-	delete m_pPrimaryVolume;
+	delete fXmom;
+	delete fYmom;
+	delete fZmom;
+	
+	delete fXpol;
+	delete fYpol;
+	delete fZpol;
+	
+	delete fCreatProc;
+	delete fFirstParentId;
+	delete fDepProc;
 }
 
 
-void EventDataOptPh::Reset()
+void EventDataOptPh::Reset(int primNum)
 {
-	m_iEventId = 0;
-	m_iNbTotHits = 0;
+	fEventId = -1;
 	
-	fPx->clear();
-	fPy->clear();
-	fPz->clear();
+	fPrimEn->assign(primNum,0);
 	
-	//fHitVol->clear();
+	fPrimaryVolumeIndex=-1;
+	fPrimaryVolumeCopyNum=-1;
 	
-	m_pTrackId->clear();
+	fPrimary_Xmom->assign(primNum,0);
+	fPrimary_Ymom->assign(primNum,0);
+	fPrimary_Zmom->assign(primNum,0);
 	
-	//m_pParentId->clear();
-	//m_pParentType->clear();
+	fPrimary_Xpol->assign(primNum,0);
+	fPrimary_Ypol->assign(primNum,0);
+	fPrimary_Zpol->assign(primNum,0);
 	
-	//m_pCreatorProcess->clear();
-	m_pDepositingProcess->clear();
-	m_pPhysVolName->clear();
+	fNbTotHits = 0;
 	
-	m_pTime->clear();
+	fVolIndex->resize(0);
+	fHitVolId->resize(0);
+	fTime->resize(0);
 	
-	fX->clear();
-	fY->clear();
-	fZ->clear();
+	fTrackId->resize(0);
 	
-	m_fPrimary_momX->clear();
-	m_fPrimary_momY->clear();
-	m_fPrimary_momZ->clear();
+	fPartGener->resize(0);
+	fParentId->resize(0);
 	
-	m_fPrimary_polX->clear();
-	m_fPrimary_polY->clear();
-	m_fPrimary_polZ->clear();
+	fXpos->resize(0);
+	fYpos->resize(0);
+	fZpos->resize(0);
 	
-	m_pPrimaryVolume->clear();
+	fXmom->resize(0);
+	fYmom->resize(0);
+	fZmom->resize(0);
+	
+	fXpol->resize(0);
+	fYpol->resize(0);
+	fZpol->resize(0);
+	
+	fCreatProc->resize(0);
+	fFirstParentId->resize(0);
+	fDepProc->resize(0);
 }
 
