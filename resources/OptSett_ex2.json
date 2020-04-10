@@ -1,0 +1,11 @@
+{
+	"setmatprop":{
+		"matname": "LAr",
+		"propfile":{
+			"RINDEX": "larrindex.txt",
+			"ABSLENGTH": "abslen_file.txt",
+			"EFFICIENCY": "eff_file.txt",
+			"RAYLEIGH": "raylen_file.txt"
+		}
+	}
+}

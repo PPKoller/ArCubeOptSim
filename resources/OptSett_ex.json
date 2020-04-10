@@ -1,0 +1,103 @@
+{
+	"setmatprop": {
+		"matname": "LAr",
+		"propfile":{
+			"RINDEX": "larrindex.txt",
+			"ABSLENGTH": "abslen_file.txt",
+			"EFFICIENCY": "eff_file.txt",
+			"RAYLEIGH": "raylen_file.txt"
+		}
+	},
+	
+	"setoptsurf":{
+		"surfname": "LAr2TPB_optsurf",
+		"model": "unified",
+		"type": "dielectric_dielectric",
+		"finish": "rough",
+		"sigma_alpha": 0.1,
+		"propfile": {
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	},
+	
+	"setbordersurf": {
+		"surfname": "LAr2TPB_logsurf",
+		"vol1": "volTPCActive_PV",
+		"vol2": "volTPB_PV",
+		"sigma_alpha": 0.1,
+		"optsurf": "LAr2TPB_optsurf",
+		"propfile": {
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	},
+	
+	"setskinsurf": {
+		"name": "EJ280_skinsurf",
+		"vol": "volWLS_PV",
+		"sigma_alpha": 0.1,
+		"optsurf": "EJ280_optsurf",
+		"propfile": {
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	},
+	
+	"buildoptsurf": {
+		"surfname": "TPB2EJ280_optsurf",
+		"model": "dichroic",
+		"type": "dielectric_dichroic",
+		"finish": "polished",
+		"dichroicfile": "dichroicfile.txt",
+		"propfile": {
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	},
+	
+	"buildbordersurface": {
+		"name": "TPB2EJ280_logsurf",
+		"vol1": "volTPB_PV",
+		"vol2": "volWLS_PV",
+		"optsurf": "TPB2EJ280_optsurf",
+		"propfile":{
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	},
+	
+	"buildskinsurf": {
+		"name": "EJ280_skinsurf",
+		"vol": "volWLS_PV",
+		"optsurf": "EJ280_optsurf",
+		"propfile": {
+			"RINDEX": "rindexfile.txt",
+			"SPECULARLOBECONSTANT": "sl_file.txt",
+			"SPECULARSPIKECONSTANT": "ss_file.txt",
+			"BACKSCATTERCONSTANT": "bs_file.txt",
+			"REFLECTIVITY": "refl_file.txt",
+			"EFFICIENCY": "eff_file.txt"
+		}
+	}
+}
