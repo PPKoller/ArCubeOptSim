@@ -1,0 +1,14 @@
+#/control/verbose 2
+#/run/verbose 2
+#/event/verbose 2
+#/tracking/verbose 2
+
+#The drift direction is "z", the vertical direction is "y" and the direction normal to the light detectors is "x"
+/argoncube/gun/particle opticalphoton
+/argoncube/gun/angtype direction
+/argoncube/gun/direction 0 1 0
+/argoncube/gun/polarization 1 0 0
+/argoncube/gun/position 0 0 315 mm
+/argoncube/gun/primaryNb 10
+
+/run/beamOn 1
