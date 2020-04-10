@@ -4,11 +4,14 @@
 #include <set>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 
 
 AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 { 
+	std::stringstream txt; txt.str("");
+	
 	fAnManager = pAnManager;
 	
 	fAnalysisDir = new G4UIdirectory("/argoncube/analysis/");
@@ -20,7 +23,8 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	fVerboseCmd->SetGuidance(" Default 1");
 	fVerboseCmd->SetParameterName("Verb", true);
 	fVerboseCmd->SetDefaultValue(1);
-	fVerboseCmd->SetRange("Verb>=0 && Verb<=2");
+	txt << "Verb>=0 && Verb<=" << AnalysisManagerOptPh::kDebug;
+	fVerboseCmd->SetRange( txt.str().c_str() );
 	fVerboseCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
 	fPrintModuloCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/PrintModulo",this);
@@ -51,6 +55,17 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	fDefOptSDCmd->SetParameterName("VolName", true, true);
 	fDefOptSDCmd->SetDefaultValue("NULL");
 	fDefOptSDCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+	
+	// Autoflush and autosave for data tree
+	fAutoFlushCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/SetAutoFlush",this);
+	fAutoFlushCmd->SetGuidance("Autoflush settings of the data TTree (see ROOT reference guide for more).");
+	fAutoFlushCmd->SetParameterName("AutoFlush", false, false);
+	fAutoFlushCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+	
+	fAutoSaveCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/SetAutoSave",this);
+	fAutoSaveCmd->SetGuidance("Autosave settings of the data TTree (see ROOT reference guide for more).");
+	fAutoSaveCmd->SetParameterName("AutoSave", false, false);
+	fAutoSaveCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 }
 
 
@@ -64,6 +79,8 @@ AnalysisOptPhMessenger::~AnalysisOptPhMessenger()
 	delete fDefOptSDCmd;
 	
 	delete fAnalysisDir;
+	delete fAutoSaveCmd;
+	delete fAutoFlushCmd;
 }
 
 
@@ -88,13 +105,13 @@ void AnalysisOptPhMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewV
 	
 	if(pUIcommand == fSaveDataCmd){
 		G4cout << "\nSetting the analysis manager saving flag to: " << fSaveDataCmd->ConvertToString(fSaveDataCmd->GetNewIntValue(hNewValue)) << G4endl;
-		fAnManager->SetSaveData(fSaveDataCmd->GetNewIntValue(hNewValue));
+		fAnManager->SetSaveData((AnalysisManagerOptPh::datasave)fSaveDataCmd->GetNewIntValue(hNewValue));
 		return;
 	}
 	
 	if(pUIcommand == fFileNameCmd){
 		G4cout << "\nSetting the tree file name to: " << hNewValue << G4endl;
-		fAnManager->SetSaveData(true);
+		if(fAnManager->GetSaveStatus()<=0) fAnManager->SetSaveData(); //Set a minimal saving data
 		fAnManager->SetDataFilename(hNewValue);
 		return;
 	}
@@ -102,6 +119,19 @@ void AnalysisOptPhMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewV
 	if(pUIcommand == fDefOptSDCmd){
 		G4cout << "\nSetting the optical photons sensitive volumes file name to: " << hNewValue << G4endl;
 		fAnManager->DefineOptPhSensDet(hNewValue);
+		return;
+	}
+	
+	if(pUIcommand == fAutoFlushCmd){
+		G4cout << "\nSetting the data TTree autoflush to " << hNewValue << G4endl;
+		fAnManager->SetAutoFlush( std::stoll(hNewValue) );
+		return;
+	}
+	
+	if(pUIcommand == fAutoSaveCmd){
+		G4cout << "\nSetting the data TTree autosave to " << hNewValue << G4endl;
+		fAnManager->SetAutoSave( std::stoll(hNewValue) );
+		return;
 	}
 	
 	

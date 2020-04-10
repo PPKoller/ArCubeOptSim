@@ -5,6 +5,8 @@
 //#include "OptPhHit.hh"
 #include "EventData.hh"
 
+#include "TNamed.h"
+
 #include "G4SDManager.hh"
 #include "G4Run.hh"
 #include "G4Event.hh"
@@ -13,6 +15,8 @@
 #include "G4StepStatus.hh"
 #include "G4VProcess.hh"
 #include "G4PhysicalVolumeStore.hh"
+
+#include "nlohmann/json.hpp"
 
 #include <numeric>
 #include <fstream>
@@ -24,17 +28,24 @@ using std::stringstream;
 using std::set;
 using std::ofstream;
 
+using json = nlohmann::json;
 
 AnalysisManagerOptPh::AnalysisManagerOptPh(PrimaryGeneratorActionOptPh *pPrimaryGeneratorAction)
 {
 	fMessenger = new AnalysisOptPhMessenger(this);
 	
-	fVerbose=0;
+	fNav = NULL;
+	
+	fVerbose=AnalysisManagerOptPh::kSilent;
 	fPrintModulo=0;
+	
+	fCurrentEvent=-1;
 	
 	fPrimaryGeneratorAction = pPrimaryGeneratorAction;
 	
-	fSave=0;
+	fSave=kOff;
+	
+	fProcTable = NULL;
 	
 	//fPmtHitsCollectionID = -1;
 	
@@ -45,8 +56,8 @@ AnalysisManagerOptPh::AnalysisManagerOptPh(PrimaryGeneratorActionOptPh *pPrimary
 	fTreeFile=NULL;
 	fTree=NULL;
 	
-	fAutoSaveEvs = 10000;
-	fAutoFlushEvs = 10000;
+	fAutoSaveEvs = 100;
+	fAutoFlushEvs = 100;
 }
 
 AnalysisManagerOptPh::~AnalysisManagerOptPh()
@@ -61,7 +72,14 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 {
 	//G4cout << "\nEntering in AnalysisManagerOptPh::BeginOfRun(...)" << G4endl;
 	
-	if(fSave==0){
+	fProcTable = G4ProcessTable::GetProcessTable();
+	
+	std::string vol_dict = BuildPysVolDict();
+	std::string proc_dict = BuildProcsDict();
+	
+	fCurrentEvent=-1;
+	
+	if(fSave<=kOff){
 		G4cout << "\nWARNING AnalysisManagerOptPh::BeginOfRun(...) ---> AnalysisManagerOptPh::BeginOfRun(...): Data will not be saved." << G4endl;
 		return;
 	}
@@ -69,18 +87,28 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	fTreeFile = new TFile(fDataFilename.c_str(), "RECREATE", "File containing event data of optical photon simulations of ArgonCube");
 	
 	if(!fTreeFile){//Here there is a problem
-		fSave = 0; //Do this to save from application crashing
+		fSave = kOff; //Do this to save from application crashing
 		return;
 	}
+	
+	
+	TNamed *tn_vol_dict = new TNamed("vol_dict", vol_dict.c_str());
+	
+	TNamed *tn_proc_dict = new TNamed("proc_dict", proc_dict.c_str());
 	
 	TParameter<int>* ptTParNbEventsToSimulate = new TParameter<int>("EventsNb", fNbEventsToSimulate);
 	
 	fNbPrim = fPrimaryGeneratorAction->GetPrimNb();
 	TParameter<int>* ptParNbPrimaryPhotPerEvent = new TParameter<int>("PrimNb", fNbPrim);
 	
+	if(fTreeFile) fTreeFile->WriteTObject(tn_vol_dict, 0, "overwrite");
+	if(fTreeFile) fTreeFile->WriteTObject(tn_proc_dict, 0, "overwrite");
 	if(fTreeFile) fTreeFile->WriteTObject(ptTParNbEventsToSimulate, 0, "overwrite");
 	if(fTreeFile) fTreeFile->WriteTObject(ptParNbPrimaryPhotPerEvent, 0, "overwrite");
 	
+	
+	delete tn_vol_dict;
+	delete tn_proc_dict;
 	delete ptTParNbEventsToSimulate;
 	delete ptParNbPrimaryPhotPerEvent;
 	
@@ -91,53 +119,90 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	gROOT->ProcessLine("#include <vector>");
 	gROOT->ProcessLine("#include <string>");
 
-	fTree->Branch("eventid", &fEventData->m_iEventId, "eventid/I");
+	fTree->Branch("EvId", &fEventData->fEventId, "eventid/I");
 	
 	//Primary particle savings
 	//if(!fLite) fTree->Branch("type_pri", "vector<string>", &fEventData->m_pPrimaryParticleType);
-	fTree->Branch("prim_vol", "vector<string>", &fEventData->m_pPrimaryVolume);
-	fTree->Branch("prim_xpos", &fEventData->m_fPrimary_posX, "prim_xpos/D");
-	fTree->Branch("prim_ypos", &fEventData->m_fPrimary_posY, "prim_ypos/D");
-	fTree->Branch("prim_zpos", &fEventData->m_fPrimary_posZ, "prim_zpos/D");
-	if(fSave>1) fTree->Branch("prim_xmom", "vector<double>", &fEventData->m_fPrimary_momX);
-	if(fSave>1) fTree->Branch("prim_ymom", "vector<double>", &fEventData->m_fPrimary_momY);
-	if(fSave>1) fTree->Branch("prim_zmom", "vector<double>", &fEventData->m_fPrimary_momZ);
-	if(fSave>1) fTree->Branch("prim_xpol", "vector<double>", &fEventData->m_fPrimary_polX);
-	if(fSave>1) fTree->Branch("prim_ypol", "vector<double>", &fEventData->m_fPrimary_polY);
-	if(fSave>1) fTree->Branch("prim_zpol", "vector<double>", &fEventData->m_fPrimary_polZ);
+	//fTree->Branch("prim_vol_index", "vector<long>", &fEventData->fPrimaryVolumeIndex);
+	fTree->Branch("prim_vol_index", &fEventData->fPrimaryVolumeIndex, "prim_vol_index/L");//Fill at start of Event
+	fTree->Branch("prim_vol_cpnm", &fEventData->fPrimaryVolumeCopyNum, "prim_vol_cpnm/L");//Fill at start of Event
+	fTree->Branch("prim_en", "vector<Double_t>", &fEventData->fPrimEn);//Fill at start of Event
+	fTree->Branch("prim_Xpos", &fEventData->fPrimary_Xpos, "prim_Xpos/D");//Fill at start of Event
+	fTree->Branch("prim_Ypos", &fEventData->fPrimary_Ypos, "prim_Ypos/D");//Fill at start of Event
+	fTree->Branch("prim_Zpos", &fEventData->fPrimary_Zpos, "prim_Zpos/D");//Fill at start of Event
+	fTree->Branch("prim_Xmom", "vector<Double_t>", &fEventData->fPrimary_Xmom);//Fill at start of Event
+	fTree->Branch("prim_Ymom", "vector<Double_t>", &fEventData->fPrimary_Ymom);//Fill at start of Event
+	fTree->Branch("prim_Zmom", "vector<Double_t>", &fEventData->fPrimary_Zmom);//Fill at start of Event
+	fTree->Branch("prim_Xpol", "vector<Double_t>", &fEventData->fPrimary_Xpol);//Fill at start of Event
+	fTree->Branch("prim_Ypol", "vector<Double_t>", &fEventData->fPrimary_Ypol);//Fill at start of Event
+	fTree->Branch("prim_Zpol", "vector<Double_t>", &fEventData->fPrimary_Zpol);//Fill at start of Event
+	
+	//Hits related data
+	if(fSave<kSdSteps) fTree->Branch("totalhits", &fEventData->fNbTotHits, "totalhits/L");
+	if(fSave<kSdSteps) fTree->Branch("hit_vol_index", "vector<Long64_t>", &fEventData->fVolIndex);//ID of the touchable volume (it is a whish!). //Fill at step stage
+	if(fSave<kSdSteps) fTree->Branch("hit_vol_copy", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
+	if(fSave<kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
+	
+	//Extended information of hits related data
+	if(fSave==kHitsExt) fTree->Branch("hit_trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_partgen", "vector<Int_t>", &fEventData->fPartGener);//Fill at step stage
+	
+	if(fSave==kHitsExt) fTree->Branch("hit_xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
+	
+	if(fSave==kHitsExt) fTree->Branch("hit_xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
+	
+	if(fSave==kHitsExt) fTree->Branch("hit_xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
+	if(fSave==kHitsExt) fTree->Branch("hit_zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
+	
+	//Full step mode
+	if(fSave>=kSdSteps) fTree->Branch("totsteps", &fEventData->fNbTotHits, "totsteps/I");//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("vol_index", "vector<long>", &fEventData->fVolIndex);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("vol_copy", "vector<long>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
+	
+	if(fSave>=kSdSteps) fTree->Branch("trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at end of Event
+	if(fSave>=kSdSteps) fTree->Branch("partgener", "vector<Int_t>", &fEventData->fPartGener);//Fill at end of Event
+	if(fSave>=kSdSteps) fTree->Branch("parentid", "vector<Int_t>", &fEventData->fParentId);//Fill at end of Event
+	if(fSave>=kSdSteps) fTree->Branch("firstparentid", "vector<Int_t>", &fEventData->fFirstParentId);//Fill at end of Event
+	if(fSave>=kSdSteps) fTree->Branch("creatproc", "vector<Int_t>", &fEventData->fCreatProc);//Fill at end of Event
+	if(fSave>=kSdSteps) fTree->Branch("deposproc", "vector<Int_t>", &fEventData->fDepProc);//Fill at step stage
+	
+	if(fSave>=kSdSteps) fTree->Branch("xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
+	if(fSave>=kSdSteps) fTree->Branch("zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
 	
 	
-	//Hits realated savings (steps)
-	//fTree->Branch("ntpmthits", &fEventData->m_iNbTopPmtHits, "ntpmthits/I");
-	//fTree->Branch("nbpmthits", &fEventData->m_iNbBottomPmtHits, "nbpmthits/I");
-	fTree->Branch("totalhits", &fEventData->m_iNbTotHits, "totalhits/I");
-	//fTree->Branch("etot", &fEventData->m_dTotalDepEn, "etot/D");
+	fEventData->fPrimaryVolumeIndex = -1;
 	
-	fTree->Branch("Px", "vector<double>", &fEventData->fPx);
-	fTree->Branch("Py", "vector<double>", &fEventData->fPy);
-	fTree->Branch("Pz", "vector<double>", &fEventData->fPz);
+	fEventData->fPrimEn->assign(fNbPrim,0);
 	
-	//fTree->Branch("HitVol", "vector<int>", &fEventData->fHitVol);
+	fEventData->fPrimary_Xmom->assign(fNbPrim,0);
+	fEventData->fPrimary_Ymom->assign(fNbPrim,0);
+	fEventData->fPrimary_Zmom->assign(fNbPrim,0);
 	
-	fTree->Branch("trackid", "vector<int>", &fEventData->m_pTrackId);
-	//if(fSave>1) fTree->Branch("parttype", "vector<string>", &fEventData->m_pParticleType);
-	//if(fSave>1) fTree->Branch("parentid", "vector<int>", &fEventData->m_pParentId);
-	//if(fSave>1) fTree->Branch("parenttype", "vector<string>", &fEventData->m_pParentType);
-	//if(fSave>1) fTree->Branch("creaproc", "vector<string>", &fEventData->m_pCreatorProcess);
-	if(fSave>1) fTree->Branch("deposproc", "vector<string>", &fEventData->m_pDepositingProcess);
-	//if(fSave>1) fTree->Branch("physvol", "vector<string>", &fEventData->m_pPhysVolName);
-	if(fSave>1) fTree->Branch("time", "vector<double>", &fEventData->m_pTime);
-	if(fSave>1) fTree->Branch("xpos", "vector<double>", &fEventData->fX);
-	if(fSave>1) fTree->Branch("ypos", "vector<double>", &fEventData->fY);
-	if(fSave>1) fTree->Branch("zpos", "vector<double>", &fEventData->fZ);
-	//if(fSave>1) fTree->Branch("edep", "vector<double>", &fEventData->m_pEnergyDeposited);
-	
+	fEventData->fPrimary_Xpol->assign(fNbPrim,0);
+	fEventData->fPrimary_Ypol->assign(fNbPrim,0);
+	fEventData->fPrimary_Zpol->assign(fNbPrim,0);
 	
 	//fTree->SetMaxTreeSize((int)1e6);
 	fTree->SetAutoFlush(fAutoFlushEvs);
 	fTree->SetAutoSave(fAutoSaveEvs);
 	
-	
+	fTrackIDs.clear();
+	fTrackParentIDsMap.clear();
+	fTrackGenerationMap.clear();
+	fFirstParentIDMap.clear();
 	
 	
 	
@@ -148,12 +213,15 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 
 void AnalysisManagerOptPh::EndOfRun(const G4Run *pRun)
 {
+	fProcTable = NULL;
+	fProcVec = NULL;
+	
 	if(fSave==0) return;
 	
 	if(fTreeFile){
 		if(fTree){
 			fTreeFile->WriteTObject(fTree, 0, "overwrite");
-			delete fTreeFile;
+			delete fTreeFile; //This deletes also the TTree owned by the TFile
 			fTree=NULL;
 		}
 		fTreeFile=NULL;
@@ -163,13 +231,12 @@ void AnalysisManagerOptPh::EndOfRun(const G4Run *pRun)
 
 void AnalysisManagerOptPh::BeginOfEvent(const G4Event *pEvent)
 {
-	
 	// grab event ID
-	G4int event_id = pEvent->GetEventID();
+	fCurrentEvent = pEvent->GetEventID();
 	
 	// print this information event by event (modulo n)  	
-	if( (fVerbose>0) && (fPrintModulo>0) && (event_id%fPrintModulo == 0) ){
-		G4cout << "\nInfo --> AnalysisManagerOptPh::BeginOfEvent(...): Begin of event: " << event_id  << G4endl;
+	if( (fVerbose>=kInfo) && (fPrintModulo>0) && (fCurrentEvent%fPrintModulo == 0) ){
+		G4cout << "\nInfo --> AnalysisManagerOptPh::BeginOfEvent(...): Begin of event: " << fCurrentEvent  << G4endl;
 	}
 	
 	/*
@@ -179,261 +246,204 @@ void AnalysisManagerOptPh::BeginOfEvent(const G4Event *pEvent)
 	}
 	*/
 	
-	fEventData->Reset();
+	fEventData->Reset(fNbPrim);
+	
+	//Primary particles information
+	//Volume id.......
+	G4ThreeVector posVec = fPrimaryGeneratorAction->GetPrimPos();
+	
+	//Here I can still use the tracking navigator as the tracking have not start yet
+	if(!fNav) fNav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
+	G4TouchableHandle touch = fNav->CreateTouchableHistory();
+	G4VPhysicalVolume *fPrimVol = fNav->LocateGlobalPointAndSetup(posVec, NULL, true);
+	//G4VPhysicalVolume *fPrimVol = fPrimaryGeneratorAction->GetPrimVol();
+	
+	vector<G4ParticleMomentum> momVec = fPrimaryGeneratorAction->GetPrimMom();
+	vector<G4ThreeVector> polVec = fPrimaryGeneratorAction->GetPrimPol();
+	
+	if(fSave>AnalysisManagerOptPh::kOff){
+		fEventData->fPrimaryVolumeIndex = FindVolumeIndex(fPrimVol);
+	
+		fEventData->fPrimary_Xpos = posVec.x();
+		fEventData->fPrimary_Ypos = posVec.y();
+		fEventData->fPrimary_Zpos = posVec.z();
+	
+		for(unsigned iPrim=0; iPrim<momVec.size(); iPrim++){
+			fEventData->fPrimary_Xmom->at(iPrim) = momVec.at(iPrim).x();
+			fEventData->fPrimary_Ymom->at(iPrim) = momVec.at(iPrim).y();
+			fEventData->fPrimary_Zmom->at(iPrim) = momVec.at(iPrim).z();
+		}
+
+		for(unsigned iPrim=0; iPrim<polVec.size(); iPrim++){
+			fEventData->fPrimary_Xpol->at(iPrim) = polVec.at(iPrim).x();
+			fEventData->fPrimary_Ypol->at(iPrim) = polVec.at(iPrim).y();
+			fEventData->fPrimary_Zpol->at(iPrim) = polVec.at(iPrim).z();
+		}
+	}
+	
+	
+	if(fVerbose>=kDebug){
+		G4cout << "Debug --> AnalysisManagerOptPh::BeginOfEvent(...): EventID: " << fCurrentEvent << "; Primary volume: " << fPrimVol->GetName() << "; Copy number: " << touch->GetCopyNumber() << G4endl;
+	}
+	
 }
 
 
 void AnalysisManagerOptPh::EndOfEvent(const G4Event *pEvent)
 {
-	//G4HCofThisEvent* pHCofThisEvent = pEvent->GetHCofThisEvent();
-	//OptPhHitsCollection* pHitsCollection = NULL;
-	
-	/*
-	//Primary particles information
-	G4ThreeVector posVec = fPrimaryGeneratorAction->GetPrimPos();
-	vector<G4ParticleMomentum> momVec = fPrimaryGeneratorAction->GetPrimMom();
-	vector<G4ThreeVector> polVec = fPrimaryGeneratorAction->GetPrimPol();
-	
-	
-	G4int iNbHits = 0;
-	
-	if(pHCofThisEvent){
-		if(fPmtHitsCollectionID != -1){
-			pPmtHitsCollection = (HitsCollection *)(pHCofThisEvent->GetHC(fHitsCollectionID));
-			if(pPmtHitsCollection){
-				iNbHits = pPmtHitsCollection->entries();
-			}
-		}
-	}
-	
-	
-	if(fVerbose>1){
-		if(fPrintModulo>0){
-			if (event_id%fPrintModulo == 0){
-				G4cout << "----> Number of primaries: " << posVec.size() << G4endl;
-			}
-		}else{
-			G4cout << "---> Event " << event_id << ". Number of primaries: " << posVec.size() << G4endl;
-		}
-	}
-	
-	
-	if(fVerbose>0){
-		if(!pHitsCollection){
-			G4cout << "\nWARNING ---> AnalysisManagerOptPh::EndOfEvent(...): the pointer <pPmtHitsCollection> is 0!" << endl;
-			G4cout << "Value of <fPmtHitsCollectionID>: " << fPmtHitsCollectionID << G4endl;
-		}
+	if(fSave>AnalysisManagerOptPh::kOff){
+		std::map<int, int>::iterator iT;
+		int nTracks = fTrackParentIDsMap.size();
+		fEventData->fPartGener->resize(nTracks);
+		fEventData->fFirstParentId->resize(nTracks);
+		fEventData->fCreatProc->resize(nTracks);
 		
-		if(fPrintModulo>0){
-			if (event_id%fPrintModulo == 0){
-				G4cout << "Info ---> AnalysisManagerOptPh::EndOfEvent(...): Total number of hits: " << iNbPmtHits << G4endl;
-			}
-		}else{
-			G4cout << "Info ---> AnalysisManagerOptPh::EndOfEvent(...): Event " << event_id << ". Total number of hits: " << iNbHits << G4endl;
-		}
-	}
-	
-	
-	
-	if(fSave==0) return;
-	
-	fEventData->m_fPrimary_posX = posVec.x();
-	fEventData->m_fPrimary_posY = posVec.y();
-	fEventData->m_fPrimary_posZ = posVec.z();
-	
-	if(fSave>1){
-		for(unsigned iEnt=0; iEnt<momVec.size(); iEnt++){
-			fEventData->m_fPrimary_momX->push_back( momVec.at(iEnt).x() );
-			fEventData->m_fPrimary_momY->push_back( momVec.at(iEnt).y() );
-			fEventData->m_fPrimary_momZ->push_back( momVec.at(iEnt).z() );
-		}
-	
-		for(unsigned iEnt=0; iEnt<polVec.size(); iEnt++){
-			fEventData->m_fPrimary_polX->push_back( polVec.at(iEnt).x() );
-			fEventData->m_fPrimary_polY->push_back( polVec.at(iEnt).y() );
-			fEventData->m_fPrimary_polZ->push_back( polVec.at(iEnt).z() );
-		}
-	}
-	
-	
-	//Hits information
-	fEventData->m_iEventId = event_id;
-	fEventData->m_iNbTotHits = iNbHits;
-	
-	fEventData->m_pTrackId->resize(iNbHits);
-	
-	if(fSave>1){
-		fEventData->m_pParticleType->resize(iNbHits);
-		fEventData->m_pParticleType->resize(iNbHits);
-		fEventData->m_pParentId->resize(iNbHits);
-		fEventData->m_pParentType->resize(iNbHits);
-		
-		fEventData->m_pPhysVolName->resize(iNbHits);
-		
-		fEventData->m_pTime->resize(iNbHits);
-		
-		fEventData->fX->resize(iNbHits);
-		fEventData->fY->resize(iNbHits);
-		fEventData->fZ->resize(iNbHits);
-		
-		fEventData->m_pEnergyDeposited->resize(iNbHits);
-	}
-	
-	fEventData->fPx->resize(iNbHits);
-	fEventData->fPy->resize(iNbHits);
-	fEventData->fPz->resize(iNbHits);
-	
-	fEventData->fHitVol->resize(iNbHits);
-	
-	//This container is just to check whether a track has more than 1 hit (bad!)
-	std::set<G4int> tracksContainer;
-	
-	//Calculate how many hits are in the top PMT and how many in the bottom
-	for(G4int iH=0; iH<iNbPmtHits; iH++){
-		OptPhHit *pHit = (OptPhHit*)pHitsCollection->GetHit(iH);
-		
-		G4int trID = pHit->GetTrackID();
-		if(tracksContainer.find(trID)==tracksContainer.end()){
-			tracksContainer.insert(trID);
-		}else{
-			G4cout << "WARNING ---> AnalysisManagerOptPh::EndOfEvent(...):" << " Event " << event_id << ". The track " << trID << " already had an hit!" << endl;
-		}
-		
-		if(fSave>1) fEventData->m_pTrackId->at(iH) = trID;
-		//if(fSave>1) fEventData->m_pParticleType->at(iH) = pHit->GetPartType();
-		
-		//if(fSave>1) fEventData->m_pParentId->at(iH) = pHit->GetParentTrackID();
-		//if(fSave>1) fEventData->m_pParentType->at(iH) = pHit->GetParentType();
-		
-		//if(fSave>1) fEventData->m_pCreatorProcess->at(iH) = pHit->GetCreatProc();
-		if(fSave>1) fEventData->m_pDepositingProcess->at(iH) = pHit->GetDepProc();
-		
-		G4String VolName = "";
-		
-		if(pHit->GetPhysVol()){
-			VolName = pHit->GetPhysVol()->GetName();
-		}
-		if(fSave>1) fEventData->m_pPhysVolName->at(iH)=VolName;
-		
-		
-		fEventData->m_pTime->at(iH) = pHit->GetTime();
-		
-		if(fSave>1) fEventData->fX->at(iH) = (pHit->GetHitPos()).x();
-		if(fSave>1) fEventData->fY->at(iH) = (pHit->GetHitPos()).y();
-		if(fSave>1) fEventData->fZ->at(iH) = (pHit->GetHitPos()).z();
-		
-		if(fSave>1) fEventData->m_pEnergyDeposited->at(iH) = pHit->GetEdep();
-		fEventData->m_dTotalDepEn += pHit->GetEdep();
-		
-		fEventData->fPx->at(iH) = (pHit->GetHitMom()).x();
-		fEventData->fPy->at(iH) = (pHit->GetHitMom()).y();
-		fEventData->fPz->at(iH) = (pHit->GetHitMom()).z();
-		
-		if(fVerbose>2){
-			if(fPrintModulo>0){
-				if (event_id%fPrintModulo == 0){
-					G4cout << "Debug ---> AnalysisManagerOptPh::EndOfEvent(...): Saved Hit " << iH << G4endl;
+		if(nTracks>0){
+			int iTrack=0;
+			
+			for(iT=fTrackParentIDsMap.begin(); iT!=fTrackParentIDsMap.end(); ++iT){
+				int trackid = iT->first;
+				int parentid = iT->second;
+				if(parentid!=0){
+					fFirstParentIDMap[trackid] = fFirstParentIDMap[parentid];
+					fTrackGenerationMap[trackid] = fTrackGenerationMap[parentid]+1;
 				}
-			}else{
-				G4cout << "Debug ---> AnalysisManagerOptPh::EndOfEvent(...): Event " << event_id << ". Saved Hit " << iH << G4endl;
+			
+				fEventData->fPartGener->at( iTrack ) = fTrackGenerationMap[trackid];
+				fEventData->fFirstParentId->at( iTrack ) = fFirstParentIDMap[trackid];
+				fEventData->fCreatProc->at( iTrack ) = fTrackCreatProc[trackid];
+			
+				iTrack++;
 			}
 		}
-	}//End of the loop over the hits
+		
+		//fProcTable = NULL;
 	
-	
-	if(fTree) fTree->Fill();
-	*/
+		if(fTree) fTree->Fill();
+	}
 }
 
 
 void AnalysisManagerOptPh::Step(const G4Step *pStep)
 {
-	//G4cout << "\nEntering in AnalysisManagerOptPh::Step\n" << G4endl;
+	if((fVerbose>=kDebug) || fStepsDebug) G4cout << "\nDebug ---> AnalysisManagerOptPh::Step(...): Entering in AnalysisManagerOptPh::Step\n" << G4endl;
 	
-	if( (fVerbose<3) && (fOptPhSenDetVolNames.empty()) )return;
-	//if(!pStep) return; //This just avoids problems
+	//if( (fVerbose<3) && (fOptPhSenDetVolNames.empty()) )return;
+	if(!pStep) return; //This just avoids problems, although would be a big problem to be fixed
 	
 	G4Track *track = pStep->GetTrack();
-	//if(!track) return; //This just avoids problems
 	
-	G4String partname = track->GetDefinition()->GetParticleName();
-	if(partname!=G4String("opticalphoton")) return;
+	G4StepPoint *preStepPoint = pStep->GetPreStepPoint();
 	
-	G4StepPoint *point1 = pStep->GetPreStepPoint();
-	G4StepPoint *point2 = pStep->GetPostStepPoint();
-	if(!(point1 && point2)) return;
+	G4VPhysicalVolume *Vol_pre = preStepPoint->GetTouchableHandle()->GetVolume();
 	
-	/*
-	G4TouchableHandle touch1 = point1->GetTouchableHandle();
-	G4TouchableHandle touch2 = point2->GetTouchableHandle();
 	
-	G4String Vol1 = "None";
-	G4String Vol2 = "None";
+	G4StepPoint *postStepPoint = pStep->GetPostStepPoint();
 	
-	if(touch1->GetVolume()){
-		Vol1 = touch1->GetVolume()->GetName(); 
-	}
-	if(touch2->GetVolume()){
-		Vol2 = touch2->GetVolume()->GetName(); 
-	}
+	G4TouchableHandle touch = postStepPoint->GetTouchableHandle();
 	
-	G4String TrackStat;
+	G4VPhysicalVolume *Vol = touch->GetVolume();
 	
-	//Check whether the particle is in one of the sensitive volumes
-	if((Vol2==G4String("TopPMTPhotocathode"))||(Vol2==G4String("BottomPMTPhotocathode"))){
-		
-		if(fVerbose>2){
-			if(point2->GetStepStatus()==fGeomBoundary){
-				G4cout << "\nDebug ---> AnalysisManagerOptPh::Step(...): " << "Optical photon at volumes boundary. Entering into volume \"" << Vol2 << "\" from volume \"" << Vol1 << "." << G4endl;
-			}else{
-				G4cout << "\nStep Debug ---> " << "Optical photon post step point in volume \"" << Vol2 << "\"" << G4endl;
+	if(!Vol) return;//This would be a big problem.... implement an error message
+	
+	
+	//Volume printouts
+	if(fVerbose>=kDebug || fStepsDebug){
+		if(postStepPoint->GetStepStatus()==fGeomBoundary){
+			if( (fSave==kAll) || ((fSave<kAll) && (fOptPhSenDetVolPtrs.find(Vol)!=fOptPhSenDetVolPtrs.end()) ) ){
+				G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Optical photon at volumes boundary. Entering into volume \"" << Vol->GetName() << "\" from volume \"" << Vol_pre->GetName() << "." << G4endl;
 			}
-			
-			G4TrackStatus trstatus = track->GetTrackStatus();
-			if(trstatus==fAlive) TrackStat = "Alive";
-			if(trstatus==fStopButAlive) TrackStat = "StopButAlive";
-			if(trstatus==fStopAndKill) TrackStat = "StopAndKill";
-			if(trstatus==fKillTrackAndSecondaries) TrackStat = "KillTrackAndSecondaries";
-			if(trstatus==fSuspend) TrackStat = "Suspend";
-			if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
-		
-			G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Status of optical photon particle: " << TrackStat << G4endl;
-			G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Process selected in this step: " << point2->GetProcessDefinedStep()->GetProcessName() << G4endl;
 		}
 		
+		G4String TrackStat = "";
 		
-		
+		G4TrackStatus trstatus = track->GetTrackStatus();
+		if(trstatus==fAlive) TrackStat = "Alive";
+		if(trstatus==fStopButAlive) TrackStat = "StopButAlive";
+		if(trstatus==fStopAndKill) TrackStat = "StopAndKill";
+		if(trstatus==fKillTrackAndSecondaries) TrackStat = "KillTrackAndSecondaries";
+		if(trstatus==fSuspend) TrackStat = "Suspend";
+		if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
+	
+		G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Status of optical photon particle: " << TrackStat << G4endl;
+		G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Process selected in this step: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << G4endl;
 	}
 	
-	if((Vol1==G4String("TopPMTPhotocathode"))||(Vol1==G4String("BottomPMTPhotocathode"))){
-		
-		if(fVerbose>2){
-			if(point1->GetStepStatus()==fGeomBoundary){
-				G4cout << "\nStep Debug ---> " << "Optical photon at volumes surfaces. First step into volume \"" << Vol1 << G4endl;
-			}else{
-				G4cout << "\nStep Debug ---> " << "Optical photon post step point in volume \"" << Vol2 << "\"" << G4endl;
+	
+	//Check whether the particle is in one of the sensitive volumes defined by the user
+	if( (fSave<kAll) && (fOptPhSenDetVolPtrs.find(Vol)==fOptPhSenDetVolPtrs.end()) ){
+		return; //There isn't anything to save here
+	}
+	
+	
+	//Here start to get stuff to be saved
+	fNbTotHits += 1; //This is the number of the total recorded steps in "stepping analisys mode"
+	
+	//This should be replaced with a unique ID of the physical volume (or the touchable)... how?
+	//fEventData->fVolName->push_back( vol->GetName() );
+	
+	fEventData->fVolIndex->push_back( fOptPhSenDetVolPtrsMap[Vol] );//ID of the physical volume (from a std::map)
+	fEventData->fHitVolId->push_back( touch->GetCopyNumber() );//Copy number of the physical volume????
+	//fEventData->fHitVolId->push_back( touch->GetId() ); //This doesn't exists of course
+	
+	fEventData->fTime->push_back( postStepPoint->GetGlobalTime() );
+	
+	if(fSave>=kHitsExt){
+		int trackid = track->GetTrackID();
+		if( fProcTable && (fTrackParentIDsMap.find(trackid) == fTrackParentIDsMap.end()) ){
+			
+			//This code is executed only the first time that the specific track is found
+			int parentid = track->GetParentID();
+			fTrackParentIDsMap[trackid] = parentid;
+			
+			if(parentid==0){//This is a primary track
+				fTrackGenerationMap[trackid] = 1;
+				fFirstParentIDMap[trackid] = trackid;
 			}
 			
-			G4TrackStatus trstatus = track->GetTrackStatus();
-			
-			if(trstatus==fAlive) TrackStat = "Alive";
-			if(trstatus==fStopButAlive) TrackStat = "StopButAlive";
-			if(trstatus==fStopAndKill) TrackStat = "StopAndKill";
-			if(trstatus==fKillTrackAndSecondaries) TrackStat = "KillTrackAndSecondaries";
-			if(trstatus==fSuspend) TrackStat = "Suspend";
-			if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
-		
-			G4cout << "Step Debug ---> " << "Status of optical photon particle: " << TrackStat << G4endl;
-			G4cout << "Step Debug ---> " << "Process selected in this step: " << point2->GetProcessDefinedStep()->GetProcessName() << G4endl;
+			if(fSave>=kSdSteps){
+				if(!track->GetCreatorProcess()){//It's a primary track
+					fTrackCreatProc[trackid] = 0;
+				}else{
+					int retcode = FindProcessIndex(track->GetCreatorProcess()); //This is the index if the process is found (>=0), otherwise a negative return code is returned
+					if(retcode>=0){
+						fTrackCreatProc[trackid] = retcode+1; //Add 1 to the index as 0 is reserved for primary tracks (no creator process)
+					}else{
+						fTrackCreatProc[trackid] = retcode; //This is a negative number and indicates for problems
+					}
+				}
+			}
 		}
 		
-	}
-	*/
+		fEventData->fTrackId->push_back( trackid );
+		fEventData->fXpos->push_back( (postStepPoint->GetPosition()).x() );
+		fEventData->fYpos->push_back( (postStepPoint->GetPosition()).y() );
+		fEventData->fZpos->push_back( (postStepPoint->GetPosition()).z() );
+		fEventData->fXmom->push_back( (postStepPoint->GetMomentumDirection()).x() );
+		fEventData->fYmom->push_back( (postStepPoint->GetMomentumDirection()).y() );
+		fEventData->fZmom->push_back( (postStepPoint->GetMomentumDirection()).z() );
+		fEventData->fXpol->push_back( (postStepPoint->GetPolarization()).x() );
+		fEventData->fYpol->push_back( (postStepPoint->GetPolarization()).y() );
+		fEventData->fZpol->push_back( (postStepPoint->GetPolarization()).z() );
+		
+		if(fSave>=kSdSteps){
+			if(fProcTable){
+				
+				if(!postStepPoint->GetProcessDefinedStep()){
+					fEventData->fDepProc->push_back( 0 );//This is a primary track!
+				}else{
+					int retcode = FindProcessIndex(postStepPoint->GetProcessDefinedStep()); //This is the index if the process is found (>=0), otherwise a negative return code is returned
+					if(retcode>=0){
+						fEventData->fDepProc->push_back( retcode+1 );//Add 1 to the index as 0 is reserved for primary tracks
+					}else{
+						fEventData->fDepProc->push_back( retcode );//This is a negative number and indicates for problems
+					}
+				}
+			}
+		} // if(fSave>=kSdSteps)...
+	} // if(fSave>=kHitsExt)...
 	
-	
-	
-	//G4cout << "\nExiting from AnalysisManagerOptPh::Step\n" << G4endl;
-	
+	if(fVerbose>=kDebug || fStepsDebug) G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): Exiting from AnalysisManagerOptPh::Step(...)\n" << G4endl;
 }
 
 
@@ -446,6 +456,12 @@ void AnalysisManagerOptPh::DefineOptPhSensDet(G4String volList)
 		return;
 	}
 	
+	G4PhysicalVolumeStore *pPhysVolStore = G4PhysicalVolumeStore::GetInstance();
+	
+	G4int nVols = pPhysVolStore->size();
+	
+	if(nVols <= 0) return;
+	
 	stringstream hStream;
 	hStream.str(volList);
 	G4String hVolumeName;
@@ -456,11 +472,9 @@ void AnalysisManagerOptPh::DefineOptPhSensDet(G4String volList)
 	while(!hStream.eof()){
 		hStream >> hVolumeName;
 		candidatevolnames.insert(hVolumeName);
+		if(!hStream) continue;
 	}
 	
-	
-	// checks if the selected volumes exist and store all volumes that match
-	G4PhysicalVolumeStore *PVStore = G4PhysicalVolumeStore::GetInstance();
 	
 	for(set<G4String>::iterator pIt = candidatevolnames.begin(); pIt != candidatevolnames.end(); pIt++){
 		G4String hRequiredVolumeName = *pIt;
@@ -468,16 +482,151 @@ void AnalysisManagerOptPh::DefineOptPhSensDet(G4String volList)
 		
 		if(bMatch = (hRequiredVolumeName.last('*') != std::string::npos)) hRequiredVolumeName = hRequiredVolumeName.strip(G4String::trailing, '*');
 		
-		for(G4int iIndex = 0; iIndex < (G4int) PVStore->size(); iIndex++){
-			G4String hName = (*PVStore)[iIndex]->GetName();
+		for(G4int iVol=0; iVol<nVols; iVol++){
+			G4String hName = pPhysVolStore->at(iVol)->GetName();
 			
 			if( (hName == hRequiredVolumeName) || (bMatch && (hName.substr(0, hRequiredVolumeName.size())) == hRequiredVolumeName) ){
 				fOptPhSenDetVolNames.insert(hName);
+				fOptPhSenDetVolPtrs.insert(pPhysVolStore->at(iVol));
 			}
 		}
+	}
+}
+
+
+int AnalysisManagerOptPh::FindProcessIndex( const G4VProcess* aProcess )
+{
+	if(!aProcess) return -1;//This is a return code
+	
+	if(!fProcVec){
+		if(!fProcTable){
+			fProcTable = G4ProcessTable::GetProcessTable();
+			if(!fProcTable) return -2; //This is a problem!
+		}
+		fProcVec = fProcTable->FindProcesses();
+		if(!fProcVec) return -3;
+		fNprocs = fProcVec->size();
+	}
+	
+	for (int iProc = 0; iProc<fNprocs; iProc++) {
+		if((*fProcVec)(iProc)==aProcess){
+			return iProc;
+		}
+	}
+	
+	return -4;//This should not happen at this stage as the process is not found in the list of all processes
+	
+}
+
+
+#include "nlohmann/json.hpp"
+
+
+int AnalysisManagerOptPh::FindVolumeIndex( const G4VPhysicalVolume* aVolume )
+{
+	if(!aVolume) return -1;//This is an error return code
+	
+	if(fOptPhSenDetVolPtrsMap.size()==0){
+		BuildPysVolDict();
+		if(fOptPhSenDetVolPtrsMap.size()==0) return -2;
+	}
+	
+	if(fOptPhSenDetVolPtrsMap.find((G4VPhysicalVolume*)aVolume)==fOptPhSenDetVolPtrsMap.end()){
+		return -3;//This should not happen at this stage as the volume is not found in the list of all volumes
+	}
+	
+	return fOptPhSenDetVolPtrsMap[(G4VPhysicalVolume*)aVolume];
+}
+
+
+std::string AnalysisManagerOptPh::BuildProcsDict()
+{
+	fOptPhProcessesMap.clear();
+	
+	std::string dictstr("");
+	
+	if(!fProcVec){
+		if(!fProcTable){
+			fProcTable = G4ProcessTable::GetProcessTable();
+			if(!fProcTable) return dictstr; //This is a problem!
+		}
+		fProcVec = fProcTable->FindProcesses();
+		if(!fProcVec) return dictstr;
+		fNprocs = fProcVec->size();
+	}
+	
+	for (int iProc = 0; iProc<fNprocs; iProc++) {
+		fOptPhProcessesMap[iProc] = (*fProcVec)(iProc)->GetProcessName();
+	}
+	
+	if(fOptPhProcessesMap.size()!=0){
+		//Make the json dict
+		json obj;
+		
+		stringstream ss_tmp; ss_tmp.str("");
+		std::map<int, G4String>::iterator it;
+		for(it=fOptPhProcessesMap.begin(); it!=fOptPhProcessesMap.end(); it++){
+			ss_tmp << it->first;
+			//obj[ std::stoi(it->first).c_str() ] = it->second;
+			obj[ ss_tmp.str().c_str() ] = it->second;
+		}
+		
+		dictstr = obj.dump();
+	}
+}
+
+
+std::string AnalysisManagerOptPh::BuildPysVolDict()
+{
+	fOptPhSenDetVolPtrsMap.clear();
+	
+	std::string dictstr("");
+	
+	int iVol = 0;
+	if( fSave<AnalysisManagerOptPh::kAll ){
+		if(fOptPhSenDetVolPtrs.size()==0) return std::string("");
+		
+		vector<G4String> volnames;
+		
+		std::set<G4VPhysicalVolume*>::iterator it;
+		for(it=fOptPhSenDetVolPtrs.begin(); it!=fOptPhSenDetVolPtrs.end(); ++it){
+			fOptPhSenDetVolPtrsMap[(*it)] = iVol;
+			fOptPhPhysVolsMap[iVol] = (*it)->GetName();
+			iVol++;
+		}
+	}else{//Make a dictionary and maps with all the physical volumes
+		G4PhysicalVolumeStore *pPhysVolStore = G4PhysicalVolumeStore::GetInstance();
+		
+		G4int nVols = pPhysVolStore->size();
+		
+		for(G4int iVol=0; iVol<nVols; iVol++){
+			fOptPhSenDetVolPtrsMap[pPhysVolStore->at(iVol)] = iVol;
+			fOptPhPhysVolsMap[iVol] = pPhysVolStore->at(iVol)->GetName();
+		}
+	}
+	
+	if(fOptPhPhysVolsMap.size()!=0){
+		//Make the json dict
+		json obj;
+		
+		stringstream ss_tmp; ss_tmp.str("");
+		std::map<int, G4String>::iterator it;
+		for(it=fOptPhPhysVolsMap.begin(); it!=fOptPhPhysVolsMap.end(); it++){
+			ss_tmp << it->first;
+			//obj[ std::stoi(it->first).c_str() ] = it->second;
+			obj[ ss_tmp.str().c_str() ] = it->second;
+		}
+		
+		dictstr = obj.dump();
 	}
 	
 	
 	
+	return dictstr;
 }
+
+
+
+
+
 

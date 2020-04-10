@@ -31,7 +31,7 @@ public:
 	AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager);
 	virtual ~AnalysisOptPhMessenger();
 
-	void SetNewValue(G4UIcommand *pUIcommand, G4String hString);
+	void SetNewValue(G4UIcommand *pUIcommand, G4String hNewValue);
 
 private:
 	AnalysisManagerOptPh* fAnManager;
@@ -44,6 +44,12 @@ private:
 	G4UIcmdWithAnInteger *fSaveDataCmd;
 	G4UIcmdWithAString *fFileNameCmd;
 	G4UIcmdWithAString *fDefOptSDCmd;
+	
+	G4UIcmdWithAnInteger *fAutoFlushCmd;
+	G4UIcmdWithAnInteger *fAutoSaveCmd;
+	
+	
+	
 };
 
 #endif

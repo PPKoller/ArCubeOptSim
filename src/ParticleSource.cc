@@ -64,6 +64,8 @@ void ParticleSourceOptPh::SetInitialValues()
 	fTotEnergy = fMass + fKinEnergy;
 	fMom = std::sqrt( fTotEnergy*fTotEnergy - fMass*fMass );
 	
+	
+	fVol = NULL;
 	fPosition=G4ThreeVector(0.,0.,0.);
 	fTime=0.;
 	fPolarization=G4ThreeVector(1.,0.,0.);
@@ -81,8 +83,11 @@ void ParticleSourceOptPh::SetInitialValues()
 	fAngDistType="iso";
 	fEnergyDisType="Mono";
 	
+	fMaxConfineLoop = 100000;
+	
 	fVolumeNames.clear();
 	
+	fVolPrim = NULL;
 	fEnPrim.resize(fPrimNb,fTotEnergy);
 	fPosPrim = G4ThreeVector(0.,0.,0.);
 	fMomPrim.resize(fPrimNb);
@@ -95,13 +100,12 @@ void ParticleSourceOptPh::SetInitialValues()
 //THIS IS THE CENTRAL FUNCTION OF THIS CLASS
 void ParticleSourceOptPh::GeneratePrimaryVertex(G4Event* evt)
 {
-
 	if(!fParticleDefinition)
 	{
-		G4cerr << "\nParticleSourceOptPh::GeneratePrimaryVertex --> ERROR: No particle is defined!" << G4endl;
+		G4cerr << "\nParticleSourceOptPh::GeneratePrimaryVertex(...)--> ERROR: No particle is defined!" << G4endl;
 		return;
 	}
-
+	
 	// Position
 	G4bool srcconf = false;
 	
@@ -117,11 +121,11 @@ void ParticleSourceOptPh::GeneratePrimaryVertex(G4Event* evt)
 				GeneratePointsInVolume();
 				LoopCount++;
 				
-				if(LoopCount == 1000000)
+				if(LoopCount == fMaxConfineLoop)
 				{
 					G4cerr << "\nParticleSourceOptPh::GeneratePrimaryVertex(...) --> ERROR:" << G4endl;
 					G4cerr << "*************************************" << G4endl;
-					G4cerr << "LoopCount = 1000000" << G4endl;
+					G4cerr << "LoopCount = " << fMaxConfineLoop << G4endl;
 					G4cerr << "Either the source distribution >> confinement" << G4endl;
 					G4cerr << "or any confining volume may not overlap with" << G4endl;
 					G4cerr << "the source distribution or any confining volumes" << G4endl;
@@ -134,16 +138,13 @@ void ParticleSourceOptPh::GeneratePrimaryVertex(G4Event* evt)
 				
 			}while(!IsSourceConfined());
 			
-			
-			
 		}else{
 			GeneratePointsInVolume();
 		}
-		
-		
 	}
 	
 	fPosPrim = fPosition;
+	fVolPrim = fVol;
 	
 	// Angular stuff
 	if(fAngDistType == "direction"){
@@ -376,10 +377,14 @@ void ParticleSourceOptPh::ConfineSourceToVolume(G4String hVolumeList)
 void ParticleSourceOptPh::GeneratePointSource()
 {
 	// Generates Points given the point source.
-	if(fSourcePosType == "Point")
+	if(fSourcePosType == "Point"){
 		fPosition = fCenterCoords;
-	else if(fVerbosityLevel >= 1)
+		G4ThreeVector nullvect(0., 0., 0.);
+		G4ThreeVector *ptr = &nullvect;
+		fVol = fNavigator->LocateGlobalPointAndSetup(fPosition, ptr, true);
+	}else if(fVerbosityLevel >= 1){
 		G4cout << "ParticleSourceOptPh::GeneratePointSource() --> ERROR SourcePosType is not set to Point" << G4endl;
+	}
 }
 
 
@@ -438,6 +443,9 @@ void ParticleSourceOptPh::GeneratePointsInVolume()
 		G4cerr << "\nParticleSourceOptPh::GeneratePointsInVolume() --> ERROR: Volume Shape Does Not Exist" << G4endl;
 	
 	fPosition = fCenterCoords + G4ThreeVector(x,y,z);
+	G4ThreeVector nullvect(0., 0., 0.);
+	G4ThreeVector *ptr = &nullvect;
+	fVol = fNavigator->LocateGlobalPointAndSetup(fPosition, ptr, true);
 }
 
 
@@ -447,8 +455,8 @@ G4bool ParticleSourceOptPh::IsSourceConfined()
 	if(fConfine == false)
 		G4cerr << "\nParticleSourceOptPh::IsSourceConfined() --> ERROR: Confine is false" << G4endl;
 	
-	G4ThreeVector null(0., 0., 0.);
-	G4ThreeVector *ptr = &null;;
+	G4ThreeVector nullvect(0., 0., 0.);
+	G4ThreeVector *ptr = &nullvect;
 
 	// Check fParticlePosition is within a volume in our list
 	G4VPhysicalVolume *theVolume;
