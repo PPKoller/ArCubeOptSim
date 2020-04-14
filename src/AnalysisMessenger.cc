@@ -21,7 +21,7 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	fVerboseCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/verbose",this);
 	fVerboseCmd->SetGuidance("Set verbosity of the analysis manager");
 	fVerboseCmd->SetGuidance(" Default 1");
-	fVerboseCmd->SetParameterName("Verb", true);
+	fVerboseCmd->SetParameterName("Verb", false);
 	fVerboseCmd->SetDefaultValue(1);
 	txt << "Verb>=0 && Verb<=" << AnalysisManagerOptPh::kDebug;
 	fVerboseCmd->SetRange( txt.str().c_str() );
@@ -39,8 +39,7 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	
 	fSaveDataCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/SaveData", this);
 	fSaveDataCmd->SetGuidance("Control for data tree saving: 0 to not save; 1 standard analysis variables (default); 2 extended tracking info for debugging (slow and heavy)");
-	fSaveDataCmd->SetParameterName("Save", true);
-	fSaveDataCmd->SetDefaultValue(1);
+	fSaveDataCmd->SetParameterName("Save", false);
 	fSaveDataCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
 	fFileNameCmd = new G4UIcmdWithAString("/argoncube/analysis/FileName",this);
@@ -88,48 +87,51 @@ void AnalysisOptPhMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewV
 {
 	
 	if(pUIcommand == fVerboseCmd){
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fVerboseCmd" << G4endl;
 		fAnManager->SetVerbosity(fVerboseCmd->GetNewIntValue(hNewValue));
 		return;
 	}
 	
 	if(pUIcommand == fPrintModuloCmd){
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fPrintModuloCmd" << G4endl;
 		fAnManager->SetPrintModulo(fPrintModuloCmd->GetNewIntValue(hNewValue));
 		return;
 	}
 	
 	if(pUIcommand == fStepDebugCmd){
-		G4cout << "\nSetting the analysis manager steps debug flag to: " << G4UIcommand::ConvertToString(fStepDebugCmd->GetNewBoolValue(hNewValue)) << G4endl;
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fVerboseCmd. Setting the analysis manager steps debug flag to: " << G4UIcommand::ConvertToString(fStepDebugCmd->GetNewBoolValue(hNewValue)) << G4endl;
 		fAnManager->SetStepsDebug(fStepDebugCmd->GetNewBoolValue(hNewValue));
 		return;
 	}
 	
 	if(pUIcommand == fSaveDataCmd){
-		G4cout << "\nSetting the analysis manager saving flag to: " << fSaveDataCmd->ConvertToString(fSaveDataCmd->GetNewIntValue(hNewValue)) << G4endl;
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fSaveDataCmd. Setting the analysis manager saving flag to: " << fSaveDataCmd->ConvertToString(fSaveDataCmd->GetNewIntValue(hNewValue)) << G4endl;
 		fAnManager->SetSaveData((AnalysisManagerOptPh::datasave)fSaveDataCmd->GetNewIntValue(hNewValue));
 		return;
 	}
 	
 	if(pUIcommand == fFileNameCmd){
-		G4cout << "\nSetting the tree file name to: " << hNewValue << G4endl;
-		if(fAnManager->GetSaveStatus()<=0) fAnManager->SetSaveData(); //Set a minimal saving data
-		fAnManager->SetDataFilename(hNewValue);
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fFileNameCmd. Setting the tree file name to: " << hNewValue << G4endl;
+		if(fAnManager->GetSaveStatus()>AnalysisManagerOptPh::kOff){
+			fAnManager->SetDataFilename(hNewValue);
+		}
 		return;
 	}
 	
 	if(pUIcommand == fDefOptSDCmd){
-		G4cout << "\nSetting the optical photons sensitive volumes file name to: " << hNewValue << G4endl;
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fDefOptSDCmd. Setting the optical photons sensitive volumes file name to: " << hNewValue << G4endl;
 		fAnManager->DefineOptPhSensDet(hNewValue);
 		return;
 	}
 	
 	if(pUIcommand == fAutoFlushCmd){
-		G4cout << "\nSetting the data TTree autoflush to " << hNewValue << G4endl;
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fAutoFlushCmd. Setting the data TTree autoflush to " << hNewValue << G4endl;
 		fAnManager->SetAutoFlush( std::stoll(hNewValue) );
 		return;
 	}
 	
 	if(pUIcommand == fAutoSaveCmd){
-		G4cout << "\nSetting the data TTree autosave to " << hNewValue << G4endl;
+		G4cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fAutoSaveCmd. Setting the data TTree autosave to " << hNewValue << G4endl;
 		fAnManager->SetAutoSave( std::stoll(hNewValue) );
 		return;
 	}

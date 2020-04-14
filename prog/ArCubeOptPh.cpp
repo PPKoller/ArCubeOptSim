@@ -181,7 +181,6 @@ int main(int argc, char **argv)
 		if(!hOutFileName.empty()) pAnalysisManager->SetDataFilename(hOutFileName);
 			
 		if(iNbEventsToSimulate){
-			pAnalysisManager->SetSaveData();
 			pAnalysisManager->SetNbEventsToSimulate(iNbEventsToSimulate);
 			hStream.clear(); hStream.str("");
 			hStream << "/run/beamOn " << iNbEventsToSimulate;

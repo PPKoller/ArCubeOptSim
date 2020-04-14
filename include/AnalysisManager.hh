@@ -30,11 +30,11 @@ class AnalysisManagerOptPh
 public:
 	enum datasave
 	{
-		kOff = 0, //No saving
-		kHits = 1, //Only stuff useful for LUT (hits, and primary info)
-		kHitsExt = 2, //Hits extended informations
-		kSdSteps = 3, //All the steps in the physical volumes defined by the user
-		kAll = 4 //All the steps everywhere in any physical volume: same data as kSdSteps but everywhere
+		kOff, //No saving
+		kHits, //Only stuff useful for LUT (hits, and primary info)
+		kHitsExt, //Hits extended informations
+		kSdSteps, //All the steps in the physical volumes defined by the user
+		kAll //All the steps everywhere in any physical volume: same data as kSdSteps but everywhere
 	};
 	
 	enum verbosity{
@@ -53,7 +53,7 @@ public:
 	void Step(const G4Step *pStep);	
 	
 	void DefineOptPhSensDet(G4String volList);
-	void SetSaveData(AnalysisManagerOptPh::datasave save=kHits){ fSave=save; };
+	void SetSaveData(AnalysisManagerOptPh::datasave save){ fSave=save; };
 	void SetStepsDebug(G4bool dbg=true){ fStepsDebug=dbg; };
 	void SetDataFilename(const G4String &hFilename) { fDataFilename = hFilename; };
 	void SetNbEventsToSimulate(G4int iNbEventsToSimulate) { fNbEventsToSimulate = iNbEventsToSimulate; };
@@ -101,6 +101,8 @@ private:
 	G4bool fStepsDebug;
 	G4int fVerbose;
 	G4int fPrintModulo;
+	
+	G4bool fWasAtBoundary;
 	
 	G4int fCurrentEvent;
 	

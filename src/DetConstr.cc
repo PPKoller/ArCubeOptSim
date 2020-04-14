@@ -90,7 +90,9 @@ DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 		G4Exception("DetConstrOptPh::DetConstrOptPh(...)","Geom.001", FatalException,"Cannot get \"OptPropManager\" pointer.");
 	}
 	
-	fVerbose = 0;
+	fTpbThick = 0.001*mm; //Default value. Can be changed by a user command
+	
+	fVerbose = DetConstrOptPh::kSilent;
 }
 
 
@@ -108,16 +110,80 @@ DetConstrOptPh::~DetConstrOptPh()
 
 G4VPhysicalVolume *DetConstrOptPh::Construct()
 {
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::Construct(): Entering the function."<<G4endl;
 	if(fWorld){
+		if( G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV") ){
+			BuildTPBlayer();
+		}
 		BuildDefaultOpticalSurfaces();
 		DefaultOptProperties();
 	}
 	
-	if(fVerbose>0) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
+	if(fVerbose>=DetConstrOptPh::kInfo) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
 	
 	
-	//G4cout<<"World returned"<<G4endl;
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::Construct(): Exiting the function."<<G4endl;
 	return fWorld;
+}
+
+
+void DetConstrOptPh::BuildTPBlayer(){
+	
+	if(fVerbose>=DetConstrOptPh::kDebug){
+		G4cout << "Debug --> DetConstrOptPh::BuildTPBlayer(): Entering the function." << G4endl;
+	}
+	
+	G4VPhysicalVolume* layerVol = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
+	
+	G4Box *layerGeom = dynamic_cast<G4Box*>( layerVol->GetLogicalVolume()->GetSolid() );
+	
+	if(!layerGeom){
+		G4cout << "\nERROR --> DetConstrOptPh::BuildTPBlayer(): Cannot find the LAr layer volume <volTPB_LAr_PV>, where the TPB layer will be placed. TPB layer for ArCLight will not be build!\n" << G4endl;
+		return;
+	}
+	
+	if(fTpbThick<=0.){
+		G4cout << "WARNING --> DetConstrOptPh::BuildTPBlayer(): the thickness of the TPB layer is not set to a positive value. TPB layer for ArCLight will not be build!" << G4endl;
+		return;
+	}
+	
+	
+	//G4double layerDx = 280.255*mm;
+	//G4double layerDy = 300.254*mm;
+	//G4double layerDz = 0.01*mm;
+	
+	G4double layerDx_hl = layerGeom->GetXHalfLength();
+	G4double layerDy_hl = layerGeom->GetYHalfLength();
+	G4double layerDz_hl = layerGeom->GetZHalfLength();
+	
+	if(fTpbThick>2*layerDz_hl){
+		G4cout << "\nERROR --> DetConstrOptPh::BuildTPBlayer(): The TPB layer thickness (" << fTpbThick << ") is larger than that of the LAr layer volume <volTPB_LAr_PV> (" << 2*layerDz_hl << "), where the TPB layer will be placed. TPB layer for ArCLight will not be build!\n" << G4endl;
+		return;
+	}
+	
+	
+	G4Material* tpbMat = FindMaterial("TPB");
+	if(!tpbMat){
+		tpbMat = FindMaterial("LAr");
+		G4cout << "WARNING --> DetConstrOptPh::BuildTPBlayer(): Building the TPB material as a copy of LAr material, with different name." << G4endl;
+		if(!tpbMat){
+			G4cout << "\nERROR --> DetConstrOptPh::BuildTPBlayer(): LAr material not found!. TPB layer for ArCLight will not be build, but this might be a major problem for the whole simulation!\n" << G4endl;
+			return;
+		}
+		//Build the tpb as LAr copy, but change the name only. Only optical properties matter.
+		tpbMat = new G4Material("TPB", tpbMat->GetDensity(), tpbMat, kStateSolid, 87.0);
+	}
+	
+	G4Box *tpbGeom = new G4Box("tpbGeom",layerDx_hl,layerDy_hl,fTpbThick/2.);
+	
+	G4LogicalVolume* tpbLog= new G4LogicalVolume(tpbGeom,tpbMat,"volTPB");
+	
+	new G4PVPlacement(NULL, G4ThreeVector(0.,0., -layerDz_hl+fTpbThick/2.), tpbLog, "volTPB_PV", layerVol->GetLogicalVolume(), false, 0);
+	
+	
+	if(fVerbose>=DetConstrOptPh::kDebug){
+		G4cout << "Debug --> DetConstrOptPh::BuildTPBlayer(): TPB layer buit! Exiting the function." << G4endl;
+	}
 }
 
 
@@ -125,6 +191,8 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 /////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::DefaultOptProperties()
 {
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::DefaultOptProperties(): Entering the function."<<G4endl;
+	
 	G4double opt_ph_en[1] = {9.69*eV};
 	G4double lar_rindex[1] = {1.369}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
 	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
@@ -149,44 +217,49 @@ void DetConstrOptPh::DefaultOptProperties()
 	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
 	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
 	fOptPropManager->SetMaterialWLSAbsLenght("TPB", 1, opt_ph_en, tpb_wls_abs_len );
-  fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
-  fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
+	fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
+	fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
 	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
 
 	
 	G4double ej280_rindex[1] = {1.67}; //Same as TPB for the moment
-  //G4double ej280_wls_abs_len[1] = {0.5*nm};
-  //G4double ej280_wls_emission[1] = {500*nm};
-  //G4double ej280_wls_delay[1] = {0.5*ns};
+	//G4double ej280_wls_abs_len[1] = {0.5*nm};
+	//G4double ej280_wls_emission[1] = {500*nm};
+	//G4double ej280_wls_delay[1] = {0.5*ns};
 
-  fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, ej280_rindex );
+	fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, ej280_rindex );
 	//fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
-  //fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
-  //fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
+	//fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
+	//fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
 
 
-  fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
+	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
 	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
 	
-  G4double ej2802tpb_reflectivity[1] = {1.};
-  G4double ej2802lar_reflectivity[1] = {1.};
-  G4double ej2802pvt_reflectivity[1] = {1.};
-  G4double ej2802G10_reflectivity[1] = {1.};
-  G4double ej2802SiPM_reflectivity[1] = {0.};
-  
+	G4double ej2802tpb_reflectivity[1] = {1.};
+	G4double ej2802lar_reflectivity[1] = {1.};
+	G4double ej2802pvt_reflectivity[1] = {1.};
+	G4double ej2802G10_reflectivity[1] = {1.};
+	G4double ej2802SiPM_reflectivity[1] = {0.};
+	
 	fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802PVT_logsurf", 1, opt_ph_en, ej2802pvt_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802G10_logsurf", 1, opt_ph_en, ej2802G10_reflectivity );
 	fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf", 1, opt_ph_en, ej2802SiPM_reflectivity );
 	
+	
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::DefaultOptProperties(): Exiting the function."<<G4endl;
+	
 }
 
 
 void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 {
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultOpticalSurfaces(): Entering the function."<<G4endl;
 	//By default the EJ28 WLS does't have optical properties.
 	//They can be defined later
+	
 	
 	G4VPhysicalVolume *vol1, *vol2;
 	
@@ -194,8 +267,8 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between LAr and TPB layer  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
+	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
 	if( vol1 && vol2){
 		
 		//By the default the surfaces are with ground finish
@@ -225,7 +298,7 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between TPB and EJ280 WLS  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
 	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
 	if( vol1 && vol2){
 		
@@ -265,10 +338,9 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
 		
 		EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }
-  
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
+	}
+	
+	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
 	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
 	if( vol1 && vol2){
 		
@@ -392,7 +464,9 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 		
 		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
 
-	}//End of interface between EJ280 WLS and SiPM 
+	}//End of interface between EJ280 WLS and SiPM
+	
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultOpticalSurfaces(): Exiting the function."<<G4endl;
 }
 
 
@@ -479,7 +553,18 @@ void DetConstrOptPh::PrintListOfPhysVols()
 	for(G4int ivol=0; ivol<nvols; ivol++){
 		G4LogicalVolume *pMotherVol = pPhysVolStore->at(ivol)->GetMotherLogical();
 		if(pMotherVol){
-			G4cout << "PV: " << pPhysVolStore->at(ivol)->GetName() << "\tLV: " << pPhysVolStore->at(ivol)->GetLogicalVolume()->GetName() << "\tMV: " << pPhysVolStore->at(ivol)->GetMotherLogical()->GetName() << G4endl;
+			G4cout << "PV: " << pPhysVolStore->at(ivol)->GetName();
+			if( pPhysVolStore->at(ivol)->IsReplicated() && pPhysVolStore->at(ivol)->IsParameterised()){
+				G4cout << " (repl, param)";
+			}else{
+				if(pPhysVolStore->at(ivol)->IsReplicated()){
+					G4cout << " (repl)";
+				}
+				if(pPhysVolStore->at(ivol)->IsParameterised()){
+					G4cout << " (param)";
+				}
+			}
+			G4cout << "\tLV: " << pPhysVolStore->at(ivol)->GetLogicalVolume()->GetName() << "\tMV: " << pPhysVolStore->at(ivol)->GetMotherLogical()->GetName() << G4endl;
 		}else{
 			G4cout << "PV: " << pPhysVolStore->at(ivol)->GetName() << "\tLV: " << pPhysVolStore->at(ivol)->GetLogicalVolume()->GetName() << "\tMV: None" << G4endl;
 		}
@@ -510,5 +595,22 @@ void DetConstrOptPh::PrintListOfLogVols()
 	
 	G4cout << "\nTotal number of logical volumes registered: " << nvols << G4endl;
 	
+	
+}
+
+
+G4Material* DetConstrOptPh::FindMaterial(G4String matname){
+	
+	G4MaterialTable *tab = G4Material::GetMaterialTable();
+	
+	if(!tab) return NULL;
+	
+	G4MaterialTable::iterator iT;
+	for(iT=tab->begin(); iT!=tab->end(); ++iT){
+		if( ((*iT)->GetName())==matname ) return (*iT);
+	}
+	
+	//Here I did not find the material ==> returning NULL
+	return NULL;
 	
 }

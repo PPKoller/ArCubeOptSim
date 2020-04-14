@@ -27,6 +27,14 @@ class OptPropManager;
 class DetConstrOptPh: public G4VUserDetectorConstruction
 {
 public:
+	
+	enum verbosity{
+		kSilent,
+		kInfo,
+		kDetails,
+		kDebug
+	};
+	
 	DetConstrOptPh(G4String gdmlfilename);
 	virtual ~DetConstrOptPh();
 	
@@ -37,8 +45,11 @@ public:
 	const G4VPhysicalVolume* GetWorldVolume() const {return fWorld;};
 	
 	
-	inline void SetVerbosity(G4int _verb){fVerbose=_verb;};
+	inline void SetVerbosity(DetConstrOptPh::verbosity verb){fVerbose=verb;};
+	inline DetConstrOptPh::verbosity GetVerbosity(){return fVerbose;};
 	
+	inline void SetTpbThickness(G4double thick){fTpbThick = thick;};
+	inline G4double GetTpbThickness(){return fTpbThick;}
 	
 	// functions used moslty by the DetectorMessenger
 	//void SetCheckOverlap(G4bool dCheckOverlap){pCheckOverlap = dCheckOverlap;};
@@ -54,9 +65,10 @@ protected:
 	//These methods are only used at the startup as default (and to debug)
 	//They should go away when the full user interface for optical setting
 	//Here also all the optical surfaces are defined
+	virtual void BuildTPBlayer();
 	virtual void BuildDefaultOpticalSurfaces();
 	virtual void DefaultOptProperties();
-	
+	virtual G4Material* FindMaterial(G4String matname);
 	
 private:
 	
@@ -67,7 +79,10 @@ private:
 	G4GDMLParser *fGDMLParser;
 	G4VPhysicalVolume *fWorld;
 	
-	G4int fVerbose;
+	DetConstrOptPh::verbosity fVerbose;
+	
+	
+	G4double fTpbThick;
 };
 
 

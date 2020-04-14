@@ -33,7 +33,7 @@ OptPropManager* OptPropManager::gThis = NULL;
 
 OptPropManager::OptPropManager()
 {
-	fVerbosity = 0;
+	fVerbosity = OptPropManager::kSilent;
 	
 	//Map of the optical surfaces models
 	(OptPropManager::OptSurfModelMap)["glisur"] = glisur;
@@ -890,16 +890,21 @@ void OptPropManager::SetSurfSigmaAlpha(const G4String& logsurfname, const G4doub
 		
 		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
 			G4String name = surftab->at(iSurf)->GetName();
-			
-      if(name == logsurfname){
+			if(name == logsurfname){
 				Surface = surftab->at(iSurf);
-      }
-    }
+			}
+		}
 		
-    if(Surface){
-      G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
-      if(OpticalSurface) OpticalSurface->SetSigmaAlpha(s_a);
-    }
+		if(Surface){
+			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+			if(OpticalSurface){
+				OpticalSurface->SetSigmaAlpha(s_a);
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetSurfSigmaAlpha(...): The G4LogicalBorder surface \"" << logsurfname << "\" returned null pointer to its G4OpticalSurface (maybe not yet set). The surface roughness cannot be set." << G4endl;
+			}
+		}else{
+			G4cout << "WARNING --> OptPropManager::SetSurfSigmaAlpha(...): The G4LogicalBorder surface \"" << logsurfname << "\" has not yet been created. The surface roughness cannot be set." << G4endl;
+		}
 	}
 }
 
@@ -910,34 +915,38 @@ void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4in
 	
 	if(surftab){
 		G4LogicalSurface* Surface = NULL;
-
 		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
 			G4String name = surftab->at(iSurf)->GetName();
-      std::cout << name << std::endl;       
-      
-      if(name == logsurfname){
+			//std::cout << name << std::endl;
+			
+			if(name == logsurfname){
 				Surface = surftab->at(iSurf);
-      }
-    }
-
-    if(Surface){
-      G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
-      
-      if(OpticalSurface){
-        G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
-        
-        if(!propTab){
-          propTab = new G4MaterialPropertiesTable();
-          OpticalSurface->SetMaterialPropertiesTable(propTab);
-        }
-        
-        if(propTab->GetProperty("REFLECTIVITY")){
-          propTab->RemoveProperty("REFLECTIVITY");
-        }
-        propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
-      }
-    }
-  }
+			}
+		}
+		
+		if(Surface){
+			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+			
+			if(OpticalSurface){
+				G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					OpticalSurface->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("REFLECTIVITY")){
+					propTab->RemoveProperty("REFLECTIVITY");
+				}
+				
+				propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" has null pointer to its G4OpticalSurface (maybe not assigned yet). The REFLECTIVITY property cannot be applied." << G4endl;
+			}
+		}else{
+			G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" has not yet been created. The REFLECTIVITY property cannot be applied." << G4endl;
+		}
+	}
 }
 
 void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& reflectivities)
@@ -1191,13 +1200,23 @@ void OptPropManager::SetOpticalSurfaceModel(const G4String& logsurfname, const G
 	
 	if(OptSurfModelMap.find(model)==OptSurfModelMap.end()) return;
 	
+	G4int nFound = 0;
+	
 	for(size_t iSurf=0; iSurf<nLogSurf; iSurf++){
 		if( (surftab->at(iSurf)->GetName())==logsurfname ){
+			nFound+=1;
 			G4OpticalSurface *optsurf = dynamic_cast<G4OpticalSurface*>(surftab->at(iSurf)->GetSurfaceProperty());
 			if(optsurf){
 				optsurf->SetModel( OptSurfModelMap[model] );
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceModel(...): The G4LogicalBorder surface \"" << logsurfname << "\", instance number " << nFound << " returns null pointer to its G4OpticalSurface (maybe not assigned yet). The surface model cannot be set for this surface." << G4endl;
 			}
 		}
+	}
+	if((nFound>0) && fVerbosity>=OptPropManager::kDetails){
+		G4cout << "Detail --> OptPropManager::SetOpticalSurfaceModel(...): Applied model to all the " << nFound << " G4VLogicalSurfaces with name \"" << logsurfname << "\"." << G4endl;
+	}else if(nFound==0){
+		G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceModel(...): Could not find any G4VLogicalSurfaces with name \"" << logsurfname << "\""  << G4endl;
 	}
 }
 
@@ -1211,13 +1230,23 @@ void OptPropManager::SetOpticalSurfaceType(const G4String& logsurfname, const G4
 	
 	if(OptSurfTypeMap.find(type)==OptSurfTypeMap.end()) return;
 	
+	G4int nFound = 0;
+	
 	for(size_t iSurf=0; iSurf<nLogSurf; iSurf++){
 		if( (surftab->at(iSurf)->GetName())==logsurfname ){
+			nFound += 1;
 			G4OpticalSurface *optsurf = dynamic_cast<G4OpticalSurface*>(surftab->at(iSurf)->GetSurfaceProperty());
 			if(optsurf){
 				optsurf->SetType( OptSurfTypeMap[type] );
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceType(...): The G4LogicalBorder surface \"" << logsurfname << "\", instance number " << nFound << " returns null pointer to its G4OpticalSurface (maybe not assigned yet). The surface type cannot be set for this surface." << G4endl;
 			}
 		}
+	}
+	if((nFound>0) && fVerbosity>=OptPropManager::kDetails){
+		G4cout << "Detail --> OptPropManager::SetOpticalSurfaceType(...): Applied the surface type to all the " << nFound << " G4VLogicalSurfaces with name \"" << logsurfname << "\"." << G4endl;
+	}else if(nFound==0){
+		G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceType(...): Could not find any G4VLogicalSurfaces with name \"" << logsurfname << "\""  << G4endl;
 	}
 }
 
@@ -1231,13 +1260,23 @@ void OptPropManager::SetOpticalSurfaceFinish(const G4String& logsurfname, const 
 	
 	if(OptSurfFinishMap.find(finish)==OptSurfFinishMap.end()) return;
 	
+	G4int nFound = 0;
+	
 	for(size_t iSurf=0; iSurf<nLogSurf; iSurf++){
 		if( (surftab->at(iSurf)->GetName())==logsurfname ){
+			nFound += 1;
 			G4OpticalSurface *optsurf = dynamic_cast<G4OpticalSurface*>(surftab->at(iSurf)->GetSurfaceProperty());
 			if(optsurf){
 				optsurf->SetFinish( OptSurfFinishMap[finish] );
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceFinish(...): The G4LogicalBorder surface \"" << logsurfname << "\", instance number " << nFound << " returns null pointer to its G4OpticalSurface (maybe not assigned yet). The surface finish cannot be set for this surface." << G4endl;
 			}
 		}
+	}
+	if((nFound>0) && fVerbosity>=OptPropManager::kDetails){
+		G4cout << "Detail --> OptPropManager::SetOpticalSurfaceFinish(...): Applied the surface finish to all the " << nFound << " G4VLogicalSurfaces with name \"" << logsurfname << "\"." << G4endl;
+	}else if(nFound==0){
+		G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceFinish(...): Could not find any G4VLogicalSurfaces with name \"" << logsurfname << "\""  << G4endl;
 	}
 }
 

@@ -30,11 +30,20 @@ typedef void (OptPropManager::*json_proc_memfunc)(const json keyval);
 class OptPropManager
 {
 public:
+	enum verbosity{
+		kSilent,
+		kInfo,
+		kDetails,
+		kDebug
+	};
+	
+	
 	static OptPropManager* GetInstance();
 	
 	void ProcessJsonFile(const G4String& jsonfilename);
 	
-	
+	void SetVerbosity(OptPropManager::verbosity verb){fVerbosity=verb;};
+	OptPropManager::verbosity GetVerbosity(){return fVerbosity;};
 	
 	//loads the refractive index from a 2 column ascii file and gives it to a material if this exists
 	//The first column should be the energy photon (not the wavelenght) and the second column the refraction index
@@ -129,7 +138,7 @@ private:
 	~OptPropManager(){;};
 	
 	
-	G4int fVerbosity;
+	OptPropManager::verbosity fVerbosity;
 	
 	static OptPropManager* gThis;
 	

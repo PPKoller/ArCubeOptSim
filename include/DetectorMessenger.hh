@@ -35,9 +35,15 @@ private:
 	//G4UIcmdWithADoubleAndUnit *fLArAbsorbtionLengthCmd;
 	//G4UIcmdWithADoubleAndUnit *fLArRayScatterLengthCmd;
 	
+	G4UIcmdWithAnInteger *fDetConstrVerb;
+	
+	G4UIcmdWithADoubleAndUnit *fTpbThicknCmd;
+	
 	G4UIcmdWithAString *fPhysVolCoordCmd;
 	
 	G4UIcmdWithAString *fLoadOpticalSettingsFile;
+	
+	G4UIcmdWithAnInteger *fOpticalSettingsVerb;
 	
 };
 

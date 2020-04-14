@@ -43,9 +43,14 @@ AnalysisManagerOptPh::AnalysisManagerOptPh(PrimaryGeneratorActionOptPh *pPrimary
 	
 	fPrimaryGeneratorAction = pPrimaryGeneratorAction;
 	
-	fSave=kOff;
+	fSave = AnalysisManagerOptPh::kOff;
+	
+	fStepsDebug = false;
+	fWasAtBoundary = false;
 	
 	fProcTable = NULL;
+	fProcVec = NULL;
+	fNprocs = 0;
 	
 	//fPmtHitsCollectionID = -1;
 	
@@ -74,22 +79,26 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	
 	fProcTable = G4ProcessTable::GetProcessTable();
 	
+	fCurrentEvent =- 1;
+	
+	
 	std::string vol_dict = BuildPysVolDict();
 	std::string proc_dict = BuildProcsDict();
 	
-	fCurrentEvent=-1;
 	
-	if(fSave<=kOff){
-		G4cout << "\nWARNING AnalysisManagerOptPh::BeginOfRun(...) ---> AnalysisManagerOptPh::BeginOfRun(...): Data will not be saved." << G4endl;
+	if(fSave<=AnalysisManagerOptPh::kOff){
+		G4cout << "\nWARNING --> AnalysisManagerOptPh::BeginOfRun(...): Data will not be saved." << G4endl;
 		return;
 	}
 	
-	fTreeFile = new TFile(fDataFilename.c_str(), "RECREATE", "File containing event data of optical photon simulations of ArgonCube");
+	fTreeFile = TFile::Open(fDataFilename.c_str(), "RECREATE", "File containing event data of optical photon simulations of ArgonCube");
+	
 	
 	if(!fTreeFile){//Here there is a problem
-		fSave = kOff; //Do this to save from application crashing
+		fSave = AnalysisManagerOptPh::kOff; //Do this to save from application crashing
 		return;
 	}
+	
 	
 	
 	TNamed *tn_vol_dict = new TNamed("vol_dict", vol_dict.c_str());
@@ -138,49 +147,49 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	fTree->Branch("prim_Zpol", "vector<Double_t>", &fEventData->fPrimary_Zpol);//Fill at start of Event
 	
 	//Hits related data
-	if(fSave<kSdSteps) fTree->Branch("totalhits", &fEventData->fNbTotHits, "totalhits/L");
-	if(fSave<kSdSteps) fTree->Branch("hit_vol_index", "vector<Long64_t>", &fEventData->fVolIndex);//ID of the touchable volume (it is a whish!). //Fill at step stage
-	if(fSave<kSdSteps) fTree->Branch("hit_vol_copy", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
-	if(fSave<kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("totalhits", &fEventData->fNbTotHits, "totalhits/L");
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_index", "vector<Long64_t>", &fEventData->fVolIndex);//ID of the touchable volume (it is a whish!). //Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_copy", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	
 	//Extended information of hits related data
-	if(fSave==kHitsExt) fTree->Branch("hit_trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_partgen", "vector<Int_t>", &fEventData->fPartGener);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_partgen", "vector<Int_t>", &fEventData->fPartGener);//Fill at step stage
 	
-	if(fSave==kHitsExt) fTree->Branch("hit_xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
 	
-	if(fSave==kHitsExt) fTree->Branch("hit_xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
 	
-	if(fSave==kHitsExt) fTree->Branch("hit_xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
-	if(fSave==kHitsExt) fTree->Branch("hit_zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
 	
 	//Full step mode
-	if(fSave>=kSdSteps) fTree->Branch("totsteps", &fEventData->fNbTotHits, "totsteps/I");//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("vol_index", "vector<long>", &fEventData->fVolIndex);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("vol_copy", "vector<long>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("totsteps", &fEventData->fNbTotHits, "totsteps/I");//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_index", "vector<long>", &fEventData->fVolIndex);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_copy", "vector<long>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	
-	if(fSave>=kSdSteps) fTree->Branch("trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at end of Event
-	if(fSave>=kSdSteps) fTree->Branch("partgener", "vector<Int_t>", &fEventData->fPartGener);//Fill at end of Event
-	if(fSave>=kSdSteps) fTree->Branch("parentid", "vector<Int_t>", &fEventData->fParentId);//Fill at end of Event
-	if(fSave>=kSdSteps) fTree->Branch("firstparentid", "vector<Int_t>", &fEventData->fFirstParentId);//Fill at end of Event
-	if(fSave>=kSdSteps) fTree->Branch("creatproc", "vector<Int_t>", &fEventData->fCreatProc);//Fill at end of Event
-	if(fSave>=kSdSteps) fTree->Branch("deposproc", "vector<Int_t>", &fEventData->fDepProc);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at end of Event
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("partgener", "vector<Int_t>", &fEventData->fPartGener);//Fill at end of Event
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("parentid", "vector<Int_t>", &fEventData->fParentId);//Fill at end of Event
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("firstparentid", "vector<Int_t>", &fEventData->fFirstParentId);//Fill at end of Event
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("creatproc", "vector<Int_t>", &fEventData->fCreatProc);//Fill at end of Event
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("deposproc", "vector<Int_t>", &fEventData->fDepProc);//Fill at step stage
 	
-	if(fSave>=kSdSteps) fTree->Branch("xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
-	if(fSave>=kSdSteps) fTree->Branch("zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("xmom", "vector<Double_t>", &fEventData->fXmom);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("ymom", "vector<Double_t>", &fEventData->fYmom);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("zmom", "vector<Double_t>", &fEventData->fZmom);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("xpol", "vector<Double_t>", &fEventData->fXpol);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("ypol", "vector<Double_t>", &fEventData->fYpol);//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("zpol", "vector<Double_t>", &fEventData->fZpol);//Fill at step stage
 	
 	
 	fEventData->fPrimaryVolumeIndex = -1;
@@ -216,7 +225,7 @@ void AnalysisManagerOptPh::EndOfRun(const G4Run *pRun)
 	fProcTable = NULL;
 	fProcVec = NULL;
 	
-	if(fSave==0) return;
+	if(fSave==AnalysisManagerOptPh::kOff) return;
 	
 	if(fTreeFile){
 		if(fTree){
@@ -238,6 +247,9 @@ void AnalysisManagerOptPh::BeginOfEvent(const G4Event *pEvent)
 	if( (fVerbose>=kInfo) && (fPrintModulo>0) && (fCurrentEvent%fPrintModulo == 0) ){
 		G4cout << "\nInfo --> AnalysisManagerOptPh::BeginOfEvent(...): Begin of event: " << fCurrentEvent  << G4endl;
 	}
+	
+	
+	fWasAtBoundary = false;
 	
 	/*
 	if(fHitsCollectionID == -1){
@@ -326,17 +338,12 @@ void AnalysisManagerOptPh::EndOfEvent(const G4Event *pEvent)
 
 void AnalysisManagerOptPh::Step(const G4Step *pStep)
 {
-	if((fVerbose>=kDebug) || fStepsDebug) G4cout << "\nDebug ---> AnalysisManagerOptPh::Step(...): Entering in AnalysisManagerOptPh::Step\n" << G4endl;
+	if(fVerbose>=kDebug) G4cout << "\nDebug ---> AnalysisManagerOptPh::Step(...): Entering in AnalysisManagerOptPh::Step\n" << G4endl;
 	
 	//if( (fVerbose<3) && (fOptPhSenDetVolNames.empty()) )return;
 	if(!pStep) return; //This just avoids problems, although would be a big problem to be fixed
 	
 	G4Track *track = pStep->GetTrack();
-	
-	G4StepPoint *preStepPoint = pStep->GetPreStepPoint();
-	
-	G4VPhysicalVolume *Vol_pre = preStepPoint->GetTouchableHandle()->GetVolume();
-	
 	
 	G4StepPoint *postStepPoint = pStep->GetPostStepPoint();
 	
@@ -349,14 +356,17 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep)
 	
 	//Volume printouts
 	if(fVerbose>=kDebug || fStepsDebug){
-		if(postStepPoint->GetStepStatus()==fGeomBoundary){
-			if( (fSave==kAll) || ((fSave<kAll) && (fOptPhSenDetVolPtrs.find(Vol)!=fOptPhSenDetVolPtrs.end()) ) ){
-				G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Optical photon at volumes boundary. Entering into volume \"" << Vol->GetName() << "\" from volume \"" << Vol_pre->GetName() << "." << G4endl;
-			}
-		}
+		
+		
+		G4StepPoint *preStepPoint = pStep->GetPreStepPoint();
+	
+		G4VPhysicalVolume *Vol_pre = preStepPoint->GetTouchableHandle()->GetVolume();
+	
+		G4TouchableHandle touch_pre = preStepPoint->GetTouchableHandle();
+		
 		
 		G4String TrackStat = "";
-		
+	
 		G4TrackStatus trstatus = track->GetTrackStatus();
 		if(trstatus==fAlive) TrackStat = "Alive";
 		if(trstatus==fStopButAlive) TrackStat = "StopButAlive";
@@ -364,9 +374,38 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep)
 		if(trstatus==fKillTrackAndSecondaries) TrackStat = "KillTrackAndSecondaries";
 		if(trstatus==fSuspend) TrackStat = "Suspend";
 		if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
-	
-		G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Status of optical photon particle: " << TrackStat << G4endl;
-		G4cout << "Debug ---> AnalysisManagerOptPh::Step(...): " << "Process selected in this step: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << G4endl;
+		
+		if((postStepPoint->GetStepStatus()==fGeomBoundary) || fWasAtBoundary){
+			if(fStepsDebug){
+				if(!fWasAtBoundary){
+					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon at volumes boundary" << G4endl;
+					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
+					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
+					G4cout << "              " << "Track status: " << TrackStat << G4endl;
+					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
+					fWasAtBoundary = true;
+				}else{
+					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon after volumes boundary" << G4endl;
+					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
+					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
+					G4cout << "              " << "Track status: " << TrackStat << G4endl;
+					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
+					fWasAtBoundary = false;
+				}
+				//std::string foo;
+				//G4cout << "Press a enter to continue..."; std::cin >> foo;
+			}else{
+				
+				if( (fSave==kAll) || (fOptPhSenDetVolPtrs.find(Vol)!=fOptPhSenDetVolPtrs.end()) ){
+					G4cout << "Debug ---> AnalysisManagerOptPh::Step(...):\n" << "     Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon at volumes boundary"<< G4endl;
+					G4cout << "     Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
+					G4cout << "     Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
+					G4cout << "     Track status: " << TrackStat << G4endl;
+					G4cout << "     Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << G4endl;
+				}
+				
+			}
+		}
 	}
 	
 	
@@ -383,7 +422,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep)
 	//fEventData->fVolName->push_back( vol->GetName() );
 	
 	fEventData->fVolIndex->push_back( fOptPhSenDetVolPtrsMap[Vol] );//ID of the physical volume (from a std::map)
-	fEventData->fHitVolId->push_back( touch->GetCopyNumber() );//Copy number of the physical volume????
+	fEventData->fHitVolId->push_back( touch->GetCopyNumber() );//Copy number of the physical volume ---> IT IS ALWAYS 0!!!!
 	//fEventData->fHitVolId->push_back( touch->GetId() ); //This doesn't exists of course
 	
 	fEventData->fTime->push_back( postStepPoint->GetGlobalTime() );
@@ -552,8 +591,9 @@ std::string AnalysisManagerOptPh::BuildProcsDict()
 		}
 		fProcVec = fProcTable->FindProcesses();
 		if(!fProcVec) return dictstr;
-		fNprocs = fProcVec->size();
 	}
+	
+	fNprocs = fProcVec->size();
 	
 	for (int iProc = 0; iProc<fNprocs; iProc++) {
 		fOptPhProcessesMap[iProc] = (*fProcVec)(iProc)->GetProcessName();
@@ -569,6 +609,7 @@ std::string AnalysisManagerOptPh::BuildProcsDict()
 			ss_tmp << it->first;
 			//obj[ std::stoi(it->first).c_str() ] = it->second;
 			obj[ ss_tmp.str().c_str() ] = it->second;
+			ss_tmp.str("");
 		}
 		
 		dictstr = obj.dump();
@@ -615,6 +656,7 @@ std::string AnalysisManagerOptPh::BuildPysVolDict()
 			ss_tmp << it->first;
 			//obj[ std::stoi(it->first).c_str() ] = it->second;
 			obj[ ss_tmp.str().c_str() ] = it->second;
+			ss_tmp.str("");
 		}
 		
 		dictstr = obj.dump();

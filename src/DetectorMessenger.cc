@@ -17,19 +17,36 @@
 #include <G4Tokenizer.hh>
 #include <G4ios.hh>
 
-
+#include <string>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 
 
 DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 :fDetector(pDetector)
 {
+	std::stringstream txt;
+	
 	fDetectorDir = new G4UIdirectory("/argoncube/detector/");
 	fDetectorDir->SetGuidance("ArgonCube detector geometry and material properties control.");
 	
 	fDetectorOptDir = new G4UIdirectory("/argoncube/detector/optical/");
 	fDetectorOptDir->SetGuidance("ArgonCube optical properties setup controls.");
+	
+	fTpbThicknCmd = new G4UIcmdWithADoubleAndUnit("/argoncube/detector/setTpbThick",this);
+	fTpbThicknCmd->SetGuidance("Set the thickness of the arcLight TPB layer.");
+	fTpbThicknCmd->SetParameterName("TpbThick",false);
+	fTpbThicknCmd->AvailableForStates(G4State_PreInit);
+	fTpbThicknCmd->SetDefaultUnit("mm");
+	fTpbThicknCmd->SetUnitCandidates("mm cm");
+	
+	fDetConstrVerb = new G4UIcmdWithAnInteger("/argoncube/detector/verbosity", this);
+	fDetConstrVerb->SetGuidance("Set the verbosity for the detector constructor.");
+	fDetConstrVerb->SetParameterName("DetVerb",false);
+	fDetConstrVerb->AvailableForStates(G4State_PreInit, G4State_Idle);
+	txt.str(""); txt << "DetVerb>=0 && DetVerb<=" << DetConstrOptPh::kDebug;
+	fDetConstrVerb->SetRange( txt.str().c_str() );
 	
 	fPhysVolCoordCmd = new G4UIcmdWithAString("/argoncube/detector/PhysVolCoord", this);
 	fPhysVolCoordCmd->SetParameterName("physvol", false);
@@ -40,7 +57,12 @@ DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 	fLoadOpticalSettingsFile->SetParameterName("SettFile",false);
 	fLoadOpticalSettingsFile->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
-	
+	fOpticalSettingsVerb = new G4UIcmdWithAnInteger("/argoncube/detector/optical/verbosity", this);
+	fOpticalSettingsVerb->SetGuidance("Set the verbosity for the manager of the optical properties settings.");
+	fOpticalSettingsVerb->SetParameterName("OptVerb",false);
+	fOpticalSettingsVerb->AvailableForStates(G4State_PreInit, G4State_Idle);
+	txt.str(""); txt << "OptVerb>=0 && OptVerb<=" << OptPropManager::kDebug;
+	fOpticalSettingsVerb->SetRange( txt.str().c_str() );
 }
 
 DetectorMessenger::~DetectorMessenger()
@@ -48,18 +70,41 @@ DetectorMessenger::~DetectorMessenger()
 	//delete fLArAbsorbtionLengthCmd;
 	//delete fLArRayScatterLengthCmd;
 	
+	delete fTpbThicknCmd;
+	delete fDetConstrVerb;
+	delete fOpticalSettingsVerb;
 	delete fPhysVolCoordCmd;
 	delete fLoadOpticalSettingsFile;
 	delete fDetectorOptDir;
 	delete fDetectorDir;
+	
 }
 
 void DetectorMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewValue)
 {
-	if(pUIcommand == fPhysVolCoordCmd) fDetector->PrintVolumeCoordinates( hNewValue );
+	if(pUIcommand == fDetConstrVerb){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fDetConstrVerb" << G4endl;
+		fDetector->SetVerbosity( (DetConstrOptPh::verbosity)std::stoi(hNewValue) );
+	}
+	
+	if(pUIcommand == fTpbThicknCmd){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fTpbThicknCmd" << G4endl;
+		fDetector->SetTpbThickness( fTpbThicknCmd->GetNewDoubleValue(hNewValue) );
+	}
+	
+	if(pUIcommand == fPhysVolCoordCmd){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fPhysVolCoordCmd" << G4endl;
+		fDetector->PrintVolumeCoordinates( hNewValue );
+	}
 	
 	if(pUIcommand == fLoadOpticalSettingsFile){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fLoadOpticalSettingsFile" << G4endl;
 		OptPropManager::GetInstance()->ProcessJsonFile( hNewValue );
+	}
+	
+	if(pUIcommand == fOpticalSettingsVerb){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fOpticalSettingsVerb" << G4endl;
+		OptPropManager::GetInstance()->SetVerbosity( (OptPropManager::verbosity)std::stoi(hNewValue) );
 	}
 }
 
