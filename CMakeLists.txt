@@ -88,6 +88,10 @@ target_link_libraries(ArgonCubeOptPh-PVlist ${Geant4_LIBRARIES} ${ROOT_LIBRARIES
 add_executable(ArgonCubeOptPh-LVlist ${PROJECT_SOURCE_DIR}/prog/ArCubeOptPh-LVlist.cpp ${sources} ${headers})
 target_link_libraries(ArgonCubeOptPh-LVlist ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 
+#add_executable(ArgonCubeOptPh-PVscan ${PROJECT_SOURCE_DIR}/prog/ArCubeOptPh-PVscan.cpp ${sources} ${headers})
+#target_link_libraries(ArgonCubeOptPh-PVscan ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
+
+
 add_executable(ArgonCubeOptPh-GeomInfo ${PROJECT_SOURCE_DIR}/prog/ArCubeOptPh-GeomInfo.cpp ${sources} ${headers})
 target_link_libraries(ArgonCubeOptPh-GeomInfo ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 #----------------------------------------------------------------------------
@@ -95,19 +99,19 @@ target_link_libraries(ArgonCubeOptPh-GeomInfo ${Geant4_LIBRARIES} ${ROOT_LIBRARI
 # build the applications. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
-set(_SCRIPTS
-  icons.mac
-  gui.mac
-  vis.mac
-  )
+##set(_SCRIPTS
+  ##icons.mac
+  ##gui.mac
+  ##vis.mac
+  ##)
 
-foreach(_script ${_SCRIPTS})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/macros/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
-    COPYONLY
-    )
-endforeach()
+##foreach(_script ${_SCRIPTS})
+  ##configure_file(
+    ##${PROJECT_SOURCE_DIR}/macros/${_script}
+    ##${PROJECT_BINARY_DIR}/${_script}
+    ##COPYONLY
+    ##)
+##endforeach()
 
 #----------------------------------------------------------------------------
 # Add program to the project targets
