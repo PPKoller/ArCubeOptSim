@@ -110,7 +110,7 @@ public:
 	void SetMaterialWLSDelay(const G4String& materialname, const std::vector<G4double>& wlsdelay);
 	
 	
-	//To use these methods the "logical surface" should already have an optical surface assigned otherwise it doesn't apply these things
+	//To use these methods the "logical surface" should already have an optical surface assigned otherwise it doesn't apply the settings
 	void SetOpticalSurfaceModel(const G4String& logsurfname, const G4String& model);
 	void SetOpticalSurfaceType(const G4String& logsurfname, const G4String& type);
 	void SetOpticalSurfaceFinish(const G4String& logsurfname, const G4String& finish);
@@ -131,6 +131,9 @@ public:
 	
 	
 	void SetOpticalSurface(const G4String& logsurfname, const G4String& optsurfname);
+	
+	
+	G4OpticalSurface* FindOptSurf(const G4String& optsurfname);
 	
 	
 private:
@@ -184,7 +187,6 @@ private:
 	
 	G4LogicalSkinSurface* FindSkinSurf(const G4String& logsurfname);
 	
-	G4OpticalSurface* FindOptSurf(const G4String& optsurfname);
 	
 	G4Material* FindMaterial(const G4String& materialname);
 	

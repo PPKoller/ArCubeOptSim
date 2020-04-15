@@ -4,6 +4,7 @@
 #include "globals.hh"
 #include "G4VUserDetectorConstruction.hh"
 
+#include "G4OpticalSurface.hh"
 #include "G4GDMLParser.hh"
 #include "G4Material.hh"
 
@@ -27,6 +28,8 @@ class OptPropManager;
 class DetConstrOptPh: public G4VUserDetectorConstruction
 {
 public:
+	
+	typedef std::map<std::string, std::vector<G4VPhysicalVolume*> > PVmap;
 	
 	enum verbosity{
 		kSilent,
@@ -56,6 +59,8 @@ public:
 	
 	//static bool GetGeometryParameter(G4String szParameter, G4double& outval);
 	
+	inline const PVmap* GetVolsMap() const {return (const PVmap*)(&fPVolsMap);}
+	
 	void PrintVolumeCoordinates(G4String VolName);
 	
 	void PrintListOfPhysVols();
@@ -66,11 +71,17 @@ protected:
 	//They should go away when the full user interface for optical setting
 	//Here also all the optical surfaces are defined
 	virtual void BuildTPBlayer();
-	virtual void BuildDefaultOpticalSurfaces();
-	virtual void DefaultOptProperties();
+	virtual void BuildDefaultOptSurf();
+	virtual void BuildDefaultLogSurfaces();
+	virtual void SetDefaultOptProperties();
 	virtual G4Material* FindMaterial(G4String matname);
 	
+	
+	
 private:
+	
+	//Using a std::set in the map in order to avoid having more entries with same volumes pointers (like for a std::vector). This fills the fPVolsMap object.
+	void ScanVols(G4VPhysicalVolume* mvol, std::map<G4String, std::set<G4VPhysicalVolume*> > *map=NULL);
 	
 	DetectorMessenger *fDetectorMessenger;
 	
@@ -81,7 +92,10 @@ private:
 	
 	DetConstrOptPh::verbosity fVerbose;
 	
+	PVmap fPVolsMap;
 	
+	const G4SurfacePropertyTable *fOptSurfTab;
+		
 	G4double fTpbThick;
 };
 

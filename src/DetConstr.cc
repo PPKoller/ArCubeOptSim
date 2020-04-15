@@ -37,7 +37,6 @@
 #include "G4LogicalVolumeStore.hh"
 
 #include "G4OpBoundaryProcess.hh"
-#include "G4OpticalSurface.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4LogicalSkinSurface.hh"
 
@@ -70,6 +69,8 @@ DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 	fWorld = NULL;
 	fDetectorMessenger = NULL;
 	
+	fVerbose = DetConstrOptPh::kSilent;
+	
 	fGDMLParser = new G4GDMLParser;
 	
 	{
@@ -90,15 +91,14 @@ DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 		G4Exception("DetConstrOptPh::DetConstrOptPh(...)","Geom.001", FatalException,"Cannot get \"OptPropManager\" pointer.");
 	}
 	
-	fTpbThick = 0.001*mm; //Default value. Can be changed by a user command
+	fOptSurfTab = G4SurfaceProperty::GetSurfacePropertyTable();
 	
-	fVerbose = DetConstrOptPh::kSilent;
+	fTpbThick = 0.001*mm; //Default value. Can be changed by a user command
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // destructor
-
 DetConstrOptPh::~DetConstrOptPh()
 {
 	if(fDetectorMessenger) delete fDetectorMessenger;
@@ -107,7 +107,6 @@ DetConstrOptPh::~DetConstrOptPh()
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-
 G4VPhysicalVolume *DetConstrOptPh::Construct()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::Construct(): Entering the function."<<G4endl;
@@ -115,8 +114,18 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 		if( G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV") ){
 			BuildTPBlayer();
 		}
-		BuildDefaultOpticalSurfaces();
-		DefaultOptProperties();
+		
+		std::map<std::string, std::vector<G4VPhysicalVolume*> >::iterator iT;
+		
+		fPVolsMap.clear();
+		
+		if(fWorld){
+			ScanVols(fWorld);
+		}
+		
+		BuildDefaultOptSurf();
+		BuildDefaultLogSurfaces();
+		SetDefaultOptProperties();
 	}
 	
 	if(fVerbose>=DetConstrOptPh::kInfo) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
@@ -127,7 +136,9 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 }
 
 
-void DetConstrOptPh::BuildTPBlayer(){
+/////////////////////////////////////////////////////////////////////////////////////////
+void DetConstrOptPh::BuildTPBlayer()
+{
 	
 	if(fVerbose>=DetConstrOptPh::kDebug){
 		G4cout << "Debug --> DetConstrOptPh::BuildTPBlayer(): Entering the function." << G4endl;
@@ -187,9 +198,45 @@ void DetConstrOptPh::BuildTPBlayer(){
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void DetConstrOptPh::BuildDefaultOptSurf()
+{
+	G4OpticalSurface* LAr2TPB_optsurf = new G4OpticalSurface("LAr2TPB_optsurf", unified, ground, dielectric_dielectric);
+	LAr2TPB_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+
+	G4OpticalSurface* TPB2LAr_optsurf = new G4OpticalSurface("TPB2LAr_optsurf", unified, ground, dielectric_dielectric);
+	TPB2LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	
+	
+	//Make the optical surface from EJ280 WLS to TPB
+	G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polished, dielectric_dielectric);
+	TPB2EJ280_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	//Make the optical surface from TPB to EJ280 WLS (trapping)
+	G4OpticalSurface* EJ2802TPB_optsurf = new G4OpticalSurface("EJ2802TPB_optsurf", unified, polished, dielectric_metal);
+	EJ2802TPB_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	
+	G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+	EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	
+	G4OpticalSurface* EJ2802PVT_optsurf = new G4OpticalSurface("EJ2802PVT_optsurf", unified, polished, dielectric_metal);
+	EJ2802PVT_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	
+	G4OpticalSurface* EJ2802G10_optsurf = new G4OpticalSurface("EJ2802G10_optsurf", unified, polished, dielectric_metal);
+	EJ2802G10_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+	
+	
+	G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+	EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::DefaultOptProperties()
+void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::DefaultOptProperties(): Entering the function."<<G4endl;
 	
@@ -210,9 +257,9 @@ void DetConstrOptPh::DefaultOptProperties()
 	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
 	G4double tpb_abs_len[1] = {400/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-  G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
-  G4double tpb_wls_emission[1] = {425*nm};
-  G4double tpb_wls_delay[1] = {0.5*ns};
+	G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
+	G4double tpb_wls_emission[1] = {425*nm};
+	G4double tpb_wls_delay[1] = {0.5*ns};
 
 	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
 	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
@@ -231,10 +278,7 @@ void DetConstrOptPh::DefaultOptProperties()
 	//fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
 	//fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
 	//fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
-
-
-	fOptPropManager->SetSurfSigmaAlpha("LAr2TPB_logsurf", 0.1);
-	fOptPropManager->SetSurfSigmaAlpha("TPB2LAr_logsurf", 0.1);
+	
 	
 	G4double ej2802tpb_reflectivity[1] = {1.};
 	G4double ej2802lar_reflectivity[1] = {1.};
@@ -242,11 +286,42 @@ void DetConstrOptPh::DefaultOptProperties()
 	G4double ej2802G10_reflectivity[1] = {1.};
 	G4double ej2802SiPM_reflectivity[1] = {0.};
 	
-	fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
-	fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
-	fOptPropManager->SetSurfReflectivity("EJ2802PVT_logsurf", 1, opt_ph_en, ej2802pvt_reflectivity );
-	fOptPropManager->SetSurfReflectivity("EJ2802G10_logsurf", 1, opt_ph_en, ej2802G10_reflectivity );
-	fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf", 1, opt_ph_en, ej2802SiPM_reflectivity );
+	size_t nOpsf = fOptSurfTab->size();
+	for(size_t iOps=0; iOps<nOpsf; iOps++){
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("LAr2TPB_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
+		}
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("TPB2LAr_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
+		}
+		
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802TPB_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
+		}
+		
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802LAr_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable()->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802lar_reflectivity, 1 );
+		}
+		
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802PVT_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable()->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802pvt_reflectivity, 1 );
+		}
+		
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802G10_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable()->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802G10_reflectivity, 1 );
+		}
+		
+		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802SiPM_optsurf") ){
+			((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable()->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802SiPM_reflectivity, 1 );
+		}
+	}
+	
+	
+	//fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
+	//fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
+	//fOptPropManager->SetSurfReflectivity("EJ2802PVT_logsurf", 1, opt_ph_en, ej2802pvt_reflectivity );
+	//fOptPropManager->SetSurfReflectivity("EJ2802G10_logsurf", 1, opt_ph_en, ej2802G10_reflectivity );
+	//fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf", 1, opt_ph_en, ej2802SiPM_reflectivity );
 	
 	
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::DefaultOptProperties(): Exiting the function."<<G4endl;
@@ -254,9 +329,9 @@ void DetConstrOptPh::DefaultOptProperties()
 }
 
 
-void DetConstrOptPh::BuildDefaultOpticalSurfaces()
+void DetConstrOptPh::BuildDefaultLogSurfaces()
 {
-	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultOpticalSurfaces(): Entering the function."<<G4endl;
+	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultLogSurfaces(): Entering the function."<<G4endl;
 	//By default the EJ28 WLS does't have optical properties.
 	//They can be defined later
 	
@@ -267,30 +342,54 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between LAr and TPB layer  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_LAr_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
-	if( vol1 && vol2){
+	
+	//By the default the surfaces are with ground finish
+	//The reflectivity is calculated by the Fresnel law
+	//No reflection properties are defined ==> lambertian reflection is selected in this default
+	
+	if( (fPVolsMap.find("volTPB_LAr_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volTPB_PV")!=fPVolsMap.end()) ){
 		
-		//By the default the surfaces are with ground finish
-		//The reflectivity is calculated by the Fresnel law
-		//No reflection properties are defined ==> lambertian reflection is selected in this default
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volTPB_LAr_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volTPB_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4OpticalSurface* LAr2TPB_optsurf = new G4OpticalSurface("LAr2TPB_optsurf", unified, ground, dielectric_dielectric);
+		G4OpticalSurface* LAr2TPB_optsurf = fOptPropManager->FindOptSurf("LAr2TPB_optsurf");
+		G4OpticalSurface* TPB2LAr_optsurf = fOptPropManager->FindOptSurf("TPB2LAr_optsurf");;
 		
-		G4LogicalBorderSurface* LAr2TPB_logsurf = new G4LogicalBorderSurface("LAr2TPB_logsurf",vol1,vol2,LAr2TPB_optsurf);
-		
-		LAr2TPB_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-		
-		
-		//Make the optical surface from TPB to LAr
-		
-		G4OpticalSurface* TPB2LAr_optsurf = new G4OpticalSurface("TPB2LAr_optsurf", unified, ground, dielectric_dielectric);
-		
-		G4LogicalBorderSurface* TPB2LAr_logsurf = new G4LogicalBorderSurface("TPB2LAr_logsurf",vol2,vol1,TPB2LAr_optsurf);
-		
-		TPB2LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-		
-		
+		if(LAr2TPB_optsurf || TPB2LAr_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				if(LAr2TPB_optsurf) new G4LogicalBorderSurface("LAr2TPB_logsurf",vol1,vol2,LAr2TPB_optsurf);
+			
+				//Make the optical surface from TPB to LAr
+				if(TPB2LAr_optsurf) new G4LogicalBorderSurface("TPB2LAr_logsurf",vol2,vol1,TPB2LAr_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+					
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "LAr2TPB_logsurf_" << iSurf;
+					
+						if(LAr2TPB_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol1,vol2,LAr2TPB_optsurf);
+					
+						ss_tmp.str("");
+						ss_tmp << "TPB2LAr_logsurf_" << iSurf;
+						if(TPB2LAr_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol2,vol1,TPB2LAr_optsurf);
+					}
+				}
+			}
+		}
 	}//End of interface between LAr and ArCLight TPB coating
 	
 	
@@ -298,30 +397,53 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between TPB and EJ280 WLS  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPB_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	if( vol1 && vol2){
+	if( (fPVolsMap.find("volTPB_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) ){
 		
 		//As a default the surface is defined as polished and front painted.
 		//This allow for some reflection while the non reflected photons are simply absorbed by the painting.
 		//Ideally this surface should be defined as dielectric_dichroic whic can be implemented later by the user.
 		
-		G4OpticalSurface* TPB2EJ280_optsurf = new G4OpticalSurface("TPB2EJ280_optsurf", unified, polished, dielectric_dielectric);
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volTPB_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volWLS_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* TPB2EJ280_logsurf = new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
 		
-		TPB2EJ280_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-
-    //Make the optical surface from EJ280 WLS to TPB
+		G4OpticalSurface* TPB2EJ280_optsurf = fOptPropManager->FindOptSurf("TPB2EJ280_optsurf");
+		G4OpticalSurface* EJ2802TPB_optsurf = fOptPropManager->FindOptSurf("EJ2802TPB_optsurf");
 		
-		G4OpticalSurface* EJ2802TPB_optsurf = new G4OpticalSurface("EJ2802TPB_optsurf", unified, polished, dielectric_metal);
+		if(TPB2EJ280_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol1_vec.at(0);
+			
+				if(TPB2EJ280_optsurf) new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
 		
-		G4LogicalBorderSurface* EJ2802TPB_logsurf = new G4LogicalBorderSurface("EJ2802TPB_logsurf",vol2,vol1,EJ2802TPB_optsurf);
-		
-		EJ2802TPB_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-		
+				if(EJ2802TPB_optsurf) new G4LogicalBorderSurface("EJ2802TPB_logsurf",vol2,vol1,EJ2802TPB_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+					
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "TPB2EJ280_logsurf_" << iSurf;
+					
+						if(TPB2EJ280_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol1,vol2,TPB2EJ280_optsurf);
+					
+						ss_tmp.str("");
+						ss_tmp << "EJ2802TPB_logsurf_" << iSurf;
+						if(EJ2802TPB_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol2,vol1,EJ2802TPB_optsurf);
+					}
+				}
+			}
+		}
 	}//End of interface between EJ280 WLS and ArCLight TPB coating
 	
 	
@@ -329,46 +451,124 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between EJ280 WLS and LAr  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volOpticalDet_PV");
-	if( vol1 && vol2){
+	if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volOpticalDet_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volOpticalDet_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
 		
-		EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
+		G4OpticalSurface* EJ2802LAr_optsurf = fOptPropManager->FindOptSurf("EJ2802LAr_optsurf");
+		
+		if(EJ2802LAr_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802LAr_logsurf", vol1, vol2, EJ2802LAr_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802LAr_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802LAr_optsurf );
+					
+					}
+				}
+			}
+		}
 	}
 	
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCActive_PV");
-	if( vol1 && vol2){
+	
+	if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volOpticalDet_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802LAr_optsurf = new G4OpticalSurface("EJ2802LAr_optsurf", unified, polished, dielectric_metal);
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volOpticalDet_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802LAr_logsurf = new G4LogicalBorderSurface("EJ2802LAr_logsurf",vol1,vol2,EJ2802LAr_optsurf);
 		
-		EJ2802LAr_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-
-	}//End of interface between EJ280 WLS and LAr
+		G4OpticalSurface* EJ2802LAr_optsurf = fOptPropManager->FindOptSurf("EJ2802LAr_optsurf");
+		
+		if(EJ2802LAr_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802LAr_logsurf", vol1, vol2, EJ2802LAr_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802LAr_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802LAr_optsurf );
+					
+					}
+				}
+			}
+		}
+	}
 	
 	
-	
-	// --------------------------------------//
-	//  Interface between EJ280 WLS and PVT  //
-	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volPVT_PV");
-	if( vol1 && vol2){
+	// -----------------------------------------------------------//
+	//        Interface between EJ280 WLS and volTPB_LAr_PV       //
+	//  This is used only in the case the TPB layer is not built  //
+	// -----------------------------------------------------------//
+	if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volTPB_LAr_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802PVT_optsurf = new G4OpticalSurface("EJ2802PVT_optsurf", unified, polished, dielectric_metal);
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volTPB_LAr_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802PVT_logsurf = new G4LogicalBorderSurface("EJ2802PVT_logsurf",vol1,vol2,EJ2802PVT_optsurf);
 		
-		EJ2802PVT_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-
+		G4OpticalSurface* EJ2802LAr_optsurf = fOptPropManager->FindOptSurf("EJ2802LAr_optsurf");
+		
+		if(EJ2802LAr_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802LArTPB_logsurf", vol1, vol2, EJ2802LAr_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802LArTPB_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802LAr_optsurf );
+					
+					}
+				}
+			}
+		}
 	}//End of interface between EJ280 WLS and PVT
 	
 	
@@ -376,95 +576,255 @@ void DetConstrOptPh::BuildDefaultOpticalSurfaces()
 	// --------------------------------------//
 	//  Interface between EJ280 WLS and G10  //
 	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volTPCBar_PV");
-	if( vol1 && vol2){
+	if(  (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volTPCBar_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802G10_optsurf = new G4OpticalSurface("EJ2802G10_optsurf", unified, polished, dielectric_metal);
+		bool singleinstances = false;
+		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+		size_t nVols1 = vol1_vec.size();
+		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volTPCBar_PV"];
+		size_t nVols2 = vol2_vec.size();
+		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802G10_logsurf = new G4LogicalBorderSurface("EJ2802G10_logsurf",vol1,vol2,EJ2802G10_optsurf);
 		
-		EJ2802G10_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-
-	}//End of interface between EJ280 WLS and LAr
+		G4OpticalSurface* EJ2802G10_optsurf = fOptPropManager->FindOptSurf("EJ2802G10_optsurf");
+		
+		if(EJ2802G10_optsurf){
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802G10_logsurf", vol1, vol2, EJ2802G10_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802G10_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802G10_optsurf );
+					
+					}
+				}
+			}
+		}
+	}//End of interface between EJ280 WLS and G10 (TPB bar)
 	
 	
 	
-	// --------------------------------------//
-	//  Interface between EJ280 WLS and SiPM  //
-	// --------------------------------------//
-	vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM0_PV");
-	if( vol1 && vol2){
-		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
-		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }  
-
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM1_PV");
-	if( vol1 && vol2){
-		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
-		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }  
+	// ----------------------------------------//
+	//  Interface between EJ280 WLS and SiPMs  //
+	// ----------------------------------------//
+	G4OpticalSurface* EJ2802SiPM_optsurf = fOptPropManager->FindOptSurf("EJ2802SiPM_optsurf");
 	
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM2_PV");
-	if( vol1 && vol2){
+	if(EJ2802SiPM_optsurf){
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM0_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM0_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }  
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM0_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM0_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
 	
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM3_PV");
-	if( vol1 && vol2){
-		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
-		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }  
 	
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM4_PV");
-	if( vol1 && vol2){
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM1_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM1_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-  }  
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM1_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM1_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
 	
-  vol1 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volWLS_PV");
-	vol2 = G4PhysicalVolumeStore::GetInstance()->GetVolume("volSiPM5_PV");
-	if( vol1 && vol2){
+	
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM2_PV")!=fPVolsMap.end()) ){
 		
-		G4OpticalSurface* EJ2802SiPM_optsurf = new G4OpticalSurface("EJ2802SiPM_optsurf", unified, polished, dielectric_metal);
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM2_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
 		
-		G4LogicalBorderSurface* EJ2802SiPM_logsurf = new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM2_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM2_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
+	
+	
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM3_PV")!=fPVolsMap.end()) ){
 		
-		EJ2802SiPM_optsurf -> SetMaterialPropertiesTable( new G4MaterialPropertiesTable() );
-
-	}//End of interface between EJ280 WLS and SiPM
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM3_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
+		
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM3_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM3_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
+	
+	
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM4_PV")!=fPVolsMap.end()) ){
+		
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM4_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
+		
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM4_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM4_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
+	
+	
+		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volSiPM5_PV")!=fPVolsMap.end()) ){
+		
+			bool singleinstances = false;
+			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
+			size_t nVols1 = vol1_vec.size();
+			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volSiPM5_PV"];
+			size_t nVols2 = vol2_vec.size();
+			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
+		
+			if(singleinstances){
+				vol1 = vol1_vec.at(0);
+				vol2 = vol2_vec.at(0);
+			
+				new G4LogicalBorderSurface("EJ2802SiPM5_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
+			
+			}else{
+				size_t iSurf = 0;
+				std::stringstream ss_tmp; 
+				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+						iSurf++;
+						vol1 = vol1_vec.at(iVol1);
+						vol2 = vol2_vec.at(iVol2);
+						ss_tmp.str("");
+						ss_tmp << "EJ2802SiPM5_logsurf_" << iSurf;
+					
+						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
+					
+					}
+				}
+			}
+		}
+	}
 	
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultOpticalSurfaces(): Exiting the function."<<G4endl;
 }
@@ -599,7 +959,8 @@ void DetConstrOptPh::PrintListOfLogVols()
 }
 
 
-G4Material* DetConstrOptPh::FindMaterial(G4String matname){
+G4Material* DetConstrOptPh::FindMaterial(G4String matname)
+{
 	
 	G4MaterialTable *tab = G4Material::GetMaterialTable();
 	
@@ -614,3 +975,77 @@ G4Material* DetConstrOptPh::FindMaterial(G4String matname){
 	return NULL;
 	
 }
+
+
+void DetConstrOptPh::ScanVols(G4VPhysicalVolume* mvol, std::map<G4String, std::set<G4VPhysicalVolume*> > *volsmap)
+{
+	if(!mvol) return;
+	
+	//This flag will be used to delete the volsmap instance and to copy the volumes of the world tree to the fPVolsMap object
+	bool isRootVol = false;
+	if(!volsmap){
+		isRootVol = true;
+		volsmap = new std::map<G4String, std::set<G4VPhysicalVolume*> >();
+	}
+	
+	if( volsmap->find(mvol->GetName()) == volsmap->end() ){
+		std::set<G4VPhysicalVolume*> volSet;
+		volSet.insert(mvol);
+		(*volsmap)[mvol->GetName()] = volSet;
+	}else{
+		((*volsmap)[mvol->GetName()]).insert(mvol);
+	}
+	
+	G4int nDVols = mvol->GetLogicalVolume()->GetNoDaughters();
+	
+	if(fVerbose>=DetConstrOptPh::kDetails){
+		G4cout << "Detail --> Scanning dauters of volume <" << mvol->GetName() << ">:" << G4endl;
+		
+		std::map<std::string, G4int> vols_map;
+		
+		for(G4int iVol=0; iVol<nDVols; iVol++){
+			G4VPhysicalVolume* dVol = mvol->GetLogicalVolume()->GetDaughter(iVol);
+			
+			if(dVol){
+				std::string name = dVol->GetName();
+				if( vols_map.find(name) == vols_map.end() ){
+					vols_map[name] = 1;
+				}else{
+					vols_map[name] += 1;
+				}
+			}
+		}
+	
+		if(vols_map.size()==0){
+			G4cout << "  No daughter volumes.\n" << G4endl;
+		}else{
+			std::map<std::string, int>::iterator it1;
+			for(it1=vols_map.begin(); it1!=vols_map.end(); ++it1){
+				G4cout << "  Volume <" << it1->first << ">, copies: " << it1->second << G4endl;
+			}
+			G4cout << G4endl;
+		}
+	}
+	
+	
+	for(G4int iVol=0; iVol<nDVols; iVol++){
+		if( mvol->GetLogicalVolume()->GetDaughter(iVol) ) ScanVols( mvol->GetLogicalVolume()->GetDaughter(iVol), volsmap );
+	}
+	
+	if(isRootVol){
+		//Only in this case I copy all the found 
+		std::map<G4String, std::set<G4VPhysicalVolume*> >::iterator mpIt;
+		for(mpIt=volsmap->begin(); mpIt!=volsmap->end(); ++mpIt){
+			fPVolsMap[mpIt->first] = std::vector<G4VPhysicalVolume*>( (mpIt->second).begin(), (mpIt->second).end() );
+		}
+		
+		
+		delete volsmap;
+	}
+}
+
+
+
+
+
+
