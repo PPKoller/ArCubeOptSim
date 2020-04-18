@@ -486,8 +486,8 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	//  Interface between EJ280 WLS and Mirror  //
 	// -----------------------------------------//
   
-  int n_lv = 7;
-  char ej2802esr_lv[n_lv][50] = { "volLAr_PV", "volSiPM_Mask_0_PV", "volSiPM_Mask_1_PV", "volSiPM_Mask_2_PV", "volArCLight_PV", "volOpticalDet_PV", "volLAr_PV"};
+  int n_lv = 5;
+  char ej2802esr_lv[n_lv][50] = { "volLAr_PV", "volSiPM_Mask_PV", "volArCLight_PV", "volOpticalDet_PV", "volLAr_PV"};
 
   for(int lv_idx=0; lv_idx<n_lv; lv_idx++){
     if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find(ej2802esr_lv[lv_idx])!=fPVolsMap.end()) ){
@@ -523,6 +523,50 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
               new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802ESR_optsurf );
             
             }
+          }
+        }
+      }
+    }
+  }//End of interface between EJ280 WLS and Mirror
+	
+	
+	
+	// -----------------------------------------//
+	//  Interface between Fibre and LAr  //
+	// -----------------------------------------//
+  
+  if( (fPVolsMap.find("volFibre_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volLCM_PV")!=fPVolsMap.end()) ){
+    
+    bool singleinstances = false;
+    std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volFibre_PV"];
+    size_t nVols1 = vol1_vec.size();
+    std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volLCM_PV"];
+    size_t nVols2 = vol2_vec.size();
+    if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
+    
+    
+    G4OpticalSurface* EJ2802ESR_optsurf = fOptPropManager->FindOptSurf("EJ2802ESR_optsurf");
+    
+    if(EJ2802ESR_optsurf){
+      if(singleinstances){
+        vol1 = vol1_vec.at(0);
+        vol2 = vol2_vec.at(0);
+      
+        new G4LogicalBorderSurface("EJ2802ESR_logsurf", vol1, vol2, EJ2802ESR_optsurf);
+      
+      }else{
+        size_t iSurf = 0;
+        std::stringstream ss_tmp; 
+        for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
+          for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
+            iSurf++;
+            vol1 = vol1_vec.at(iVol1);
+            vol2 = vol2_vec.at(iVol2);
+            ss_tmp.str("");
+            ss_tmp << "EJ2802ESR_logsurf_" << iSurf;
+          
+            new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802ESR_optsurf );
+          
           }
         }
       }
