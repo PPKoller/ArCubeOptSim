@@ -23,6 +23,7 @@ class G4String;
 using json = nlohmann::json;
 
 //Definition of the functins that take a "processing unit" from the main json file structure
+class DetConstrOptPh;
 class OptPropManager;
 typedef void (OptPropManager::*json_proc_memfunc)(const json keyval);
 
@@ -40,10 +41,12 @@ public:
 	
 	static OptPropManager* GetInstance();
 	
+	void SetDetConstr(DetConstrOptPh* detConst){fDetConstr = detConst;};
+	
 	void ProcessJsonFile(const G4String& jsonfilename);
 	
-	void SetVerbosity(OptPropManager::verbosity verb){fVerbosity=verb;};
-	OptPropManager::verbosity GetVerbosity(){return fVerbosity;};
+	void SetVerbosity(OptPropManager::verbosity verb){fVerbose=verb;};
+	OptPropManager::verbosity GetVerbosity(){return fVerbose;};
 	
 	//loads the refractive index from a 2 column ascii file and gives it to a material if this exists
 	//The first column should be the energy photon (not the wavelenght) and the second column the refraction index
@@ -127,7 +130,9 @@ public:
 	};
 	
 	
-	void BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& optsurfname, const G4String& physvol1, const G4String& physvol2);
+	//Builds the logical surface given the names of the PVs.
+	//If no name for the optical surface is given it will build the logical surface without that. --> Do not do it as can generate big issues not immediately recognisable!!!
+	void BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& physvol1, const G4String& physvol2, const G4String& optsurfname=G4String(""));
 	
 	
 	void SetOpticalSurface(const G4String& logsurfname, const G4String& optsurfname);
@@ -141,7 +146,7 @@ private:
 	~OptPropManager(){;};
 	
 	
-	OptPropManager::verbosity fVerbosity;
+	OptPropManager::verbosity fVerbose;
 	
 	static OptPropManager* gThis;
 	
@@ -150,6 +155,7 @@ private:
 	std::map<G4String, G4OpticalSurfaceFinish> OptSurfFinishMap;
 	
 	
+	DetConstrOptPh* fDetConstr;
 	
 	//The following functions process the info of the "setmatprop" key word at the upper level of the jsonfile structure
 	

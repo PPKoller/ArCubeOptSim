@@ -86,6 +86,7 @@ DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 	}
 	
 	fOptPropManager = OptPropManager::GetInstance();
+	fOptPropManager->SetDetConstr(this);
 	
 	if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DetConstrOptPh(...)","Geom.001", FatalException,"Cannot get \"OptPropManager\" pointer.");
