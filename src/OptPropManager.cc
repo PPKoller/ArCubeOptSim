@@ -1272,14 +1272,14 @@ void OptPropManager::SetOpticalSurfaceFinish(const G4String& logsurfname, const 
 			if(optsurf){
 				optsurf->SetFinish( OptSurfFinishMap[finish] );
 			}else{
-				G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceFinish(...): The G4LogicalBorder surface \"" << logsurfname << "\", instance number " << nFound << " returns null pointer to its G4OpticalSurface (maybe not assigned yet). The surface finish cannot be set for this surface." << G4endl;
+				G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceFinish(...): The G4LogicalBorder surface <" << logsurfname << ">, instance number " << nFound << " returns null pointer to its G4OpticalSurface (maybe not assigned yet). The surface finish cannot be set for this surface." << G4endl;
 			}
 		}
 	}
 	if((nFound>0) && fVerbose>=OptPropManager::kDetails){
-		G4cout << "Detail --> OptPropManager::SetOpticalSurfaceFinish(...): Applied the surface finish to all the " << nFound << " G4VLogicalSurfaces with name \"" << logsurfname << "\"." << G4endl;
+		G4cout << "Detail --> OptPropManager::SetOpticalSurfaceFinish(...): Applied the surface finish to all the " << nFound << " G4VLogicalSurfaces with name <" << logsurfname << ">." << G4endl;
 	}else if(nFound==0){
-		G4cout << "WARNING --> OptPropManager::SetOpticalSurfaceFinish(...): Could not find any G4VLogicalSurfaces with name \"" << logsurfname << "\""  << G4endl;
+		G4cout << "\nWARNING --> OptPropManager::SetOpticalSurfaceFinish(...): Could not find any G4VLogicalSurfaces with name <" << logsurfname << ">.\n"  << G4endl;
 	}
 }
 
@@ -1328,7 +1328,7 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 	
 	
 	if( pv_map->find(physvol1)==pv_map->end() ){
-		G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The physical volume <" << physvol1 << "> does not exists in the list of volumes. The logical surface <" << logsurfname << "> will not be created." << G4endl;
+		G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The physical volume <" << physvol1 << "> does not exists in the list of volumes. The logical surface <" << logsurfname << "> will not be created.\n" << G4endl;
 		return;
 	}else{
 		//const std::string vname = physvol1.data();
@@ -1337,7 +1337,7 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 	}
 	
 	if( pv_map->find(physvol2)==pv_map->end() ){
-		G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The physical volume <" << physvol2 << "> does not exists in the list of volumes. The logical surface <" << logsurfname << "> will not be created." << G4endl;
+		G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The physical volume <" << physvol2 << "> does not exists in the list of volumes. The logical surface <" << logsurfname << "> will not be created.\n" << G4endl;
 		return;
 	}else{
 		//const std::string vname = physvol2.data();
@@ -1347,13 +1347,13 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 	
 	size_t nVols1 = vol1_vec.size();
 	if(nVols1==0){
-		G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The list of physical volumes with name <" << physvol2 << "> is empty!!! The logical surface <" << logsurfname << "> will not be created." << G4endl;
+		G4cout << "\nERROR --> OptPropManager::BuildLogicalBorderSurface(...): The list of physical volumes with name <" << physvol2 << "> is empty!!! The logical surface <" << logsurfname << "> will not be created.\n" << G4endl;
 		return;
 	}
 	
 	size_t nVols2 = vol2_vec.size();
 	if(nVols2==0){
-		G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The list of physical volumes with name <" << physvol2 << "> is empty!!! The logical surface <" << logsurfname << "> will not be created." << G4endl;
+		G4cout << "\nERROR --> OptPropManager::BuildLogicalBorderSurface(...): The list of physical volumes with name <" << physvol2 << "> is empty!!! The logical surface <" << logsurfname << "> will not be created.\n" << G4endl;
 		return;
 	}
 	
@@ -1379,7 +1379,7 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 		}
 		
 		if(!optsurf){
-			G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface <" << optsurfname << "> could not be found in the table of all optical surfaces. A dummy surface with the given name will be created for building the logical surface <" << logsurfname << ">." << G4endl;
+			G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface <" << optsurfname << "> could not be found in the table of all optical surfaces. A dummy surface with the given name will be created for building the logical surface <" << logsurfname << ">.\n" << G4endl;
 		}
 		
 		optsurf = new G4OpticalSurface(optsurfname);
@@ -1388,7 +1388,7 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 	
 	
 	if(!optsurf){
-		G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The logical surface <" << logsurfname << "> will be built without an optical surface (null pointer). This might produce run-time crashes and/or wrong behaviour of the simulation!" << G4endl;
+		G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The logical surface <" << logsurfname << "> will be built without an optical surface (null pointer). This might produce run-time crashes and/or wrong behaviour of the simulation!\n" << G4endl;
 	}
 	
 	
@@ -1401,11 +1401,11 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 		
 		if(logsurf){
 			
-			G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface between volume <" << vol1->GetName() << "> at address" << vol1 << " and volume <" << vol2->GetName() << "> at address" << vol2 << " already exists with name <" << logsurf->GetName() << ">. Renaming it as <" << logsurfname << "> and assigning the ." << G4endl;
+			G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface between volume <" << vol1->GetName() << "> at address" << vol1 << " and volume <" << vol2->GetName() << "> at address" << vol2 << " already exists with name <" << logsurf->GetName() << ">. Renaming it as <" << logsurfname << ">" << G4endl;
 			if(optsurf){
-				G4cout << " and assigning the surface <" << optsurf->GetName() << "> to it." << G4endl;
+				G4cout << " and assigning the surface <" << optsurf->GetName() << "> to it.\n" << G4endl;
 			}else{
-				G4cout << "." << G4endl;
+				G4cout << ".\n" << G4endl;
 			}
 			
 			logsurf->SetName(logsurfname);
@@ -1451,11 +1451,11 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 				
 				if(logsurf){
 					
-					G4cout << "WARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface between volume <" << vol1->GetName() << "> at address" << vol1 << " and volume <" << vol2->GetName() << "> at address" << vol2 << " already exists with name <" << logsurf->GetName() << ">. Renaming it as <" << ss_tmp.str().c_str() << "> and assigning the ." << G4endl;
+					G4cout << "\nWARNING --> OptPropManager::BuildLogicalBorderSurface(...): The optical surface between volume <" << vol1->GetName() << "> at address" << vol1 << " and volume <" << vol2->GetName() << "> at address" << vol2 << " already exists with name <" << logsurf->GetName() << ">. Renaming it as <" << ss_tmp.str().c_str() << "> and assigning the ." << G4endl;
 					if(optsurf){
-						G4cout << " and assigning the surface <" << optsurf->GetName() << "> to it." << G4endl;
+						G4cout << " and assigning the surface <" << optsurf->GetName() << "> to it.\n" << G4endl;
 					}else{
-						G4cout << "." << G4endl;
+						G4cout << ".\n" << G4endl;
 					}
 					
 					logsurf->SetName(ss_tmp.str().c_str());
@@ -1475,7 +1475,7 @@ void OptPropManager::BuildLogicalBorderSurface(const G4String& logsurfname, cons
 					
 					if(!logsurf){
 						if(fVerbose >= OptPropManager::kInfo){
-							G4cout << "Info --> OptPropManager::BuildLogicalBorderSurface(...): creating logical surface <" << ss_tmp.str().c_str() << ">." << G4endl;
+							G4cout << "\Info --> OptPropManager::BuildLogicalBorderSurface(...): creating logical surface <" << ss_tmp.str().c_str() << ">." << G4endl;
 						}
 						new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol1,vol2,optsurf);
 					}else{

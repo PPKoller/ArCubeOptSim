@@ -1,6 +1,8 @@
 #ifndef __DET_CONSTR_HH__
 #define __DET_CONSTR_HH__
 
+#include "OptPropManager.hh"
+
 #include "globals.hh"
 #include "G4VUserDetectorConstruction.hh"
 
@@ -22,7 +24,7 @@ class G4LogicalVolume;
 class G4VPhysicalVolume;
 class G4SubtractionSolid;
 class DetectorMessenger;
-class OptPropManager;
+//class OptPropManager;
 
 
 class DetConstrOptPh: public G4VUserDetectorConstruction
@@ -48,7 +50,10 @@ public:
 	const G4VPhysicalVolume* GetWorldVolume() const {return fWorld;};
 	
 	
-	inline void SetVerbosity(DetConstrOptPh::verbosity verb){fVerbose=verb;};
+	inline void SetVerbosity(DetConstrOptPh::verbosity verb){
+		fVerbose=verb;
+		fOptPropManager->SetVerbosity( (OptPropManager::verbosity)verb );
+	};
 	inline DetConstrOptPh::verbosity GetVerbosity(){return fVerbose;};
 	
 	inline void SetTpbThickness(G4double thick){fTpbThick = thick;};
@@ -74,7 +79,6 @@ protected:
 	virtual void BuildDefaultOptSurf();
 	virtual void BuildDefaultLogSurfaces();
 	virtual void SetDefaultOptProperties();
-	virtual void BuildLogSurface(const string, const string, const string);
 	virtual G4Material* FindMaterial(G4String matname);
 	
 	
