@@ -63,7 +63,6 @@ using std::ofstream;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // constructor
-
 DetConstrOptPh::DetConstrOptPh(G4String gdmlfilename)
 {
 	fWorld = NULL;
@@ -276,7 +275,6 @@ void DetConstrOptPh::SetDefaultOptProperties()
 	//fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
 	
 	
-	G4double ej2802tpb_reflectivity[1] = {1.};
 	G4double ej2802lar_reflectivity[1] = {1.};
 	G4double ej2802esr_reflectivity[1] = {1.};
 	G4double ej2802sipm_reflectivity[1] = {0.};
@@ -318,241 +316,82 @@ void DetConstrOptPh::SetDefaultOptProperties()
 	
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::BuildDefaultLogSurfaces()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultLogSurfaces(): Entering the function."<<G4endl;
 	//By default the EJ28 WLS does't have optical properties.
 	//They can be defined later
-	
-	
-	G4VPhysicalVolume *vol1, *vol2;
-	
-	
-	// --------------------------------------//
-	//  Interface between LAr and TPB layer  //
-	// --------------------------------------//
-	
-	//By the default the surfaces are with ground finish
-	//The reflectivity is calculated by the Fresnel law
-	//No reflection properties are defined ==> lambertian reflection is selected in this default
-	
-	if( (fPVolsMap.find("volTPB_LAr_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volTPB_PV")!=fPVolsMap.end()) ){
-		
-		bool singleinstances = false;
-		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volTPB_LAr_PV"];
-		size_t nVols1 = vol1_vec.size();
-		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volTPB_PV"];
-		size_t nVols2 = vol2_vec.size();
-		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
-		
-		G4OpticalSurface* LAr2TPB_optsurf = fOptPropManager->FindOptSurf("LAr2TPB_optsurf");
-		G4OpticalSurface* TPB2LAr_optsurf = fOptPropManager->FindOptSurf("TPB2LAr_optsurf");;
-		
-		if(LAr2TPB_optsurf || TPB2LAr_optsurf){
-			if(singleinstances){
-				vol1 = vol1_vec.at(0);
-				vol2 = vol2_vec.at(0);
-			
-				if(LAr2TPB_optsurf) new G4LogicalBorderSurface("LAr2TPB_logsurf",vol1,vol2,LAr2TPB_optsurf);
-			
-				//Make the optical surface from TPB to LAr
-				if(TPB2LAr_optsurf) new G4LogicalBorderSurface("TPB2LAr_logsurf",vol2,vol1,TPB2LAr_optsurf);
-			
-			}else{
-				size_t iSurf = 0;
-				std::stringstream ss_tmp; 
-				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
-					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
-						iSurf++;
-					
-						vol1 = vol1_vec.at(iVol1);
-						vol2 = vol2_vec.at(iVol2);
-						ss_tmp.str("");
-						ss_tmp << "LAr2TPB_logsurf_" << iSurf;
-					
-						if(LAr2TPB_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol1,vol2,LAr2TPB_optsurf);
-					
-						ss_tmp.str("");
-						ss_tmp << "TPB2LAr_logsurf_" << iSurf;
-						if(TPB2LAr_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol2,vol1,TPB2LAr_optsurf);
-					}
-				}
-			}
-		}
-	}//End of interface between LAr and ArCLight TPB coating
-	
-	
-	
-	// --------------------------------------//
-	//  Interface between TPB and EJ280 WLS  //
-	// --------------------------------------//
-	if( (fPVolsMap.find("volTPB_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) ){
-		
-		//As a default the surface is defined as polished and front painted.
-		//This allow for some reflection while the non reflected photons are simply absorbed by the painting.
-		//Ideally this surface should be defined as dielectric_dichroic whic can be implemented later by the user.
-		
-		bool singleinstances = false;
-		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volTPB_PV"];
-		size_t nVols1 = vol1_vec.size();
-		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volWLS_PV"];
-		size_t nVols2 = vol2_vec.size();
-		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
-		
-		
-		G4OpticalSurface* TPB2EJ280_optsurf = fOptPropManager->FindOptSurf("TPB2EJ280_optsurf");
-		G4OpticalSurface* EJ2802TPB_optsurf = fOptPropManager->FindOptSurf("EJ2802TPB_optsurf");
-		
-		if(TPB2EJ280_optsurf){
-			if(singleinstances){
-				vol1 = vol1_vec.at(0);
-				vol2 = vol1_vec.at(0);
-			
-				if(TPB2EJ280_optsurf) new G4LogicalBorderSurface("TPB2EJ280_logsurf",vol1,vol2,TPB2EJ280_optsurf);
-		
-				if(EJ2802TPB_optsurf) new G4LogicalBorderSurface("EJ2802TPB_logsurf",vol2,vol1,EJ2802TPB_optsurf);
-			
-			}else{
-				size_t iSurf = 0;
-				std::stringstream ss_tmp; 
-				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
-					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
-						iSurf++;
-					
-						vol1 = vol1_vec.at(iVol1);
-						vol2 = vol2_vec.at(iVol2);
-						ss_tmp.str("");
-						ss_tmp << "TPB2EJ280_logsurf_" << iSurf;
-					
-						if(TPB2EJ280_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol1,vol2,TPB2EJ280_optsurf);
-					
-						ss_tmp.str("");
-						ss_tmp << "EJ2802TPB_logsurf_" << iSurf;
-						if(EJ2802TPB_optsurf) new G4LogicalBorderSurface(ss_tmp.str().c_str(),vol2,vol1,EJ2802TPB_optsurf);
-					}
-				}
-			}
-		}
-	}//End of interface between EJ280 WLS and ArCLight TPB coating
-	
-	
-	
-	// -----------------------------------------------------------//
-	//        Interface between EJ280 WLS and volTPB_LAr_PV       //
-	//  This is used only in the case the TPB layer is not built  //
-	// -----------------------------------------------------------//
-	if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volTPB_LAr_PV")!=fPVolsMap.end()) ){
-		
-		bool singleinstances = false;
-		std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
-		size_t nVols1 = vol1_vec.size();
-		std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volTPB_LAr_PV"];
-		size_t nVols2 = vol2_vec.size();
-		if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
-		
-		
-		G4OpticalSurface* EJ2802LAr_optsurf = fOptPropManager->FindOptSurf("EJ2802LAr_optsurf");
-		
-		if(EJ2802LAr_optsurf){
-			if(singleinstances){
-				vol1 = vol1_vec.at(0);
-				vol2 = vol2_vec.at(0);
-			
-				new G4LogicalBorderSurface("EJ2802LArTPB_logsurf", vol1, vol2, EJ2802LAr_optsurf);
-			
-			}else{
-				size_t iSurf = 0;
-				std::stringstream ss_tmp; 
-				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
-					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
-						iSurf++;
-						vol1 = vol1_vec.at(iVol1);
-						vol2 = vol2_vec.at(iVol2);
-						ss_tmp.str("");
-						ss_tmp << "EJ2802LArTPB_logsurf_" << iSurf;
-					
-						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802LAr_optsurf );
-					
-					}
-				}
-			}
-		}
-	}//End of interface between EJ280 WLS and PVT
-	
-	
-	
-	// -----------------------------------------//
-	//  Interface between EJ280 WLS and Mirror  //
-	// -----------------------------------------//
-  
-  int n_lv = 5;
-  char ej2802esr_lv[n_lv][50] = { "volLAr_PV", "volSiPM_Mask_PV", "volArCLight_PV", "volOpticalDet_PV", "volLAr_PV"};
 
-  for(int lv_idx=0; lv_idx<n_lv; lv_idx++){
-    if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find(ej2802esr_lv[lv_idx])!=fPVolsMap.end()) ){
-      
-      bool singleinstances = false;
-      std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
-      size_t nVols1 = vol1_vec.size();
-      std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap[ej2802esr_lv[lv_idx]];
-      size_t nVols2 = vol2_vec.size();
-      if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
-      
-      
-      G4OpticalSurface* EJ2802ESR_optsurf = fOptPropManager->FindOptSurf("EJ2802ESR_optsurf");
-      
-      if(EJ2802ESR_optsurf){
-        if(singleinstances){
-          vol1 = vol1_vec.at(0);
-          vol2 = vol2_vec.at(0);
-        
-          new G4LogicalBorderSurface("EJ2802ESR_logsurf", vol1, vol2, EJ2802ESR_optsurf);
-        
-        }else{
-          size_t iSurf = 0;
-          std::stringstream ss_tmp; 
-          for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
-            for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
-              iSurf++;
-              vol1 = vol1_vec.at(iVol1);
-              vol2 = vol2_vec.at(iVol2);
-              ss_tmp.str("");
-              ss_tmp << "EJ2802ESR_logsurf_" << iSurf;
-            
-              new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802ESR_optsurf );
-            
-            }
-          }
-        }
-      }
-    }
-  }//End of interface between EJ280 WLS and Mirror
-	
-	
-	
-	// -----------------------------------------//
-	//  Interface between Fibre and LAr  //
-	// -----------------------------------------//
+  // LogSurface between LAr and TPB
+  DetConstrOptPh::BuildLogSurface("volTPB_LAr_PV","volTPB_PV","LAr2TPB");
+  DetConstrOptPh::BuildLogSurface("volTPB_PV","volTPB_LAr_PV","TPB2LAr");
+
   
-  if( (fPVolsMap.find("volFibre_PV")!=fPVolsMap.end()) && (fPVolsMap.find("volLCM_PV")!=fPVolsMap.end()) ){
+  ///////////////
+  // ArgonCube //
+  ///////////////
+  // LogSurface between TPB and EJ280
+  DetConstrOptPh::BuildLogSurface("volTPB_LAr_PV","volWLS_PV","TPB2EJ280");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volTPB_LAr_PV","EJ2802TPB");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volTPB_LAr_PV","EJ2802LAr");
+  
+  // LogSurface between EJ280 and ESR (all mirror applied surfaces)
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_Mask_PV","EJ2802ESR");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volArCLight_PV","EJ2802ESR");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volOpticalDet_PV","EJ2802ESR");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volLAr_PV","EJ2802ESR");
+ 
+  // LogSurface between EJ280 and SiPMs
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_0_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_1_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_2_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_3_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_4_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volWLS_PV","volSiPM_5_PV","EJ2802SiPM");
+
+  
+  /////////
+  // LCM //
+  /////////
+  // LogSurface between Fibres and LAr (using same as EJ280 to ESR)
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volLCM_PV","EJ2802ESR");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volLCM_PV","EJ2802ESR");
+  
+  // LogSurface between Fibres and SiPMs
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_0_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_1_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_2_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_3_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_4_PV","EJ2802SiPM");
+  DetConstrOptPh::BuildLogSurface("volFibre_PV","volSiPM_LCM_5_PV","EJ2802SiPM");
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DetConstrOptPh::BuildLogSurface(const string vol1_name, const string vol2_name, const string optsurf_name)
+{
+
+	G4VPhysicalVolume *vol1, *vol2;
+ 
+  if( (fPVolsMap.find(vol1_name)!=fPVolsMap.end()) && (fPVolsMap.find(vol2_name)!=fPVolsMap.end()) ){
     
     bool singleinstances = false;
-    std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volFibre_PV"];
+    std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap[vol1_name];
     size_t nVols1 = vol1_vec.size();
-    std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap["volLCM_PV"];
+    std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap[vol2_name];
     size_t nVols2 = vol2_vec.size();
     if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
     
     
-    G4OpticalSurface* EJ2802ESR_optsurf = fOptPropManager->FindOptSurf("EJ2802ESR_optsurf");
+    G4OpticalSurface* optsurf = fOptPropManager->FindOptSurf(optsurf_name+"_optsurf");
     
-    if(EJ2802ESR_optsurf){
+    if(optsurf){
       if(singleinstances){
         vol1 = vol1_vec.at(0);
         vol2 = vol2_vec.at(0);
       
-        new G4LogicalBorderSurface("EJ2802ESR_logsurf", vol1, vol2, EJ2802ESR_optsurf);
+        new G4LogicalBorderSurface(optsurf_name+"_logsurf", vol1, vol2, optsurf);
       
       }else{
         size_t iSurf = 0;
@@ -563,68 +402,18 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
             vol1 = vol1_vec.at(iVol1);
             vol2 = vol2_vec.at(iVol2);
             ss_tmp.str("");
-            ss_tmp << "EJ2802ESR_logsurf_" << iSurf;
+            ss_tmp << (optsurf_name+"_logsurf_") << iSurf;
           
-            new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802ESR_optsurf );
+            new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, optsurf );
           
           }
         }
       }
     }
-  }//End of interface between EJ280 WLS and Mirror
-
-
-
-	// ----------------------------------------//
-	//  Interface between EJ280 WLS and SiPMs  //
-	// ----------------------------------------//
-  
-  n_lv = 6;
-  char ej2802sipm_lv[n_lv][50] = { "volSiPM0_PV", "volSiPM1_PV", "volSiPM2_PV", "volSiPM3_PV", "volSiPM4_PV", "volSiPM5_PV"};
-
-  for(int lv_idx=0; lv_idx<n_lv; lv_idx++){
-		if( (fPVolsMap.find("volWLS_PV")!=fPVolsMap.end()) && (fPVolsMap.find(ej2802sipm_lv[lv_idx])!=fPVolsMap.end()) ){
-		
-			bool singleinstances = false;
-			std::vector<G4VPhysicalVolume*> vol1_vec = fPVolsMap["volWLS_PV"];
-			size_t nVols1 = vol1_vec.size();
-			std::vector<G4VPhysicalVolume*> vol2_vec = fPVolsMap[ej2802sipm_lv[lv_idx]];
-			size_t nVols2 = vol2_vec.size();
-			if( (nVols1==1) && (nVols2==1) ) singleinstances = true;
-      
-      
-      G4OpticalSurface* EJ2802SiPM_optsurf = fOptPropManager->FindOptSurf("EJ2802SiPM_optsurf");
-		
-			if(singleinstances){
-				vol1 = vol1_vec.at(0);
-				vol2 = vol2_vec.at(0);
-			
-				new G4LogicalBorderSurface("EJ2802SiPM_logsurf",vol1,vol2,EJ2802SiPM_optsurf);
-			
-			}else{
-				size_t iSurf = 0;
-				std::stringstream ss_tmp; 
-				for(size_t iVol1 = 0; iVol1<nVols1; iVol1++){
-					for(size_t iVol2 = 0; iVol2<nVols2; iVol2++){
-						iSurf++;
-						vol1 = vol1_vec.at(iVol1);
-						vol2 = vol2_vec.at(iVol2);
-						ss_tmp.str("");
-						ss_tmp << "EJ2802SiPM_logsurf_" << iSurf;
-					
-						new G4LogicalBorderSurface( ss_tmp.str().c_str(), vol1, vol2, EJ2802SiPM_optsurf );
-					
-					}
-				}
-			}
-		}
-  }//End of interface between EJ280 WLS and SiPMs
-	
-	
-	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::BuildDefaultOpticalSurfaces(): Exiting the function."<<G4endl;
+  }
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 {
 	if(hVolName==G4String("")){
@@ -692,6 +481,7 @@ void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::PrintListOfPhysVols()
 {
 	if(!fWorld) return;
@@ -731,6 +521,7 @@ void DetConstrOptPh::PrintListOfPhysVols()
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::PrintListOfLogVols()
 {
 	if(!fWorld) return;
@@ -772,6 +563,7 @@ G4Material* DetConstrOptPh::FindMaterial(G4String matname)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void DetConstrOptPh::ScanVols(G4VPhysicalVolume* mvol, std::map<G4String, std::set<G4VPhysicalVolume*> > *volsmap)
 {
 	if(!mvol) return;

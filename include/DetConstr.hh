@@ -11,9 +11,9 @@
 #include <vector>
 #include <map>
 
-
 using std::vector;
 using std::map;
+using std::string;
 
 
 class G4String;
@@ -74,6 +74,7 @@ protected:
 	virtual void BuildDefaultOptSurf();
 	virtual void BuildDefaultLogSurfaces();
 	virtual void SetDefaultOptProperties();
+	virtual void BuildLogSurface(const string, const string, const string);
 	virtual G4Material* FindMaterial(G4String matname);
 	
 	
