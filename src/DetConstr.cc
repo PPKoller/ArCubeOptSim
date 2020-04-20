@@ -270,12 +270,12 @@ void DetConstrOptPh::SetDefaultOptProperties()
 
 	
 	G4double ej280_rindex[1] = {1.67}; //Same as TPB for the moment
-	//G4double ej280_wls_abs_len[1] = {0.5*nm};
+	G4double ej280_wls_abs_len[1] = {5*cm}; //This is just to not have infinite internal reflections (arbitrary value)
 	//G4double ej280_wls_emission[1] = {500*nm};
 	//G4double ej280_wls_delay[1] = {0.5*ns};
 
 	fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, ej280_rindex );
-	//fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
+	fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
 	//fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
 	//fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
 	
