@@ -10,6 +10,7 @@
 #include "nlohmann/json.hpp"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <fstream>
 #include <string>
@@ -114,12 +115,11 @@ public:
 	
 	
 	//To use these methods the "logical surface" should already have an optical surface assigned otherwise it doesn't apply the settings
-	void SetOpticalSurfaceModel(const G4String& logsurfname, const G4String& model);
-	void SetOpticalSurfaceType(const G4String& logsurfname, const G4String& type);
-	void SetOpticalSurfaceFinish(const G4String& logsurfname, const G4String& finish);
-	
+	void SetSurfModel(const G4String& logsurfname, const G4String& model);
+	void SetSurfType(const G4String& logsurfname, const G4String& type);
+	void SetSurfFinish(const G4String& logsurfname, const G4String& finish);
 	void SetSurfSigmaAlpha(const G4String& logsurfname, const G4double& s_a);
-	
+	void SetSurfPropFromFile(const G4String& logsurfname, const G4String& filename, const G4String& propertyname);
 	
 	void BuildOpticalSurface(const G4String& optsurfname, const G4String& model, const G4String& type, const G4String& finish );
 	
@@ -132,11 +132,12 @@ public:
 	
 	//Builds the logical surface given the names of the PVs.
 	//If no name for the optical surface is given it will build the logical surface without that. --> Do not do it as can generate big issues not immediately recognisable!!!
-	void BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& physvol1, const G4String& physvol2, const G4String& optsurfname=G4String(""));
+	G4int BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& physvol1, const G4String& physvol2, const G4String& optsurfname=G4String(""));
 	
 	
 	void SetOpticalSurface(const G4String& logsurfname, const G4String& optsurfname);
 	
+	std::set< G4LogicalSurface* >* FindLogSurf(const G4String& logsurfname);
 	
 	G4OpticalSurface* FindOptSurf(const G4String& optsurfname);
 	
@@ -154,6 +155,7 @@ private:
 	std::map<G4String, G4OpticalSurfaceModel> OptSurfModelMap;
 	std::map<G4String, G4OpticalSurfaceFinish> OptSurfFinishMap;
 	
+	std::map<G4String, std::set< G4LogicalSurface*> > fLogSurfMap;
 	
 	DetConstrOptPh* fDetConstr;
 	
@@ -187,16 +189,18 @@ private:
 	
 	
 	//Service functions used by the stuff here above
-	G4VPhysicalVolume* FindPhysVol(const G4String& physvolname);
+	const std::vector<G4VPhysicalVolume* >* FindPhysVol(const G4String& physvolname) const;
 	
-	G4LogicalBorderSurface* FindBorderSurf(const G4String& logsurfname);
 	
-	G4LogicalSkinSurface* FindSkinSurf(const G4String& logsurfname);
 	
 	
 	G4Material* FindMaterial(const G4String& materialname);
 	
 	void ReadValuesFromFile(const G4String& filename, std::vector<G4double>& ph_en, std::vector<G4double>& vals);
+	
+	void RegisterLogSurf(G4LogicalSurface* logsurf);
+	void DeRegisterLogSurf(G4LogicalSurface* logsurf);
+	
 };
 
 #endif

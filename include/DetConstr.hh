@@ -59,6 +59,8 @@ public:
 	inline void SetTpbThickness(G4double thick){fTpbThick = thick;};
 	inline G4double GetTpbThickness(){return fTpbThick;}
 	
+	const std::vector<G4VPhysicalVolume* >* GetPvList(G4String pvname) const;
+	
 	// functions used moslty by the DetectorMessenger
 	//void SetCheckOverlap(G4bool dCheckOverlap){pCheckOverlap = dCheckOverlap;};
 	

@@ -631,7 +631,15 @@ void DetConstrOptPh::ScanVols(G4VPhysicalVolume* mvol, std::map<G4String, std::s
 }
 
 
-
+const std::vector<G4VPhysicalVolume* >* DetConstrOptPh::GetPvList(G4String pvname) const
+{
+	PVmap::const_iterator it = fPVolsMap.find(pvname);
+	if( it==fPVolsMap.end() ) return NULL;
+	
+	const std::vector<G4VPhysicalVolume* > *vp = &(it->second);
+	
+	return vp;
+}
 
 
 
