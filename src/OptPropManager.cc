@@ -1187,6 +1187,8 @@ void OptPropManager::SetMaterialWLSDelay(const G4String& materialname, const G4d
 	}
 }
 
+
+
 void OptPropManager::SetMaterialWLSDelay(const G4String& materialname, const std::vector<G4double>& delay)
 {
 	OptPropManager::SetMaterialWLSDelay(materialname, &delay.at(0));
