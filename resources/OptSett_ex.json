@@ -27,8 +27,6 @@
 	
 	"setbordersurf": {
 		"surfname": "LAr2TPB_logsurf",
-		"vol1": "volTPCActive_PV",
-		"vol2": "volTPB_PV",
 		"sigma_alpha": 0.1,
 		"optsurf": "LAr2TPB_optsurf",
 		"propfile": {
@@ -43,7 +41,6 @@
 	
 	"setskinsurf": {
 		"name": "EJ280_skinsurf",
-		"vol": "volWLS_PV",
 		"sigma_alpha": 0.1,
 		"optsurf": "EJ280_optsurf",
 		"propfile": {
