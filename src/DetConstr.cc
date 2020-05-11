@@ -315,97 +315,9 @@ void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Entering the function."<<G4endl;
 	
-	G4double opt_ph_en[1] = {9.69*eV};
-	G4double lar_rindex[1] = {1.369}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
-	G4double lar_rayleigh_len[1] = {0.91*m}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-
 	if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}
-	
-	fOptPropManager->SetMaterialRindex("LAr", 1, opt_ph_en, lar_rindex ); 
-	fOptPropManager->SetMaterialAbsLenght("LAr", 1, opt_ph_en, lar_abs_len );
-	fOptPropManager->SetMaterialRayleighLenght("LAr", 1, opt_ph_en, lar_rayleigh_len );
-	
-	
-	G4double tpb_rindex[1] = {1.67}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	G4double tpb_qe[1] = {0.58}; //Quantum efficiency of VUV WLS. From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	G4double tpb_abs_len[1] = {400/(1.-tpb_qe[0])*nm}; //From Benson et al (2018), https://doi.org/10.1140/epjc/s10052-018-5807-z
-	G4double tpb_wls_abs_len[1] = {400/tpb_qe[0]*nm};
-	G4double tpb_wls_emission[1] = {425*nm};
-	G4double tpb_wls_delay[1] = {0.5*ns};
-
-	fOptPropManager->SetMaterialRindex("TPB", 1, opt_ph_en, tpb_rindex );
-	fOptPropManager->SetMaterialAbsLenght("TPB", 1, opt_ph_en, tpb_abs_len );
-	fOptPropManager->SetMaterialWLSAbsLenght("TPB", 1, opt_ph_en, tpb_wls_abs_len );
-	fOptPropManager->SetMaterialWLSEmission("TPB", 1, opt_ph_en, tpb_wls_emission );
-	fOptPropManager->SetMaterialWLSDelay("TPB", tpb_wls_delay);
-	//SetQE("TPB", 1, G4double opt_ph_en[] = {9.69*eV}, tpb_qe );
-
-	
-	G4double ej280_rindex[1] = {1.67}; //Same as TPB for the moment
-	G4double ej280_wls_abs_len[1] = {5*cm}; //This is just to not have infinite internal reflections (arbitrary value)
-	//G4double ej280_wls_emission[1] = {500*nm};
-	//G4double ej280_wls_delay[1] = {0.5*ns};
-
-	fOptPropManager->SetMaterialRindex("EJ280WLS", 1, opt_ph_en, ej280_rindex );
-	fOptPropManager->SetMaterialWLSAbsLenght("EJ280WLS", 1, opt_ph_en, ej280_wls_abs_len );
-	//fOptPropManager->SetMaterialWLSEmission("EJ280WLS", 1, opt_ph_en, ej280_wls_emission );
-	//fOptPropManager->SetMaterialWLSDelay("EJ280WLS", ej280_wls_delay);
-	
-	
-	G4double ej2802lar_reflectivity[1] = {1.};
-	G4double ej2802esr_reflectivity[1] = {1.};
-	G4double ej2802sipm_reflectivity[1] = {0.};
-	
-	size_t nOpsf = fOptSurfTab->size();
-	for(size_t iOps=0; iOps<nOpsf; iOps++){
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("LAr2TPB_optsurf") ){
-			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
-		}
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("TPB2LAr_optsurf") ){
-			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
-		}
-		
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802TPB_optsurf") ){
-			((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetSigmaAlpha(0.1);
-		}
-		
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802LAr_optsurf") ){
-			G4MaterialPropertiesTable* propTab = ((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable();
-			if(!propTab){
-				propTab = new G4MaterialPropertiesTable();
-				((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetMaterialPropertiesTable( propTab );
-			}
-			propTab->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802lar_reflectivity, 1 );
-		}
-		
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802ESR_optsurf") ){
-			G4MaterialPropertiesTable* propTab = ((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable();
-			if(!propTab){
-				propTab = new G4MaterialPropertiesTable();
-				((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetMaterialPropertiesTable( propTab );
-			}
-			propTab->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802esr_reflectivity, 1 );
-		}
-		
-		if( fOptSurfTab->at(iOps)->GetName() == G4String("EJ2802SiPM_optsurf") ){
-			G4MaterialPropertiesTable* propTab = ((G4OpticalSurface*)fOptSurfTab->at(iOps))->GetMaterialPropertiesTable();
-			if(!propTab){
-				propTab = new G4MaterialPropertiesTable();
-				((G4OpticalSurface*)fOptSurfTab->at(iOps))->SetMaterialPropertiesTable( propTab );
-			}
-			propTab->AddProperty( "REFLECTIVITY" ,opt_ph_en, ej2802sipm_reflectivity, 1 );
-		}
-	}
-	
-	
-	//fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf", 1, opt_ph_en, ej2802tpb_reflectivity );
-	//fOptPropManager->SetSurfReflectivity("EJ2802LAr_logsurf", 1, opt_ph_en, ej2802lar_reflectivity );
-	//fOptPropManager->SetSurfReflectivity("EJ2802ESR_logsurf", 1, opt_ph_en, ej2802esr_reflectivity );
-	//fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf", 1, opt_ph_en, ej2802sipm_reflectivity );
-	
 	
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Exiting the function."<<G4endl;
 	
