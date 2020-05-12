@@ -296,11 +296,11 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	// -----------------------------------------//
 	
 	// LogSurface between Fibers and LAr (using same as EJ280 to ESR)
-	fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
+	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	
 	// LogSurface between Fibers and SiPMs
-	fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
+	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM0_logsurf","volFiber_PV","volSiPM_LCM_0_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM1_logsurf","volFiber_PV","volSiPM_LCM_1_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM2_logsurf","volFiber_PV","volSiPM_LCM_2_PV","EJ2802SiPM_optsurf");
@@ -318,18 +318,9 @@ void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Entering the function."<<G4endl;
 	
-	G4double opt_ph_en[1] = {9.69*eV};
-	G4double lar_rindex[1] = {1.369}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-	G4double lar_abs_len[1] = {10*m}; //Depends on the purity
-	G4double lar_rayleigh_len[1] = {0.91*m}; //From Bordoni et al (2019), https://doi.org/10.1016/j.nima.2018.10.082
-
 	if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}
-	
-	fOptPropManager->SetMaterialRindex("LAr", 1, opt_ph_en, lar_rindex ); 
-	fOptPropManager->SetMaterialAbsLenght("LAr", 1, opt_ph_en, lar_abs_len );
-	fOptPropManager->SetMaterialRayleighLenght("LAr", 1, opt_ph_en, lar_rayleigh_len );
 	
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Exiting the function."<<G4endl;
 	
