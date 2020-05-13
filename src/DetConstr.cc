@@ -122,7 +122,7 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 			ScanVols(fWorld);
 		}
 		
-		BuildDefaultOptSurf();
+		//BuildDefaultOptSurf();
 		BuildDefaultLogSurfaces();
 		SetDefaultOptProperties();
 	}
@@ -271,11 +271,7 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	//  Interface between EJ280 WLS and Mirror  //
 	// -----------------------------------------//
 	
-	fOptPropManager->BuildLogicalBorderSurface("EJ2802Mirror_logsurf", "volWLS_PV", "volMirror_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802OptDet_logsurf", "volWLS_PV", "volOpticalDet_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPMMask_logsurf", "volWLS_PV", "volSiPM_Mask_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802ArCLight_logsurf", "volWLS_PV", "volArCLight_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802LAr_logsurf", "volWLS_PV", "volLAr_PV", "EJ2802ESR_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("EJ2802ESR_logsurf", "volWLS_PV", "volMirror_PV", "EJ2802ESR_optsurf");
 	
 	
 	
@@ -290,13 +286,14 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM3_logsurf", "volWLS_PV", "volSiPM_3_PV", "EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM4_logsurf", "volWLS_PV", "volSiPM_4_PV", "EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM5_logsurf", "volWLS_PV", "volSiPM_5_PV", "EJ2802SiPM_optsurf");
-	
+
+
+
 	// -----------------------------------------//
 	//  Interface between Fiber and LAr  //
 	// -----------------------------------------//
 	
 	// LogSurface between Fibers and LAr (using same as EJ280 to ESR)
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	
 	// LogSurface between Fibers and SiPMs

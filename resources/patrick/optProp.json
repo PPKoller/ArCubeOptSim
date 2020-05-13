@@ -1,24 +1,108 @@
 {
-  "setmatprop": {
-    "matname": "LAr",
-    "propfile": {
-      "RINDEX": "resources/patrick/datafiles/lar_rindex.dat",
-      "ABSLENGTH": "resources/patrick/datafiles/lar_abslength.dat",
-      "RAYLEIGH": "resources/patrick/datafiles/lar_rayleigh.dat"
+  "commands":[
+    {
+      "name": "setmatprop",
+      "obj": {
+        "matname": "LAr",
+        "propfile": {
+          "RINDEX": "resources/patrick/datafiles/lar_rindex.dat",
+          "ABSLENGTH": "resources/patrick/datafiles/lar_abslength.dat",
+          "RAYLEIGH": "resources/patrick/datafiles/lar_rayleigh.dat"
+        }
+      }
+    },
+    {
+      "name": "setmatprop",
+      "obj": {
+        "matname": "TPB",
+        "propfile": {
+          "RINDEX": "resources/patrick/datafiles/tpb_rindex.dat"
+        }
+      }
+    },
+    {
+      "name": "setmatprop",
+      "obj": {
+        "matname": "EJ280WLS",
+        "propfile": {
+          "RINDEX": "resources/patrick/datafiles/ej280_rindex.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "LAr2TPB_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "rough",
+        "sigma_alpha": 0.1
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "TPB2LAr_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "rough",
+        "sigma_alpha": 0.1
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "TPB2EJ280_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "polished",
+        "sigma_alpha": 0.1
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "EJ2802TPB_optsurf",
+        "model": "unified",
+        "type": "dielectric_metal",
+        "finish": "polished"
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "EJ2802LAr_optsurf",
+        "model": "unified",
+        "type": "dielectric_metal",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "ej2802lar_reflectivity.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "EJ2802ESR_optsurf",
+        "model": "unified",
+        "type": "dielectric_metal",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "ej2802esr_reflectivity.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "EJ2802SiPM_optsurf",
+        "model": "unified",
+        "type": "dielectric_metal",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "ej2802sipm_reflectivity.dat"
+        }
+      }
     }
-  },
-
-  "setmatprop": {
-    "matname": "TPB",
-    "propfile":{
-      "RINDEX": "resources/patrick/datafiles/tpb_rindex.dat"
-    }
-  },
-  
-  "setmatprop": {
-    "matname": "EJ280WLS",
-    "propfile":{
-      "RINDEX": "resources/patrick/datafiles/ej280_rindex.dat"
-    }
-  }
+  ]
 }
