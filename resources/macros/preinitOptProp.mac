@@ -1,0 +1,3 @@
+/argoncube/detector/optical/verbosity 3
+/argoncube/detector/setTpbThick 0.0 mm
+/argoncube/detector/optical/loadOptSett optProp.json
