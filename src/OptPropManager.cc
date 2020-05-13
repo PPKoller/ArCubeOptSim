@@ -131,20 +131,86 @@ void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
 	
 	infile >> jsonObj;
 	
+	int iCmd=0;
 	
-	for (json::iterator it = jsonObj.begin(); it != jsonObj.end(); ++it){
-		if( it.value().is_object() ){
-			if(fVerbose>=OptPropManager::kDebug){
-				std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): Key command to process: <" << it.key() << ">" << std::endl;
+	if( jsonObj.contains("commands") ){
+		
+		if(jsonObj.at("commands").is_array()){
+			
+			std::string cmdname = "";
+			json jsonCmds = jsonObj.at("commands");
+			
+			
+			for (json::iterator it = jsonObj.at("commands").begin(); it != jsonObj.at("commands").end(); it++){
+				bool validcmd = true;
+				cmdname = "";
+				
+				if(!it.value().is_object()){
+					std::cout << "\nERROR --> The json array element num. " << iCmd << " is not of json object type!" << std::endl;
+					validcmd = false;
+				}
+				
+				if( validcmd && (!it.value().contains("name")) ){
+					std::cout << "\nERROR --> The json array element num. " << iCmd << " does not contain the <name> key!" << std::endl;
+					validcmd = false;
+				}
+				
+				
+				if(validcmd && (!it.value().at("name").is_string()) ){
+					std::cout << "\nERROR --> The json array element num. " << iCmd << " has the <name> value that is not of string type!" << std::endl;
+					validcmd = false;
+				}
+				
+				
+				if(validcmd){
+					cmdname = it.value().at("name").get<std::string>();
+					if(fVerbose>=OptPropManager::kDebug){
+						std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): Found command key: <" << cmdname << ">" << std::endl;
+					}
+				}
+				
+				if(validcmd && (!it.value().contains("obj")) ){
+					std::cout << "\nERROR --> The json array element num. " << iCmd << ", with name <" << cmdname << "> has not the <obj> key!" << std::endl;
+					validcmd = false;
+				}
+				
+				if(validcmd && (!it.value().at("obj").is_object()) ){
+					std::cout << "\nERROR --> The json array element num. " << iCmd << ", with name <" << cmdname << "> has <obj> key not corresponding to a json object value type!" << std::endl;
+					validcmd = false;
+				}
+				
+				
+				if(validcmd){
+					
+					if( json_proc_tab.find(cmdname) != json_proc_tab.end() ){
+						json_proc_memfunc fncptr = json_proc_tab.at( cmdname );
+						if(fVerbose>=OptPropManager::kDebug){
+							std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): Processing command: <" << cmdname << ">" << std::endl;
+						}
+						(this->*fncptr)( it.value().at("obj") );
+					}else{
+						std::cout << "\nERROR --> OptPropManager::ProcessJsonFile(...): The command <" << cmdname << "> does not correspond to any callback function in the dictionary.\n" << std::endl;
+					}
+					
+				}
+				
+				iCmd++;
+				
+				
 			}
-			if( json_proc_tab.find(it.key()) != json_proc_tab.end() ){
-				json_proc_memfunc fncptr = json_proc_tab.at( it.key() );
-				(this->*fncptr)( it.value() );
-			}else{
-				std::cout << "ERROR --> OptPropManager::ProcessJsonFile(...): The key <" << it.key() << "> does not correspond to any callback function in the dictionary." << std::endl;
-			}
+			
+		}else{
+			std::cout << "\nERROR --> OptPropManager::ProcessJsonFile(...): The key <commands> must be a json array!\n" << std::endl;
 		}
+	}else{
+		std::cout << "\nERROR --> OptPropManager::ProcessJsonFile(...): The key <commands> must be present in the json file. Could not find it!\n" << std::endl;
 	}
+	
+	
+	if(fVerbose>=OptPropManager::kDetails){
+		std::cout << "Detail --> OptPropManager::ProcessJsonFile(...): Found " << iCmd << " commands to process." << std::endl;
+	}
+	
 }
 
 
