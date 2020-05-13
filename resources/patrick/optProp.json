@@ -76,7 +76,7 @@
         "type": "dielectric_metal",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "ej2802lar_reflectivity.dat"
+          "REFLECTIVITY": "resources/patrick/datafiles/ej2802lar_reflectivity.dat"
         }
       }
     },
@@ -88,7 +88,7 @@
         "type": "dielectric_metal",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "ej2802esr_reflectivity.dat"
+          "REFLECTIVITY": "resources/patrick/datafiles/ej2802esr_reflectivity.dat"
         }
       }
     },
@@ -100,7 +100,7 @@
         "type": "dielectric_metal",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "ej2802sipm_reflectivity.dat"
+          "REFLECTIVITY": "resources/patrick/datafiles/ej2802sipm_reflectivity.dat"
         }
       }
     }

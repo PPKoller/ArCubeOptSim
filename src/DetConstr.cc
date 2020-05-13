@@ -314,7 +314,19 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Entering the function."<<G4endl;
-	
+  /*
+  G4double opt_ph_en[1] = {9.6*eV};
+  
+  G4double ej2802tpb_reflectivity[1] = {1.};
+  G4double ej2802lartpb_reflectivity[1] = {1.};
+  G4double ej2802esr_reflectivity[1] = {1.};
+  G4double ej2802sipm_reflectivity[1] = {0.};
+
+  fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf",     1, opt_ph_en,   ej2802tpb_reflectivity );
+  fOptPropManager->SetSurfReflectivity("EJ2802LArTPB_logsurf",  1, opt_ph_en,   ej2802lartpb_reflectivity );
+  fOptPropManager->SetSurfReflectivity("EJ2802ESR_logsurf",     1, opt_ph_en,   ej2802esr_reflectivity );
+  fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf",    1, opt_ph_en,   ej2802sipm_reflectivity );
+  */
 	if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}

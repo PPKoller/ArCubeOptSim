@@ -145,6 +145,7 @@ void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
 			
 			
 			for (json::iterator it = jsonObj.at("commands").begin(); it != jsonObj.at("commands").end(); it++){
+
 				bool validcmd = true;
 				cmdname = "";
 				
@@ -287,19 +288,11 @@ void OptPropManager::ReadValuesFromFile(const G4String& filename, std::vector<G4
 	
 	while(getline(infile,str)){
 		
-    if(fVerbose>=OptPropManager::kDebug){
-      std::cout << "\tDebug --> OptPropManager::ReadValuesFromFile(...): processing line <" << str << ">." << std::endl;
-    }
-		
 		ss_tmp.clear(); ss_tmp.str("");
 		ss_tmp << str;
 		
 		ss_tmp >> str;
     
-    if(fVerbose>=OptPropManager::kDebug){
-      std::cout << "\tDebug --> OptPropManager::ReadValuesFromFile(...): processing line <" << str << ">." << std::endl;
-    }
-		
 		G4double ph_en_d = std::stod(str);
 		
 		if(!ss_tmp){//There is only one value while the file format is defined with 2 columns
@@ -309,7 +302,11 @@ void OptPropManager::ReadValuesFromFile(const G4String& filename, std::vector<G4
 		}
 		ss_tmp >> str;
 		G4double val_d = std::stod(str);
-		
+    /*
+    if(fVerbose>=OptPropManager::kDebug){
+      std::cout << "Debug --> OptPropManager::ReadValuesFromFile: ph_en = " << ph_en_d << ", val = " << val_d << std::endl;
+    }
+		*/
 		ph_en.push_back(ph_en_d);
 		vals.push_back(val_d);
 	}
@@ -427,7 +424,6 @@ void OptPropManager::setoptsurf(const json keyval)
 		std::cout << "\nERROR --> OptPropManager::setoptsurf(...): Cannot find the optical surface \""<< keyval.at("surfname").get<std::string>() <<"\" in table of the instanced optical surfaces!" << std::endl;
 		return;
 	}
-	
 	
 	if(keyval.contains("model")){
 		if( keyval.at("model").is_string() && (OptSurfModelMap.find(keyval.at("model").get<std::string>())!=OptSurfModelMap.end()) ){
@@ -640,7 +636,6 @@ void OptPropManager::buildoptsurf(const json keyval)
 		return;
 	}
 	
-	
 	optsurf = new G4OpticalSurface( keyval.at("surfname").get<std::string>() );
 	
 	if(keyval.contains("model")){
@@ -675,6 +670,9 @@ void OptPropManager::buildoptsurf(const json keyval)
 		std::vector<G4double> en_vec(0), val_vec(0);
 		
 		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
+      if(fVerbose>=OptPropManager::kDebug){
+        std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): parsing object: " << it.value() << std::endl;
+      }
 			if(!it.value().is_string()){
 				std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The field corresponding to the property " << it.key() << " is not a string!" << std::endl;
 				continue;
@@ -744,7 +742,6 @@ void OptPropManager::buildbordersurface(const json keyval)
 		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <optsurf> key must be a string!\n" << G4endl;
 		return;
 	}
-	
 	
 	G4OpticalSurface *optsurf = FindOptSurf( keyval.at("optsurf").get<std::string>() );
 	
@@ -933,7 +930,48 @@ void OptPropManager::SetSurfSigmaAlpha(const G4String& logsurfname, const G4doub
 }
 
 
+void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4int Nentries, const G4double* photonenergies, const G4double* reflectivities)
+{
+	const G4LogicalBorderSurfaceTable* surftab = G4LogicalBorderSurface::GetSurfaceTable();
+	
+	if(surftab){
+		G4LogicalSurface* Surface = NULL;
+		
+		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
+			G4String name = surftab->at(iSurf)->GetName();
+			if(name == logsurfname){
+				Surface = surftab->at(iSurf);
+			}
+		}
+		
+		if(Surface){
+			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
+			if(OpticalSurface){
+				G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
+				
+				if(!propTab){
+					propTab = new G4MaterialPropertiesTable();
+					OpticalSurface->SetMaterialPropertiesTable(propTab);
+				}
+				
+				if(propTab->GetProperty("REFLECTIVITY")){
+					propTab->RemoveProperty("REFLECTIVITY");
+				}
+				
+				propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
+			}else{
+				G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" returned null pointer to its G4OpticalSurface (maybe not yet set). The surface roughness cannot be set." << G4endl;
+			}
+		}else{
+			G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" has not yet been created. The surface roughness cannot be set." << G4endl;
+		}
+	}
+}
 
+void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& reflectivities)
+{
+  if(photonenergies.size()==reflectivities.size()) OptPropManager::SetSurfReflectivity(logsurfname, photonenergies.size(), &photonenergies.at(0), &reflectivities.at(0));
+}
 
 
 
@@ -1172,52 +1210,6 @@ void OptPropManager::SetMaterialWLSDelay(const G4String& materialname, const std
 	OptPropManager::SetMaterialWLSDelay(materialname, &delay.at(0));
 }
 
-
-
-void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const G4int Nentries, const G4double* photonenergies, const G4double* reflectivities)
-{
-	const G4LogicalBorderSurfaceTable* surftab = G4LogicalBorderSurface::GetSurfaceTable();
-	
-	if(surftab){
-		G4LogicalSurface* Surface = NULL;
-		for(size_t iSurf=0; iSurf<surftab->size(); iSurf++){
-			G4String name = surftab->at(iSurf)->GetName();
-			//std::cout << name << std::endl;
-			
-			if(name == logsurfname){
-				Surface = surftab->at(iSurf);
-			}
-		}
-		
-		if(Surface){
-			G4OpticalSurface* OpticalSurface = dynamic_cast <G4OpticalSurface*> (Surface->GetSurfaceProperty());
-			
-			if(OpticalSurface){
-				G4MaterialPropertiesTable* propTab = OpticalSurface->GetMaterialPropertiesTable();
-				
-				if(!propTab){
-					propTab = new G4MaterialPropertiesTable();
-					OpticalSurface->SetMaterialPropertiesTable(propTab);
-				}
-				
-				if(propTab->GetProperty("REFLECTIVITY")){
-					propTab->RemoveProperty("REFLECTIVITY");
-				}
-				
-				propTab->AddProperty("REFLECTIVITY",(G4double*)photonenergies,(G4double*)reflectivities,Nentries);
-			}else{
-				G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" has null pointer to its G4OpticalSurface (maybe not assigned yet). The REFLECTIVITY property cannot be applied." << G4endl;
-			}
-		}else{
-			G4cout << "WARNING --> OptPropManager::SetSurfReflectivity(...): The G4LogicalBorder surface \"" << logsurfname << "\" has not yet been created. The REFLECTIVITY property cannot be applied." << G4endl;
-		}
-	}
-}
-
-void OptPropManager::SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& photonenergies, const std::vector<G4double>& reflectivities)
-{
-	if(photonenergies.size()==reflectivities.size()) OptPropManager::SetSurfReflectivity(logsurfname, photonenergies.size(), &photonenergies.at(0), &reflectivities.at(0));
-}
 
 
 void OptPropManager::SetSurfModel(const G4String& logsurfname, const G4String& model)

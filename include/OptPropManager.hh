@@ -61,10 +61,6 @@ public:
 	//The first column should be the energy photon (not the wavelenght) and the second column the lenght (in m)
 	void SetMaterialRayleighLenght(const G4String& materialname, const G4String& asciifilename);
 
-	//loads the reflectivity from a 2 column ascii file and gives it to a surface if this exists
-	//The first column should be the energy photon (not the wavelenght) and the second column the index
-	void SetSurfReflectivity(const G4String& logsurfname, const G4String& asciifilename);
-
 	//loads the photon detection efficiency from a 2 column ascii file and gives it to a material if this exists
 	//The first column should be the energy photon (not the wavelenght) and the second column the efficiency
 	void SetMaterialEfficiency(const G4String& materialname, const G4String& asciifilename);
@@ -82,8 +78,8 @@ public:
 	void SetMaterialWLSDelay(const G4String& materialname, const G4String& asciifilename);
 	
 	
-	void SetMaterialRindex(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* rindexes);
-	void SetMaterialRindex(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& rindexes);
+	void SetMaterialRindex(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* rindeces);
+	void SetMaterialRindex(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& rindeces);
 	
 	
 	void SetMaterialAbsLenght(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* abslenghts);
@@ -92,10 +88,6 @@ public:
 	
 	void SetMaterialRayleighLenght(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* rayleighlenghts);
 	void SetMaterialRayleighLenght(const G4String& materialname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& rayleighlenghts);
-	
-	
-	void SetSurfReflectivity(const G4String& logsurfname, const G4int Nentries, const G4double* wavelenghts, const G4double* reflectivities);
-	void SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& reflectivities);
 	
 	
 	void SetMaterialEfficiency(const G4String& materialname, const G4int Nentries, const G4double* wavelenghts, const G4double* efficiencies);
@@ -119,6 +111,8 @@ public:
 	void SetSurfType(const G4String& logsurfname, const G4String& type);
 	void SetSurfFinish(const G4String& logsurfname, const G4String& finish);
 	void SetSurfSigmaAlpha(const G4String& logsurfname, const G4double& s_a);
+	void SetSurfReflectivity(const G4String& logsurfname, const G4int Nentries, const G4double* wavelenghts, const G4double* reflectivities);
+	void SetSurfReflectivity(const G4String& logsurfname, const std::vector<G4double>& wavelenghts, const std::vector<G4double>& reflectivities);
 	void SetSurfPropFromFile(const G4String& logsurfname, const G4String& filename, const G4String& propertyname);
 	
 	void BuildOpticalSurface(const G4String& optsurfname, const G4String& model, const G4String& type, const G4String& finish );
