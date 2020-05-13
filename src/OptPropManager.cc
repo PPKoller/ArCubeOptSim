@@ -134,9 +134,14 @@ void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
 	
 	for (json::iterator it = jsonObj.begin(); it != jsonObj.end(); ++it){
 		if( it.value().is_object() ){
+			if(fVerbose>=OptPropManager::kDebug){
+				std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): Key command to process: <" << it.key() << ">" << std::endl;
+			}
 			if( json_proc_tab.find(it.key()) != json_proc_tab.end() ){
 				json_proc_memfunc fncptr = json_proc_tab.at( it.key() );
 				(this->*fncptr)( it.value() );
+			}else{
+				std::cout << "ERROR --> OptPropManager::ProcessJsonFile(...): The key <" << it.key() << "> does not correspond to any callback function in the dictionary." << std::endl;
 			}
 		}
 	}
