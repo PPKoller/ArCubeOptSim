@@ -125,6 +125,9 @@ OptPropManager* OptPropManager::GetInstance()
 
 void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
 {
+  if(fVerbose>=OptPropManager::kDebug){
+    std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): processing <" << jsonfilename << ">" << std::endl;
+  }
 	json jsonObj;
 	std::ifstream infile( jsonfilename.c_str() );
 	if(!infile) return;
@@ -136,6 +139,9 @@ void OptPropManager::ProcessJsonFile(const G4String& jsonfilename)
 		if( it.value().is_object() ){
 			if( json_proc_tab.find(it.key()) != json_proc_tab.end() ){
 				json_proc_memfunc fncptr = json_proc_tab.at( it.key() );
+        if(fVerbose>=OptPropManager::kDebug){
+          std::cout << "Debug --> OptPropManager::ProcessJsonFile(...): setting <" << it.key() << ">: " << it.value() << std::endl;
+        }
 				(this->*fncptr)( it.value() );
 			}
 		}
@@ -214,13 +220,23 @@ void OptPropManager::ReadValuesFromFile(const G4String& filename, std::vector<G4
 	
 	
 	while(getline(infile,str)){
+		
+    if(fVerbose>=OptPropManager::kDebug){
+      std::cout << "\tDebug --> OptPropManager::ReadValuesFromFile(...): processing line <" << str << ">." << std::endl;
+    }
+		
 		ss_tmp.clear(); ss_tmp.str("");
 		ss_tmp << str;
 		
 		ss_tmp >> str;
+    
+    if(fVerbose>=OptPropManager::kDebug){
+      std::cout << "\tDebug --> OptPropManager::ReadValuesFromFile(...): processing line <" << str << ">." << std::endl;
+    }
+		
 		G4double ph_en_d = std::stod(str);
 		
-		if(ss_tmp){//There is only one value while the file format is defined with 2 columns
+		if(!ss_tmp){//There is only one value while the file format is defined with 2 columns
 			ph_en.resize(0);
 			vals.resize(0);
 			return;
@@ -263,10 +279,14 @@ void OptPropManager::setmatprop(const json keyval)
 	
 	//The materials object have only the key "propfile", containing a list of keys that link a property to a specific text file
 	
-	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
-		json propObj = keyval.at("propfiles");
-		
+	if( keyval.contains("propfile") && (keyval.at("propfile").is_object()) ){
+		json propObj = keyval.at("propfile");
+	
 		std::vector<G4double> en_vec(0), val_vec(0);
+		
+    if(fVerbose>=OptPropManager::kDebug){
+      std::cout << "Debug --> OptPropManager::setmatprop(...): starting iterator." << std::endl;
+    }
 		
 		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
 			if(!it.value().is_string()){
@@ -277,9 +297,18 @@ void OptPropManager::setmatprop(const json keyval)
 			en_vec.clear(); en_vec.resize(0);
 			val_vec.clear(); val_vec.resize(0);
 			
+      if(fVerbose>=OptPropManager::kDebug){
+        std::cout << "\tDebug --> OptPropManager::setmatprop(...): read values from file <" << it.value() << ">." << std::endl;
+      }
+		
 			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
 			
 			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
+			
+        if(fVerbose>=OptPropManager::kDebug){
+          std::cout << "\tDebug --> OptPropManager::setmatprop(...): en_vec.size: " << en_vec.size() << ", val_vec.size: " << val_vec.size() << "." << std::endl;
+        }
+		
 				continue;
 			}
 			
@@ -359,9 +388,9 @@ void OptPropManager::setoptsurf(const json keyval)
 	}
 	
 	
-	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+	if( keyval.contains("propfile") && (keyval.at("propfile").is_object()) ){
 		
-		json propObj = keyval.at("propfiles");
+		json propObj = keyval.at("propfile");
 		
 		std::vector<G4double> en_vec(0), val_vec(0);
 		
@@ -487,9 +516,9 @@ void OptPropManager::setbordersurf(const json keyval)
 	}
 	
 	
-	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+	if( keyval.contains("propfile") && (keyval.at("propfile").is_object()) ){
 		
-		json propObj = keyval.at("propfiles");
+		json propObj = keyval.at("propfile");
 		
 		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
 			if(!it.value().is_string()){
@@ -573,9 +602,9 @@ void OptPropManager::buildoptsurf(const json keyval)
 	}
 	
 	
-	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+	if( keyval.contains("propfile") && (keyval.at("propfile").is_object()) ){
 		
-		json propObj = keyval.at("propfiles");
+		json propObj = keyval.at("propfile");
 		
 		std::vector<G4double> en_vec(0), val_vec(0);
 		
@@ -753,9 +782,9 @@ void OptPropManager::buildbordersurface(const json keyval)
 	}
 	
 	
-	if( keyval.contains("propfiles") && (keyval.at("propfile").is_object()) ){
+	if( keyval.contains("propfile") && (keyval.at("propfile").is_object()) ){
 		
-		json propObj = keyval.at("propfiles");
+		json propObj = keyval.at("propfile");
 		
 		std::vector<G4double> en_vec(0), val_vec(0);
 		

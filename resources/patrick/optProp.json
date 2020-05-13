@@ -1,0 +1,24 @@
+{
+  "setmatprop": {
+    "matname": "LAr",
+    "propfile": {
+      "RINDEX": "resources/patrick/datafiles/lar_rindex.dat",
+      "ABSLENGTH": "resources/patrick/datafiles/lar_abslength.dat",
+      "RAYLEIGH": "resources/patrick/datafiles/lar_rayleigh.dat"
+    }
+  },
+
+  "setmatprop": {
+    "matname": "TPB",
+    "propfile":{
+      "RINDEX": "resources/patrick/datafiles/tpb_rindex.dat"
+    }
+  },
+  
+  "setmatprop": {
+    "matname": "EJ280WLS",
+    "propfile":{
+      "RINDEX": "resources/patrick/datafiles/ej280_rindex.dat"
+    }
+  }
+}
