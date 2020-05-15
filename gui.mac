@@ -77,3 +77,6 @@
 # Set visualization to accumulate events into one picture
 #
 /vis/scene/endOfEventAction accumulate
+#
+# Load optical properties from json file
+/control/execute resources/patrick/optProp.mac

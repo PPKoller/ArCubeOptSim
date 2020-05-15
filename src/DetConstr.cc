@@ -124,7 +124,7 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 		
 		//BuildDefaultOptSurf();
 		BuildDefaultLogSurfaces();
-		SetDefaultOptProperties();
+		//SetDefaultOptProperties();
 	}
 	
 	if(fVerbose>=DetConstrOptPh::kInfo) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
@@ -294,10 +294,10 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	// -----------------------------------------//
 	
 	// LogSurface between Fibers and LAr (using same as EJ280 to ESR)
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	
 	// LogSurface between Fibers and SiPMs
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM0_logsurf","volFiber_PV","volSiPM_LCM_0_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM1_logsurf","volFiber_PV","volSiPM_LCM_1_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM2_logsurf","volFiber_PV","volSiPM_LCM_2_PV","EJ2802SiPM_optsurf");
@@ -314,20 +314,8 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Entering the function."<<G4endl;
-  /*
-  G4double opt_ph_en[1] = {9.6*eV};
-  
-  G4double ej2802tpb_reflectivity[1] = {1.};
-  G4double ej2802lartpb_reflectivity[1] = {1.};
-  G4double ej2802esr_reflectivity[1] = {1.};
-  G4double ej2802sipm_reflectivity[1] = {0.};
-
-  fOptPropManager->SetSurfReflectivity("EJ2802TPB_logsurf",     1, opt_ph_en,   ej2802tpb_reflectivity );
-  fOptPropManager->SetSurfReflectivity("EJ2802LArTPB_logsurf",  1, opt_ph_en,   ej2802lartpb_reflectivity );
-  fOptPropManager->SetSurfReflectivity("EJ2802ESR_logsurf",     1, opt_ph_en,   ej2802esr_reflectivity );
-  fOptPropManager->SetSurfReflectivity("EJ2802SiPM_logsurf",    1, opt_ph_en,   ej2802sipm_reflectivity );
-  */
-	if(!fOptPropManager){
+	
+  if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}
 	

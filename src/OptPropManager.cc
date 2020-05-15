@@ -105,11 +105,11 @@ OptPropManager::OptPropManager()
 	
 	json_proc_tab["setmatprop"] = &OptPropManager::setmatprop;
 	json_proc_tab["setoptsurf"] = &OptPropManager::setoptsurf;
-	json_proc_tab["setbordersurf"] = &OptPropManager::setbordersurf;
-	json_proc_tab["setskinsurf"] = &OptPropManager::setskinsurf;
+	json_proc_tab["setlogbordersurf"] = &OptPropManager::setlogbordersurf;
+	json_proc_tab["setlogskinsurf"] = &OptPropManager::setlogskinsurf;
 	json_proc_tab["buildoptsurf"] = &OptPropManager::buildoptsurf;
-	json_proc_tab["buildbordersurface"] = &OptPropManager::buildbordersurface;
-	json_proc_tab["buildskinsurf"] = &OptPropManager::buildskinsurf;
+	json_proc_tab["buildlogbordersurf"] = &OptPropManager::buildlogbordersurf;
+	json_proc_tab["buildlogskinsurf"] = &OptPropManager::buildlogskinsurf;
 	
 }
 
@@ -500,21 +500,21 @@ void OptPropManager::setoptsurf(const json keyval)
 }
 
 
-void OptPropManager::setbordersurf(const json keyval)
+void OptPropManager::setlogbordersurf(const json keyval)
 {
 	if(fVerbose>=OptPropManager::kDebug){
-		std::cout << "Debug --> OptPropManager::setbordersurf(...): start of routine." << std::endl;
+		std::cout << "Debug --> OptPropManager::setlogbordersurf(...): start of routine." << std::endl;
 	}
 	
 	
 	//Requirements are that the logical border surface exists, otherwise return with an error
 	if( !keyval.contains("surfname") ){
-		G4cout << "\nERROR --> OptPropManager::setbordersurf(...): the json object doesn't contain the <surfname> key. Cannot change settings of a logical border surface without knowing its name!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::setlogbordersurf(...): the json object doesn't contain the <surfname> key. Cannot change settings of a logical border surface without knowing its name!\n" << G4endl;
 		return;
 	}
 	
 	if( !keyval.at("surfname").is_string() ){
-		G4cout << "\nERROR --> OptPropManager::setbordersurf(...): The <surfname> key must be a string!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::setlogbordersurf(...): The <surfname> key must be a string!\n" << G4endl;
 		return;
 	}
 	
@@ -523,7 +523,7 @@ void OptPropManager::setbordersurf(const json keyval)
 	std::set<G4LogicalSurface* > *logsurflist = FindLogSurf(logsurfname);
 	
 	if(!logsurflist){
-		G4cout << "\nERROR --> OptPropManager::setbordersurf(...): Cannot find the logical surface <"<< logsurfname <<"> in the table of the instanced logical border surfaces!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::setlogbordersurf(...): Cannot find the logical surface <"<< logsurfname <<"> in the table of the instanced logical border surfaces!\n" << G4endl;
 		return;
 	}
 	
@@ -540,11 +540,11 @@ void OptPropManager::setbordersurf(const json keyval)
 				}
 				
 			}else{
-				G4cout << "\nWARNING --> OptPropManager::setbordersurf(...): Could not find the optical surface <" << keyval.at("optsurf").get<std::string>() << ">. The optical surface of the <" << logsurfname << "> logical surface(s) will not be changed." << G4endl;
+				G4cout << "\nWARNING --> OptPropManager::setlogbordersurf(...): Could not find the optical surface <" << keyval.at("optsurf").get<std::string>() << ">. The optical surface of the <" << logsurfname << "> logical surface(s) will not be changed." << G4endl;
 			}
 			
 		}else{
-			G4cout << "\nERROR --> OptPropManager::setbordersurf(...): The <optsurf> key must be a string!\n" << G4endl;
+			G4cout << "\nERROR --> OptPropManager::setlogbordersurf(...): The <optsurf> key must be a string!\n" << G4endl;
 		}
 	}
 	
@@ -584,13 +584,13 @@ void OptPropManager::setbordersurf(const json keyval)
 		
 		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
 			if(!it.value().is_string()){
-				std::cout << "\nERROR --> OptPropManager::setbordersurf(...): The field corresponding to the property <" << it.key() << "> is not a string!" << std::endl;
+				std::cout << "\nERROR --> OptPropManager::setlogbordersurf(...): The field corresponding to the property <" << it.key() << "> is not a string!" << std::endl;
 				continue;
 			}
 			
 			
 			if(fVerbose>=OptPropManager::kDetails){
-				G4cout << "Detail --> OptPropManager::setbordersurf(...): Setting property <" << it.key() << "> for logical surface(s) named <" << logsurfname << "> from file <" << it.value().get<std::string>() << ">" << G4endl;
+				G4cout << "Detail --> OptPropManager::setlogbordersurf(...): Setting property <" << it.key() << "> for logical surface(s) named <" << logsurfname << "> from file <" << it.value().get<std::string>() << ">" << G4endl;
 			}
 			
 			SetSurfPropFromFile(logsurfname, it.value().get<std::string>(), it.key() );
@@ -600,12 +600,12 @@ void OptPropManager::setbordersurf(const json keyval)
 	
 	
 	if(fVerbose>=OptPropManager::kDebug){
-		std::cout << "Debug --> OptPropManager::setbordersurf(...): end of routine." << std::endl;
+		std::cout << "Debug --> OptPropManager::setlogbordersurf(...): end of routine." << std::endl;
 	}
 }
 
 
-void OptPropManager::setskinsurf(const json keyval)
+void OptPropManager::setlogskinsurf(const json keyval)
 {
 	//Not implemented yet
 }
@@ -714,65 +714,65 @@ void OptPropManager::buildoptsurf(const json keyval)
 }
 
 
-void OptPropManager::buildbordersurface(const json keyval)
+void OptPropManager::buildlogbordersurf(const json keyval)
 {
 	if(fVerbose>=OptPropManager::kDebug){
-		G4cout << "Debug --> OptPropManager::buildbordersurface(...): start of routine." << G4endl;
+		G4cout << "Debug --> OptPropManager::buildlogbordersurf(...): start of routine." << G4endl;
 	}
 	
 	
 	//Requirements are that the logical border surface does not exist, otherwise return with an error
 	if( !keyval.contains("surfname") ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): the json object doesn't contain the <surfname> key. Cannot change settings of alogical border surface without knowing its name!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): the json object doesn't contain the <surfname> key. Cannot change settings of alogical border surface without knowing its name!\n" << G4endl;
 		return;
 	}
 	
 	if( !keyval.at("surfname").is_string() ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <surfname> key must be a string!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <surfname> key must be a string!\n" << G4endl;
 		return;
 	}
 	
 	
 	if( !keyval.contains("optsurf") ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <optsurf> key is mandatory! The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <optsurf> key is mandatory! The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	if( !keyval.at("optsurf").is_string() ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <optsurf> key must be a string!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <optsurf> key must be a string!\n" << G4endl;
 		return;
 	}
 	
 	G4OpticalSurface *optsurf = FindOptSurf( keyval.at("optsurf").get<std::string>() );
 	
 	if(!optsurf){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): Could not find the optical surface <" << keyval.at("optsurf").get<std::string>() << ">. The optical surface must be built before than the logical surface that uses it. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): Could not find the optical surface <" << keyval.at("optsurf").get<std::string>() << ">. The optical surface must be built before than the logical surface that uses it. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
 	}
 	
 	
 	if( !keyval.contains("vol1") ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol1> key is mandatory to build a new logical border surface! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol1> key is mandatory to build a new logical border surface! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 	}
 	
 	if( !keyval.at("vol1").is_string() ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol1> key must be a json string type! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol1> key must be a json string type! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	
 	if( !keyval.contains("vol2") ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol2> key is mandatory to build a new logical border surface! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol2> key is mandatory to build a new logical border surface! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	if( !keyval.at("vol2").is_string() ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol2> key must be a json string type! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol2> key must be a json string type! The surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	
 	if( keyval.at("vol1").get<std::string>() == keyval.at("vol2").get<std::string>() ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol1> and <vol2> are the same. A logical border surface can be built only between 2 different physical volumes!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol1> and <vol2> are the same. A logical border surface can be built only between 2 different physical volumes!\n" << G4endl;
 		return;
 	}
 	
@@ -780,12 +780,12 @@ void OptPropManager::buildbordersurface(const json keyval)
 	const std::vector<G4VPhysicalVolume* > *vol_vec1 = FindPhysVol(keyval.at("vol1").get<std::string>());
 	
 	if(!vol_vec1){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...):Could not find the <vol1> physical volume with name <" << keyval.at("vol1").get<std::string>() << ">. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...):Could not find the <vol1> physical volume with name <" << keyval.at("vol1").get<std::string>() << ">. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	if( (!vol_vec1->size()) ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...):The <vol1> physical volume with name <" << keyval.at("vol1").get<std::string>() << "> corresponds to an empty list! This is an unexpected behaviour. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...):The <vol1> physical volume with name <" << keyval.at("vol1").get<std::string>() << "> corresponds to an empty list! This is an unexpected behaviour. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
 		return;
 	}
 	
@@ -793,12 +793,12 @@ void OptPropManager::buildbordersurface(const json keyval)
 	const std::vector<G4VPhysicalVolume* > *vol_vec2 = FindPhysVol(keyval.at("vol2").get<std::string>());
 	
 	if(!vol_vec2){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...):Could not find the <vol2> physical volume with name <" << keyval.at("vol2").get<std::string>() << ">. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...):Could not find the <vol2> physical volume with name <" << keyval.at("vol2").get<std::string>() << ">. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built!\n" << G4endl;
 		return;
 	}
 	
 	if( !(vol_vec2->size()) ){
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The <vol2> physical volume with name <" << keyval.at("vol2").get<std::string>() << "> corresponds to an empty list! This is an unexpected behaviour. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The <vol2> physical volume with name <" << keyval.at("vol2").get<std::string>() << "> corresponds to an empty list! This is an unexpected behaviour. The logical border surface <" << keyval.at("surfname").get<std::string>() << "> will not be built.\n" << G4endl;
 		return;
 	}
 	
@@ -808,14 +808,14 @@ void OptPropManager::buildbordersurface(const json keyval)
 	G4int nLBS = BuildLogicalBorderSurface(keyval.at("surfname").get<std::string>(), keyval.at("vol1").get<std::string>(), keyval.at("vol2").get<std::string>(), optsurf->GetName());
 	if(nLBS<=0){
 		
-		G4cout << "\nERROR --> OptPropManager::buildbordersurface(...): The logical surface <" << keyval.at("surfname").get<std::string>() << "> could not be made!\n" << G4endl;
+		G4cout << "\nERROR --> OptPropManager::buildlogbordersurf(...): The logical surface <" << keyval.at("surfname").get<std::string>() << "> could not be made!\n" << G4endl;
 		
 	}else{
 		if(fVerbose>=OptPropManager::kDetails){
-			G4cout << "Detail --> OptPropManager::buildbordersurface(...): built " << nLBS << " instances of the logical surface <" << keyval.at("surfname").get<std::string>() << "> between volumes <" << keyval.at("vol1").get<std::string>() << "> and <" << keyval.at("vol2").get<std::string>() << ">, with optical surface <" << optsurf->GetName() << ">." << G4endl;
+			G4cout << "Detail --> OptPropManager::buildlogbordersurf(...): built " << nLBS << " instances of the logical surface <" << keyval.at("surfname").get<std::string>() << "> between volumes <" << keyval.at("vol1").get<std::string>() << "> and <" << keyval.at("vol2").get<std::string>() << ">, with optical surface <" << optsurf->GetName() << ">." << G4endl;
 		}
 		if(fVerbose>=OptPropManager::kInfo){
-			G4cout << "Info --> OptPropManager::buildbordersurface(...): built logical surface <" << keyval.at("surfname").get<std::string>() << ">." << G4endl;
+			G4cout << "Info --> OptPropManager::buildlogbordersurf(...): built logical surface <" << keyval.at("surfname").get<std::string>() << ">." << G4endl;
 		}
 	}
 	
@@ -853,7 +853,7 @@ void OptPropManager::buildbordersurface(const json keyval)
 		
 		for (json::iterator it = propObj.begin(); it != propObj.end(); ++it){
 			if(!it.value().is_string()){
-				G4cout << "\nWARNING --> OptPropManager::buildbordersurface(...): The field corresponding to the property <" << it.key() << "> is not a string!\n" << G4endl;
+				G4cout << "\nWARNING --> OptPropManager::buildlogbordersurf(...): The field corresponding to the property <" << it.key() << "> is not a string!\n" << G4endl;
 				continue;
 			}
 			
@@ -863,12 +863,12 @@ void OptPropManager::buildbordersurface(const json keyval)
 			ReadValuesFromFile( it.value().get<std::string>(), en_vec, val_vec );
 			
 			if( (en_vec.size()==0) || (val_vec.size()==0) || (en_vec.size()!=val_vec.size()) ){
-				G4cout << "\nWARNING --> OptPropManager::buildbordersurface(...): Wrong dimensions of the vectors built from the property file <" << it.value().get<std::string>() << ">. The field corresponding to the property <" << it.key() << "> is not a string!\n" << G4endl;
+				G4cout << "\nWARNING --> OptPropManager::buildlogbordersurf(...): Wrong dimensions of the vectors built from the property file <" << it.value().get<std::string>() << ">. The field corresponding to the property <" << it.key() << "> is not a string!\n" << G4endl;
 				continue;
 			}
 			
 			if(fVerbose>=OptPropManager::kInfo){
-				G4cout << "Info --> OptPropManager::buildbordersurface(...): Setting property <" << it.key() << "> for <" << optsurf->GetName() << "> from file <" << it.value().get<std::string>() << ">" << G4endl;
+				G4cout << "Info --> OptPropManager::buildlogbordersurf(...): Setting property <" << it.key() << "> for <" << optsurf->GetName() << "> from file <" << it.value().get<std::string>() << ">" << G4endl;
 			}
 			
 			G4MaterialPropertiesTable* propTab = optsurf->GetMaterialPropertiesTable();
@@ -889,12 +889,12 @@ void OptPropManager::buildbordersurface(const json keyval)
 	
 	
 	if(fVerbose>=OptPropManager::kDebug){
-		std::cout << "Debug --> OptPropManager::buildbordersurface(...): end of routine." << std::endl;
+		std::cout << "Debug --> OptPropManager::buildlogbordersurf(...): end of routine." << std::endl;
 	}
 }
 
 
-void OptPropManager::buildskinsurf(const json keyval)
+void OptPropManager::buildlogskinsurf(const json keyval)
 {
 	//Not implemented yet
 }

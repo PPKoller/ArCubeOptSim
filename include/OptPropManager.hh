@@ -162,19 +162,19 @@ private:
 	void setoptsurf(const json keyval);
 	
 	//Modifies the properties of an already existing G4LogicalBorderSurface. If necessary accesses to its G4OpticalSurface to apply the properties
-	void setbordersurf(const json keyval);
+	void setlogbordersurf(const json keyval);
 	
 	//Modifies the properties of an already existing G4LogicalSkinSurface. If necessary accesses to its G4OpticalSurface to apply the properties
-	void setskinsurf(const json keyval);
+	void setlogskinsurf(const json keyval);
 	
 	//Builds a new G4OpticalSurface if it doesn't already exist (check by name). If it exists doesn't do anything
 	void buildoptsurf(const json keyval);
 	
 	//Builds a new G4LogicalBorderSurface if it doesn't already exist (check by name). If it exists doesn't do anything. In the process an already instanced G4OpticalSurface must be given to the surface, otherwise this object won't be created.
-	void buildbordersurface(const json keyval);
+	void buildlogbordersurf(const json keyval);
 	
 	//Builds a new G4LogicalSkinSurface if it doesn't already exist (check by name). If it exists doesn't do anything. In the process an already instanced G4OpticalSurface must be given to the surface, otherwise this object won't be created.
-	void buildskinsurf(const json keyval);
+	void buildlogskinsurf(const json keyval);
 	
 	
 	
