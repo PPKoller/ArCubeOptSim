@@ -122,9 +122,9 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 			ScanVols(fWorld);
 		}
 		
-		BuildDefaultOptSurf();
+		//BuildDefaultOptSurf();
 		BuildDefaultLogSurfaces();
-		SetDefaultOptProperties();
+		//SetDefaultOptProperties();
 	}
 	
 	if(fVerbose>=DetConstrOptPh::kInfo) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
@@ -271,11 +271,7 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	//  Interface between EJ280 WLS and Mirror  //
 	// -----------------------------------------//
 	
-	fOptPropManager->BuildLogicalBorderSurface("EJ2802Mirror_logsurf", "volWLS_PV", "volMirror_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802OptDet_logsurf", "volWLS_PV", "volOpticalDet_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPMMask_logsurf", "volWLS_PV", "volSiPM_Mask_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802ArCLight_logsurf", "volWLS_PV", "volArCLight_PV", "EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("EJ2802LAr_logsurf", "volWLS_PV", "volLAr_PV", "EJ2802ESR_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("EJ2802ESR_logsurf", "volWLS_PV", "volMirror_PV", "EJ2802ESR_optsurf");
 	
 	
 	
@@ -290,17 +286,18 @@ void DetConstrOptPh::BuildDefaultLogSurfaces()
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM3_logsurf", "volWLS_PV", "volSiPM_3_PV", "EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM4_logsurf", "volWLS_PV", "volSiPM_4_PV", "EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("EJ2802SiPM5_logsurf", "volWLS_PV", "volSiPM_5_PV", "EJ2802SiPM_optsurf");
-	
+
+
+
 	// -----------------------------------------//
 	//  Interface between Fiber and LAr  //
 	// -----------------------------------------//
 	
 	// LogSurface between Fibers and LAr (using same as EJ280 to ESR)
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("Fib2LCM_logsurf","volFiber_PV","volLCM_PV","EJ2802ESR_optsurf");
 	
 	// LogSurface between Fibers and SiPMs
-	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
+	fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM_logsurf","volFiber_PV","volSiPM_LCM_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM0_logsurf","volFiber_PV","volSiPM_LCM_0_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM1_logsurf","volFiber_PV","volSiPM_LCM_1_PV","EJ2802SiPM_optsurf");
 	//fOptPropManager->BuildLogicalBorderSurface("Fib2SiPM2_logsurf","volFiber_PV","volSiPM_LCM_2_PV","EJ2802SiPM_optsurf");
@@ -318,7 +315,7 @@ void DetConstrOptPh::SetDefaultOptProperties()
 {
 	if(fVerbose>=DetConstrOptPh::kDebug) G4cout << "Debug --> DetConstrOptPh::SetDefaultOptProperties(): Entering the function."<<G4endl;
 	
-	if(!fOptPropManager){
+  if(!fOptPropManager){
 		G4Exception("DetConstrOptPh::DefaultOptProperties()","Geom.002", FatalException,"\"OptPropManager\" pointer is null.");
 	}
 	
