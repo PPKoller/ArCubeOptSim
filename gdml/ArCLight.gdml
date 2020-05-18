@@ -595,37 +595,37 @@
     <volume name="volMirror">
       <materialref ref="ESR"/>
       <solidref ref="Mirror_shape"/>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volWLS"/>
         <positionref ref="WLS_pos"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_0"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="1">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_1"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="2">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_2"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="3">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_3"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="4">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_4"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="5">
         <volumeref ref="volSiPM_Sens"/>
         <positionref ref="SiPM_Sens_pos_5"/>
         <rotationref ref="identity"/>
@@ -642,12 +642,12 @@
     <volume name="volSiPM_Mask">
       <materialref ref="PVT"/>
       <solidref ref="SiPM_Mask_shape"/>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM"/>
         <positionref ref="SiPM_pos_0"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM"/>
         <positionref ref="SiPM_pos_1"/>
         <rotationref ref="identity"/>
@@ -660,42 +660,42 @@
     <volume name="volArCLight">
       <materialref ref="LAr"/>
       <solidref ref="ArCLight"/>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volMirror"/>
         <positionref ref="Mirror_pos"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volTPB_LAr"/>
         <positionref ref="TPB_pos"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM_Mask"/>
         <positionref ref="SiPM_Mask_pos_0"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="1">
         <volumeref ref="volSiPM_Mask"/>
         <positionref ref="SiPM_Mask_pos_1"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="2">
         <volumeref ref="volSiPM_Mask"/>
         <positionref ref="SiPM_Mask_pos_2"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM_PCB"/>
         <positionref ref="SiPM_PCB_pos_0"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM_PCB"/>
         <positionref ref="SiPM_PCB_pos_1"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volSiPM_PCB"/>
         <positionref ref="SiPM_PCB_pos_2"/>
         <rotationref ref="identity"/>
@@ -704,7 +704,7 @@
     <volume name="volDetEnclosure">
       <materialref ref="Air"/>
       <solidref ref="DetEnclosure"/>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volArCLight"/>
         <positionref ref="volArCLight_pos"/>
         <rotationref ref="volArCLight_rot"/>
@@ -713,7 +713,7 @@
     <volume name="volWorld">
       <materialref ref="Rock"/>
       <solidref ref="World"/>
-      <physvol>
+      <physvol copynumber="0">
         <volumeref ref="volDetEnclosure"/>
         <positionref ref="volDetEnclosure_pos"/>
         <rotationref ref="volDetEnclosure_rot"/>
