@@ -126,7 +126,7 @@ public:
 	
 	//Builds the logical surface given the names of the PVs.
 	//If no name for the optical surface is given it will build the logical surface without that. --> Do not do it as can generate big issues not immediately recognisable!!!
-	G4int BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& physvol1, const G4String& physvol2, const G4String& optsurfname=G4String(""));
+	int BuildLogicalBorderSurface(const G4String& logsurfname, const G4String& physvol1, const G4String& physvol2, const G4String& optsurfname=G4String(""));
 	
 	
 	void SetOpticalSurface(const G4String& logsurfname, const G4String& optsurfname);
@@ -176,6 +176,15 @@ private:
 	//Builds a new G4LogicalSkinSurface if it doesn't already exist (check by name). If it exists doesn't do anything. In the process an already instanced G4OpticalSurface must be given to the surface, otherwise this object won't be created.
 	void buildlogskinsurf(const json keyval);
 	
+	
+	//Private versions of functions to build/set logical surfaces, should be only used with homogeneous lists of logical surfaces (same name)
+	void SetSurfModel(const std::set<G4LogicalSurface* >* logsurflist, const G4String& model);
+	void SetSurfType(const std::set<G4LogicalSurface* >* logsurflist, const G4String& type);
+	void SetSurfFinish(const std::set<G4LogicalSurface* >* logsurflist, const G4String& finish);
+	void SetSurfSigmaAlpha(const std::set<G4LogicalSurface* >* logsurflist, const G4double& s_a);
+	void SetSurfPropFromFile(const std::set<G4LogicalSurface* >* logsurflist, const G4String& filename, const G4String& propertyname);
+	
+	int BuildLogicalBorderSurface(const G4String& logsurfname, const std::vector<G4VPhysicalVolume*>& vol1_vec, const std::vector<G4VPhysicalVolume*>& vol2_vec, const G4OpticalSurface* optsurf );
 	
 	
 	//Map from the key (a string obj) to the corresponding function

@@ -122,9 +122,13 @@ G4VPhysicalVolume *DetConstrOptPh::Construct()
 			ScanVols(fWorld);
 		}
 		
+		OptPropManager::verbosity oldverb = fOptPropManager->GetVerbosity();
+		fOptPropManager->SetVerbosity( (OptPropManager::verbosity)fVerbose );
 		//BuildDefaultOptSurf();
-		BuildDefaultLogSurfaces();
+		//BuildDefaultLogSurfaces();
 		//SetDefaultOptProperties();
+		fOptPropManager->SetVerbosity( oldverb );
+		
 	}
 	
 	if(fVerbose>=DetConstrOptPh::kInfo) G4cout << "Info --> DetConstrOptPh::Construct(): Finished construction "<<G4endl;
