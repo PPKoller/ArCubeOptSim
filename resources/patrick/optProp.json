@@ -39,7 +39,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "LAr2TPB_optsurf",
         "model": "unified",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "TPB2LAr_optsurf",
         "model": "unified",
@@ -59,7 +59,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "TPB2EJ280_optsurf",
         "model": "unified",
@@ -69,7 +69,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802TPB_optsurf",
         "model": "unified",
@@ -81,7 +81,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802LAr_optsurf",
         "model": "unified",
@@ -93,7 +93,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802ESR_optsurf",
         "model": "unified",
@@ -105,7 +105,7 @@
       }
     },
     {
-      "name": "setoptsurf",
+      "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802SiPM_optsurf",
         "model": "unified",
@@ -114,6 +114,78 @@
         "propfile": {
           "REFLECTIVITY": "resources/patrick/datafiles/ej2802sipm_reflectivity.dat"
         }
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "LAr2TPB_logsurf",
+        "vol1": "volTPB_LAr_PV",
+        "vol2": "volTPB_PV",
+        "optsurf": "LAr2TPB_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "TPB2LAr_logsurf",
+        "vol1": "volTPB_PV",
+        "vol2": "volTPB_LAr_PV",
+        "optsurf": "TPB2LAr_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "EJ2802TPB_logsurf",
+        "vol1": "volWLS_PV",
+        "vol2": "volTPB_PV",
+        "optsurf": "EJ2802TPB_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "EJ2802LAr_logsurf",
+        "vol1": "volWLS_PV",
+        "vol2": "volTPB_LAr_PV",
+        "optsurf": "EJ2802LAr_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "EJ2802ESR_logsurf",
+        "vol1": "volWLS_PV",
+        "vol2": "volMirror_PV",
+        "optsurf": "EJ2802ESR_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "EJ2802SiPM_logsurf",
+        "vol1": "volWLS_PV",
+        "vol2": "volSiPM_Sens_PV",
+        "optsurf": "EJ2802SiPM_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "Fiber2LAr_logsurf",
+        "vol1": "volFiber_PV",
+        "vol2": "volLCM_PV",
+        "optsurf": "EJ2802ESR_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "Fiber2SiPM_logsurf",
+        "vol1": "volFiber_PV",
+        "vol2": "volSiPM_LCM_PV",
+        "optsurf": "EJ2802SiPM_optsurf"
       }
     }
   ]
