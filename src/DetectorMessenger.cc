@@ -52,10 +52,14 @@ DetectorMessenger::DetectorMessenger(DetConstrOptPh *pDetector)
 	fPhysVolCoordCmd->SetParameterName("physvol", false);
 	fPhysVolCoordCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
+	fPhysVolInfoCmd = new G4UIcmdWithAString("/argoncube/detector/PhysVolInfo", this);
+	//fPhysVolInfoCmd->SetParameterName("physvol", false);
+	fPhysVolInfoCmd->AvailableForStates(G4State_Idle);
+	
 	fLoadOpticalSettingsFile = new G4UIcmdWithAString("/argoncube/detector/optical/loadOptSett", this);
 	fLoadOpticalSettingsFile->SetGuidance("Load the json file with all the optical settings used");
 	fLoadOpticalSettingsFile->SetParameterName("SettFile",false);
-	fLoadOpticalSettingsFile->AvailableForStates(G4State_PreInit, G4State_Idle);
+	fLoadOpticalSettingsFile->AvailableForStates(G4State_Idle);
 	
 	fOpticalSettingsVerb = new G4UIcmdWithAnInteger("/argoncube/detector/optical/verbosity", this);
 	fOpticalSettingsVerb->SetGuidance("Set the verbosity for the manager of the optical properties settings.");
@@ -74,6 +78,7 @@ DetectorMessenger::~DetectorMessenger()
 	delete fDetConstrVerb;
 	delete fOpticalSettingsVerb;
 	delete fPhysVolCoordCmd;
+	delete fPhysVolInfoCmd;
 	delete fLoadOpticalSettingsFile;
 	delete fDetectorOptDir;
 	delete fDetectorDir;
@@ -95,6 +100,11 @@ void DetectorMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewValue)
 	if(pUIcommand == fPhysVolCoordCmd){
 		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fPhysVolCoordCmd" << G4endl;
 		fDetector->PrintVolumeCoordinates( hNewValue );
+	}
+	
+	if(pUIcommand == fPhysVolInfoCmd){
+		G4cout << "Info --> DetectorMessenger::SetNewValue(...): called command fPhysVolInfoCmd" << G4endl;
+		fDetector->PrintVolumeInfo( hNewValue );
 	}
 	
 	if(pUIcommand == fLoadOpticalSettingsFile){

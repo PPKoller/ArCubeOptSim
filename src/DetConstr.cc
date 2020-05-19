@@ -329,7 +329,7 @@ void DetConstrOptPh::SetDefaultOptProperties()
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
+void DetConstrOptPh::PrintVolumeCoordinates(const G4String& hVolName)
 {
 	if(hVolName==G4String("")){
 		G4cout << "\nERROR --> DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName): Physical volume name not set!!!" << G4endl;
@@ -350,10 +350,10 @@ void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 	}
 	
 	if(vPhysVols.size()==0){
-		G4cout << "Physical Volume \"" << hVolName << "\" not found!!!" << G4endl;
+		G4cout << "Physical Volume <" << hVolName << "> not found!!!" << G4endl;
 		return;
 	}else{
-		G4cout << "There are " << vPhysVols.size() << " instances of the physical volume \"" << hVolName << "\"" << G4endl;
+		G4cout << "There are " << vPhysVols.size() << " instances of the physical volume <" << hVolName << ">" << G4endl;
 	}
 	
 	G4cout << G4endl << G4endl;
@@ -383,17 +383,38 @@ void DetConstrOptPh::PrintVolumeCoordinates(G4String hVolName)
 					pAncPhysVol = pPhysVolStore->at(i);
 				}
 			}
-			G4cout << "Shift of physical volume \"" << pPhysVol->GetName() << "\" with respect to \"" << pAncPhysVol->GetName() << "\" =  " << pPhysVol->GetTranslation()/mm << " mm" << G4endl;
+			G4cout << "Shift of physical volume <" << pPhysVol->GetName() << "> with respect to <" << pAncPhysVol->GetName() << "> =  " << pPhysVol->GetTranslation()/mm << " mm" << G4endl;
 			pPhysVol = pAncPhysVol;
 			ShiftGlob = ShiftGlob + pPhysVol->GetTranslation();
 		}
 		
-		G4cout << "\nGlobal shift of physical volume \"" << hVolName << "\" (inst. " << iVol << ") =  " << ShiftGlob/mm << " mm" << G4endl;
+		G4cout << "\nGlobal shift of physical volume <" << hVolName << "> (inst. " << iVol << ") =  " << ShiftGlob/mm << " mm" << G4endl;
 		
 	}
 	
 	return;
 }
+
+
+void DetConstrOptPh::PrintVolumeInfo(const G4String& VolName)
+{
+	if(fPVolsMap.find(VolName)==fPVolsMap.end()){
+		G4cout << "\nPhysical volume <" << VolName << "> not present in the volumes map!" << G4endl;
+		return;
+	}
+	
+	G4cout << "Found " << (fPVolsMap[VolName]).size() << " instances of the volume <" << VolName << ">" << G4endl;
+	
+	
+	if(fPVolsRecour.find(VolName)==fPVolsRecour.end()){
+		G4cout << "Physical volume <" << VolName << "> not present in the map of recourrences!" << G4endl;
+		return;
+	}
+	
+	G4cout << "The physical volume <" << VolName << "> was found " << fPVolsRecour[VolName] << " times in the tree of physical volumes" << G4endl;
+	
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -497,6 +518,13 @@ void DetConstrOptPh::ScanVols(G4VPhysicalVolume* mvol, std::map<G4String, std::s
 	}else{
 		((*volsmap)[mvol->GetName()]).insert(mvol);
 	}
+	
+	if( fPVolsRecour.find(mvol->GetName()) == fPVolsRecour.end() ){
+		fPVolsRecour[mvol->GetName()] = 1;
+	}else{
+		fPVolsRecour[mvol->GetName()] += 1;
+	}
+	
 	
 	G4int nDVols = mvol->GetLogicalVolume()->GetNoDaughters();
 	
