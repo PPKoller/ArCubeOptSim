@@ -434,7 +434,7 @@ void DetConstrOptPh::PrintListOfPhysVols()
 	for(G4int ivol=0; ivol<nvols; ivol++){
 		G4LogicalVolume *pMotherVol = pPhysVolStore->at(ivol)->GetMotherLogical();
 		if(pMotherVol){
-			G4cout << "PV: " << pPhysVolStore->at(ivol)->GetName();
+			G4cout << "PV: " << pPhysVolStore->at(ivol)->GetName() << " (CpNm: " << pPhysVolStore->at(ivol)->GetCopyNo() << ")";
 			if( pPhysVolStore->at(ivol)->IsReplicated() && pPhysVolStore->at(ivol)->IsParameterised()){
 				G4cout << " (repl, param)";
 			}else{

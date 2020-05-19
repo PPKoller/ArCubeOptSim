@@ -43,6 +43,8 @@ private:
 	
 	G4UIcmdWithAString *fPhysVolInfoCmd;
 	
+	G4UIcmdWithoutParameter *fPhysVolList;
+	
 	G4UIcmdWithAString *fLoadOpticalSettingsFile;
 	
 	G4UIcmdWithAnInteger *fOpticalSettingsVerb;
