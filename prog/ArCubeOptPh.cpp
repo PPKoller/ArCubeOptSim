@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 		//Let G4UIExecutive guess what is the best available UI
 		ui = new G4UIExecutive(1,argv);
 		if (ui->IsGUI() && bUseGui ){
-			pUImanager->ApplyCommand("/control/execute gui.mac");
+			//pUImanager->ApplyCommand("/control/execute gui.mac");
 			ui->SessionStart();
 			delete ui;
 		}else{
