@@ -16,7 +16,11 @@
       "obj": {
         "matname": "TPB",
         "propfile": {
-          "RINDEX": "resources/datafiles/RINDEX_TPB.dat"
+          "RINDEX": "resources/datafiles/RINDEX_TPB.dat",
+          "ABSLENGTH": "resources/datafiles/ABSLENGTH_TPB.dat",
+          "WLSABSLENGTH": "resources/datafiles/WLSABSLENGTH_TPB.dat",
+          "WLSCOMPONENT": "resources/datafiles/WLSCOMPONENT_TPB.dat",
+          "WLSTIMECONSTANT": "resources/datafiles/WLSTIMECONSTANT_TPB.dat"
         }
       }
     },
