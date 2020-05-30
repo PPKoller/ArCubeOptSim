@@ -274,6 +274,9 @@ void AnalysisManagerOptPh::BeginOfEvent(const G4Event *pEvent)
 	vector<G4ThreeVector> polVec = fPrimaryGeneratorAction->GetPrimPol();
 	
 	if(fSave>AnalysisManagerOptPh::kOff){
+		
+		fEventData->fEventId = fCurrentEvent;
+		
 		fEventData->fPrimaryVolumeIndex = FindVolumeIndex(fPrimVol);
 	
 		fEventData->fPrimary_Xpos = posVec.x();
@@ -420,7 +423,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep)
 	//fEventData->fVolName->push_back( vol->GetName() );
 	
 	fEventData->fVolIndex->push_back( fOptPhSenDetVolPtrsMap[Vol] );//ID of the physical volume (from a std::map)
-	fEventData->fHitVolId->push_back( touch->GetCopyNumber() );//Copy number of the physical volume ---> IT IS ALWAYS 0!!!!
+	fEventData->fHitVolId->push_back( touch->GetCopyNumber() );//Copy number of the physical volume
 	//fEventData->fHitVolId->push_back( touch->GetId() ); //This doesn't exists of course
 	
 	fEventData->fTime->push_back( postStepPoint->GetGlobalTime() );
