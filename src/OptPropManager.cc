@@ -1,6 +1,9 @@
 #ifndef OPT_PROP_MANAGER_CC
 #define OPT_PROP_MANAGER_CC
 
+#include "globals.hh"
+#include "G4SystemOfUnits.hh"
+
 #include "OptPropManager.hh"
 #include "DetConstr.hh"
 
@@ -339,7 +342,7 @@ void OptPropManager::ReadValuesFromFile(const G4String& filename, std::vector<G4
 		}
 		*/
 		
-		ph_en.push_back(ph_en_d);
+		ph_en.push_back(ph_en_d*eV);
 		vals.push_back(val_d);
 	}
 	

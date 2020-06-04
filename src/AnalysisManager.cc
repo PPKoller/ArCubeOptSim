@@ -376,22 +376,29 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep)
 		if(trstatus==fSuspend) TrackStat = "Suspend";
 		if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
 		
-		if((postStepPoint->GetStepStatus()==fGeomBoundary) || fWasAtBoundary){
+		if((postStepPoint->GetStepStatus()==fGeomBoundary) || fWasAtBoundary || (fOptPhSenDetVolPtrs.find(Vol)!=fOptPhSenDetVolPtrs.end())) {
 			if(fStepsDebug){
-				if(!fWasAtBoundary){
-					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon at volumes boundary" << G4endl;
-					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
-					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
-					G4cout << "              " << "Track status: " << TrackStat << G4endl;
-					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
-					fWasAtBoundary = true;
-				}else{
+				if(fWasAtBoundary && (postStepPoint->GetStepStatus()!=fGeomBoundary)){
 					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon after volumes boundary" << G4endl;
 					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
 					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
 					G4cout << "              " << "Track status: " << TrackStat << G4endl;
 					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
 					fWasAtBoundary = false;
+				}else if(!fWasAtBoundary && fOptPhSenDetVolPtrs.find(Vol)==fOptPhSenDetVolPtrs.end()){
+					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon at volumes boundary" << G4endl;
+					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
+					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
+					G4cout << "              " << "Track status: " << TrackStat << G4endl;
+					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
+					fWasAtBoundary = true;
+				}
+        if (fOptPhSenDetVolPtrs.find(Vol)!=fOptPhSenDetVolPtrs.end()){
+					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ":" << G4endl;
+					G4cout << "              Volume: <" << Vol->GetName() << ">, copy num: " << touch->GetCopyNumber() << G4endl;
+					G4cout << "              " << "Track status: " << TrackStat << G4endl;
+					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
+					G4cout << "              " << "Energy: " << postStepPoint->GetKineticEnergy() << "\n" << G4endl;
 				}
 				//std::string foo;
 				//G4cout << "Press a enter to continue..."; std::cin >> foo;
