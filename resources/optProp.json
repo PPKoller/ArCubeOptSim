@@ -179,6 +179,33 @@
     {
       "name": "buildlogbordersurf",
       "obj": {
+        "surfname": "LCM2TPB_logsurf",
+        "vol1": "volLCM_PV",
+        "vol2": "volTPB_Fiber_PV",
+        "optsurf": "LAr2TPB_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "TPB2LCM_logsurf",
+        "vol1": "volTPB_Fiber_PV",
+        "vol2": "volLCM_PV",
+        "optsurf": "TPB2LAr_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "Fiber2TPB_logsurf",
+        "vol1": "volFiber_PV",
+        "vol2": "volTPB_Fiber_PV",
+        "optsurf": "EJ2802TPB_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
         "surfname": "Fiber2LAr_logsurf",
         "vol1": "volFiber_PV",
         "vol2": "volLCM_PV",
