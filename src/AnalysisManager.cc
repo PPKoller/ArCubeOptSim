@@ -115,6 +115,8 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	std::string proc_dict = BuildProcsDict();
 	
 	
+	
+	
 	if(fSave<=AnalysisManagerOptPh::kOff){
 		G4cout << "\nWARNING --> AnalysisManagerOptPh::BeginOfRun(...): Data will not be saved." << G4endl;
 		return;
@@ -217,8 +219,8 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	//Full step mode
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("totsteps", &fEventData->fNbTotHits, "totsteps/I");//Fill at step stage
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_index", "vector<Int_t>", &fEventData->fVolIndex);//Fill at step stage
-	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_copy", "vector<Int_t>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
-	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_id", "vector<Int_t>", &fEventData->fHitVolCopyNum);//ID of the touchable volume//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_copy", "vector<Int_t>", &fEventData->fHitVolCopyNum);//ID of the touchable volume//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_id", "vector<Int_t>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at end of Event
@@ -507,6 +509,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	
 	//This should be replaced with a unique ID of the physical volume
+	
 	if( (trackid!=fLastTrackId) || (Vol!=fLastPhysVol) ){
 		//Recalculate the volume id (recursive process) only if the volume pointer is different from before
 		fLastTrackId = trackid;
@@ -517,7 +520,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	}
 	
 	
-	fEventData->fVolIndex->push_back( fLastVolIdx );//ID of the physical volume (from a std::map)
+	fEventData->fVolIndex->push_back( fLastVolIdx );//Index of the physical volume (from a std::map)
 	fEventData->fHitVolCopyNum->push_back( fLastCopyNum );//Copy number of the physical volume
 	fEventData->fHitVolId->push_back( fLastVolId );
 	fEventData->fFirstParentId->push_back( fFirstParentIDMap[fLastTrackId] );
@@ -799,7 +802,7 @@ int AnalysisManagerOptPh::FindVolId(G4TouchableHandle& touch)
 	
 	int volId = 1;
 	for(int iLev=0; iLev<=nLevs; iLev++){
-		volId *= (touch->GetCopyNumber()+1);
+		volId = volId*(touch->GetVolume(iLev)->GetCopyNo()+1);
 	}
 	
 	return volId;

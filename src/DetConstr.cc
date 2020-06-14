@@ -418,7 +418,7 @@ void DetConstrOptPh::PrintVolumeInfo(const G4String& VolName)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::PrintListOfPhysVols()
+void DetConstrOptPh::PrintListOfPhysVols() const
 {
 	if(!fWorld) return;
 	
@@ -458,7 +458,7 @@ void DetConstrOptPh::PrintListOfPhysVols()
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DetConstrOptPh::PrintListOfLogVols()
+void DetConstrOptPh::PrintListOfLogVols() const
 {
 	if(!fWorld) return;
 	

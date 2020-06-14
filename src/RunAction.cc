@@ -1,16 +1,13 @@
 #include "AnalysisManager.hh"
 #include "RunAction.hh"
 
-#include "Randomize.hh"
 
-#include <sys/time.h>
 
 
 
 RunActionOptPh::RunActionOptPh(AnalysisManagerOptPh *pAnalysisManager)
 {
 	fAnalysisManager = pAnalysisManager;
-	fRanSeed=0;
 }
 
 RunActionOptPh::~RunActionOptPh()

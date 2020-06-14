@@ -21,8 +21,6 @@ public:
 
 private:
 	AnalysisManagerOptPh *fAnalysisManager;
-	
-	G4int fRanSeed;
 };
 
 #endif
