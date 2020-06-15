@@ -344,7 +344,7 @@
         "surfname": "Fiber2LAr_logsurf",
         "vol1": "volFiber_PV",
         "vol2": "volLCM_PV",
-        "optsurf": "EJ2802ESR_optsurf"
+        "optsurf": "EJ2802LAr_optsurf"
       }
     },
     {
