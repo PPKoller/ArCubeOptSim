@@ -211,8 +211,7 @@
         "type": "dielectric_metal",
         "finish": "polished",
         "propfile": {
-          "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat",
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802SiPM.dat"
+          "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat"
         }
       }
     },
