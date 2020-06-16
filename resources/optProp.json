@@ -179,7 +179,7 @@
       "obj": {
         "surfname": "EJ2802LAr_optsurf",
         "model": "unified",
-        "type": "dielectric_metal",
+        "type": "dielectric_dielectric",
         "finish": "polished"
       }
     },
@@ -188,10 +188,11 @@
       "obj": {
         "surfname": "EJ2802TPB_optsurf",
         "model": "unified",
-        "type": "dielectric_metal",
+        "type": "dielectric_dielectric",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802TPB.dat"
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802TPB.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_EJ2802TPB.dat"
         }
       }
     },
@@ -200,10 +201,11 @@
       "obj": {
         "surfname": "EJ2802ESR_optsurf",
         "model": "unified",
-        "type": "dielectric_metal",
+        "type": "dielectric_dielectric",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802ESR.dat"
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802ESR.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_EJ2802ESR.dat"
         }
       }
     },
@@ -212,7 +214,7 @@
       "obj": {
         "surfname": "EJ2802SiPM_optsurf",
         "model": "unified",
-        "type": "dielectric_metal",
+        "type": "dielectric_dielectric",
         "finish": "polished",
         "propfile": {
           "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat",
