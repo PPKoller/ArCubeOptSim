@@ -169,6 +169,14 @@
       "name": "buildoptsurf",
       "obj": {
         "surfname": "TPB2EJ280_optsurf",
+        "model": "dichroic",
+        "dichroicfile": "resources/datafiles/DICHROICFILE_dfpachill.data"
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "TPB2EJ280_old_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished"
@@ -187,6 +195,14 @@
       "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802TPB_optsurf",
+        "model": "dichroic",
+        "dichroicfile": "resources/datafiles/DICHROICFILE_dfpachill.data"
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "EJ2802TPB_old_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished",
@@ -219,39 +235,6 @@
         "propfile": {
           "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat",
           "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802SiPM.dat"
-        }
-      }
-    },
-    {
-      "name": "buildoptsurf",
-      "obj": {
-        "surfname": "WLS2LAr_optsurf",
-        "model": "unified",
-        "type": "dielectric_dielectric"
-      }
-    },
-    {
-      "name": "buildoptsurf",
-      "obj": {
-        "surfname": "WLS2TPB_optsurf",
-        "model": "unified",
-        "type": "dielectric_dielectric",
-        "finish": "polished",
-        "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2TPB.dat"
-        }
-      }
-    },
-    {
-      "name": "buildoptsurf",
-      "obj": {
-        "surfname": "WLS2SiPM_optsurf",
-        "model": "unified",
-        "type": "dielectric_metal",
-        "finish": "polished",
-        "propfile": {
-          "EFFICIENCY": "resources/datafiles/EFFICIENCY_WLS2SiPM.dat",
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2SiPM.dat"
         }
       }
     },
