@@ -45,6 +45,7 @@ private:
 	G4UIcmdWithAnInteger *fSaveDataCmd;
 	G4UIcmdWithAString *fFileNameCmd;
 	G4UIcmdWithAString *fDefOptSDCmd;
+	G4UIcmdWithAString *fDefAbsVolCmd;
 	
 	G4UIcmdWithAnInteger *fAutoFlushCmd;
 	G4UIcmdWithAnInteger *fAutoSaveCmd;

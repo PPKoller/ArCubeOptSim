@@ -202,6 +202,9 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at step stage
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_partgen", "vector<Int_t>", &fEventData->fPartGener);//Fill at step stage
 	
+	
+	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_ekin", "vector<Double_t>", &fEventData->fEkin);//Fill at step stage
+	
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_zpos", "vector<Double_t>", &fEventData->fZpos);//Fill at step stage
@@ -227,6 +230,9 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("firstparentid", "vector<Int_t>", &fEventData->fFirstParentId);//Fill at end of Event
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("creatproc", "vector<Int_t>", &fEventData->fCreatProc);//Fill at end of Event
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("deposproc", "vector<Int_t>", &fEventData->fDepProc);//Fill at step stage
+	
+	
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("ekin", "vector<Double_t>", &fEventData->fEkin);//Fill at step stage
 	
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("xpos", "vector<Double_t>", &fEventData->fXpos);//Fill at step stage
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("ypos", "vector<Double_t>", &fEventData->fYpos);//Fill at step stage
@@ -366,26 +372,45 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	G4int trackid = track->GetTrackID();
 	
-	G4TrackStatus trstatus = track->GetTrackStatus();
-	
 	G4StepPoint *preStepPoint = pStep->GetPreStepPoint();
 	
 	G4StepPoint *postStepPoint = pStep->GetPostStepPoint();
 	
 	G4TouchableHandle touch = postStepPoint->GetTouchableHandle();
-	
 	G4VPhysicalVolume *Vol = touch->GetVolume();
+	
+	G4TouchableHandle touch_pre = preStepPoint->GetTouchableHandle();
+	G4VPhysicalVolume *Vol_pre = preStepPoint->GetTouchableHandle()->GetVolume();
+	
+	
+	
+	//This is the step point from where the stuff is saved. It changes to preStepPoint only in saving mode and in the the case the photon is absorbed in the physical volume soon after it went through the boundary surface.
+	G4StepPoint *saveStepPoint = postStepPoint;
+	G4VPhysicalVolume *saveVol = Vol;
+	G4TouchableHandle *saveTouch = &touch;
+	
 	
 	if(!Vol) return;
 	
 	
+	if(fWasAtBoundary && (fOptPhAbsVolPtrs.find(Vol_pre)!=fOptPhAbsVolPtrs.end()) ){
+		//This is the first step inside the new volume where the optical photon gets absorbed
+		track->SetTrackStatus(fStopAndKill);
+		
+		if( (fSave>kOff) && (fSave<kSdSteps) && (fOptPhAbsVolPtrs.find(Vol_pre)!=fOptPhAbsVolPtrs.end()) ){
+			saveStepPoint = preStepPoint;
+			saveVol = Vol_pre; //This determines to save the point in "hit mode"
+			saveTouch = &touch_pre;
+		}
+	}
+	
+	
+	G4TrackStatus trstatus = track->GetTrackStatus();
+	
+	
+	
 	//Volume printouts
 	if(fVerbose>=kDebug || fStepsDebug){
-		
-		G4VPhysicalVolume *Vol_pre = preStepPoint->GetTouchableHandle()->GetVolume();
-		
-		G4TouchableHandle touch_pre = preStepPoint->GetTouchableHandle();
-		
 		
 		G4String TrackStat = "";
 		
@@ -397,6 +422,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 		if(trstatus==fSuspend) TrackStat = "Suspend";
 		if(trstatus==fPostponeToNextEvent) TrackStat = "PostponeToNextEvent";
 		
+		
 		if((postStepPoint->GetStepStatus()==fGeomBoundary) || fWasAtBoundary){
 			if(fStepsDebug){
 				if(!fWasAtBoundary){
@@ -405,14 +431,14 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
 					G4cout << "              " << "Track status: " << TrackStat << G4endl;
 					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
-					fWasAtBoundary = true;
+					//fWasAtBoundary = true;
 				}else{
 					G4cout << "\nStepDebug --> " << "Event " << fCurrentEvent << ", trackID: " << track->GetTrackID() << ". Optical photon after volumes boundary" << G4endl;
 					G4cout << "              Volume 1: <" << Vol_pre->GetName() << ">, copy num: " << touch_pre->GetCopyNumber() << G4endl; 
 					G4cout << "              Volume 2: <" << Vol->GetName() << ">, copy num:" << touch->GetCopyNumber() << G4endl;
 					G4cout << "              " << "Track status: " << TrackStat << G4endl;
 					G4cout << "              " << "Sel proc: " << postStepPoint->GetProcessDefinedStep()->GetProcessName() << "\n" << G4endl;
-					fWasAtBoundary = false;
+					//fWasAtBoundary = false;
 				}
 				//std::string foo;
 				//G4cout << "Press a enter to continue..."; std::cin >> foo;
@@ -428,6 +454,15 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 				
 			}
 		}
+	}
+	
+	
+	
+	if((postStepPoint->GetStepStatus()==fGeomBoundary) && (!fWasAtBoundary)){
+		fWasAtBoundary = true;
+	}else{
+		//For optical photons it might happen that in successive steps they go from a boundary to another
+		if(postStepPoint->GetStepStatus()!=fGeomBoundary) fWasAtBoundary = false;
 	}
 	
 	
@@ -483,13 +518,15 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	//For saves modes lower than kAll check whether the particle is in one of the sensitive volumes defined by the user
 	if( (fSave<kAll) ){
-		if( fOptPhSenDetVolPtrs.find(Vol)==fOptPhSenDetVolPtrs.end() ){
+		//Here the mode is either "SD stepping mode" or one of the "hits modes"
+		
+		if( fOptPhSenDetVolPtrs.find(saveVol)==fOptPhSenDetVolPtrs.end() ){
 			//In all other saving modes I am interested only in hits or steps in specific physical volumes (sensitive volumes)
 			return;
 		}
 		
 		if( (fSave!=kSdSteps) && (trstatus!=fStopAndKill) ){
-			//Here the mode is either "SD stepping mode" or one of the "hits modes"
+			
 			//When in hit mode the hit is saved only if the optical photon is going to be absorbed (killed) in one of the sensitive volumes
 			return;
 		}
@@ -500,13 +537,13 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	
 	//This should be replaced with a unique ID of the physical volume
-	if( (trackid!=fLastTrackId) || (Vol!=fLastPhysVol) ){
+	if( (trackid!=fLastTrackId) || (saveVol!=fLastPhysVol) ){
 		//Recalculate the volume id (recursive process) only if the volume pointer is different from before
 		fLastTrackId = trackid;
-		fLastPhysVol = Vol;
-		fLastVolIdx = fPhysVolUniqueMap[Vol];
-		fLastCopyNum = touch->GetCopyNumber();
-		fLastVolId = FindVolId(touch);
+		fLastPhysVol = saveVol;
+		fLastVolIdx = fPhysVolUniqueMap[saveVol];
+		fLastCopyNum = (*saveTouch)->GetCopyNumber();
+		fLastVolId = FindVolId(*saveTouch);
 	}
 	
 	
@@ -514,29 +551,30 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	fEventData->fHitVolCopyNum->push_back( fLastCopyNum );//Copy number of the physical volume
 	fEventData->fHitVolId->push_back( fLastVolId );
 	fEventData->fFirstParentId->push_back( fFirstParentIDMap[fLastTrackId] );
-	fEventData->fTime->push_back( postStepPoint->GetGlobalTime() );
+	fEventData->fTime->push_back( saveStepPoint->GetGlobalTime() );
 	
 	if(fSave>=kHitsExt){
 		
 		fEventData->fTrackId->push_back( fLastTrackId );
 		
-		fEventData->fXpos->push_back( (postStepPoint->GetPosition()).x() );
-		fEventData->fYpos->push_back( (postStepPoint->GetPosition()).y() );
-		fEventData->fZpos->push_back( (postStepPoint->GetPosition()).z() );
-		fEventData->fXmom->push_back( (postStepPoint->GetMomentumDirection()).x() );
-		fEventData->fYmom->push_back( (postStepPoint->GetMomentumDirection()).y() );
-		fEventData->fZmom->push_back( (postStepPoint->GetMomentumDirection()).z() );
-		fEventData->fXpol->push_back( (postStepPoint->GetPolarization()).x() );
-		fEventData->fYpol->push_back( (postStepPoint->GetPolarization()).y() );
-		fEventData->fZpol->push_back( (postStepPoint->GetPolarization()).z() );
+		fEventData->fEkin->push_back( saveStepPoint->GetKineticEnergy() );
+		fEventData->fXpos->push_back( (saveStepPoint->GetPosition()).x() );
+		fEventData->fYpos->push_back( (saveStepPoint->GetPosition()).y() );
+		fEventData->fZpos->push_back( (saveStepPoint->GetPosition()).z() );
+		fEventData->fXmom->push_back( (saveStepPoint->GetMomentumDirection()).x() );
+		fEventData->fYmom->push_back( (saveStepPoint->GetMomentumDirection()).y() );
+		fEventData->fZmom->push_back( (saveStepPoint->GetMomentumDirection()).z() );
+		fEventData->fXpol->push_back( (saveStepPoint->GetPolarization()).x() );
+		fEventData->fYpol->push_back( (saveStepPoint->GetPolarization()).y() );
+		fEventData->fZpol->push_back( (saveStepPoint->GetPolarization()).z() );
 		
 		if(fSave>=kSdSteps){
 			if(fProcTable){
 				
-				if(!postStepPoint->GetProcessDefinedStep()){
+				if(!saveStepPoint->GetProcessDefinedStep()){
 					fEventData->fDepProc->push_back( 0 );//This is a primary track!
 				}else{
-					int retcode = FindProcessIndex(postStepPoint->GetProcessDefinedStep()); //This is the index if the process is found (>=0), otherwise a negative return code is returned
+					int retcode = FindProcessIndex(saveStepPoint->GetProcessDefinedStep()); //This is the index if the process is found (>=0), otherwise a negative return code is returned
 					if(retcode>=0){
 						fEventData->fDepProc->push_back( retcode+1 );//Add 1 to the index as 0 is reserved for primary tracks
 					}else{
@@ -592,6 +630,53 @@ void AnalysisManagerOptPh::DefineOptPhSensDet(G4String volList)
 			
 			if( (hName == hRequiredVolumeName) || (bMatch && (hName.substr(0, hRequiredVolumeName.size())) == hRequiredVolumeName) ){
 				fOptPhSenDetVolPtrs.insert(pPhysVolStore->at(iVol));
+			}
+		}
+	}
+}
+
+
+void AnalysisManagerOptPh::DefineOptPhAbsVols(G4String volList)
+{
+	fOptPhAbsVolPtrs.clear();
+	
+	
+	if(volList == G4String("NULL")){
+		return;
+	}
+	
+	G4PhysicalVolumeStore *pPhysVolStore = G4PhysicalVolumeStore::GetInstance();
+	
+	G4int nVols = pPhysVolStore->size();
+	
+	if(nVols <= 0) return;
+	
+	
+	stringstream hStream;
+	hStream.str(volList);
+	G4String hVolumeName;
+	
+	
+	// store all the volume names
+	std::set<G4String> candidatevolnames;
+	while(!hStream.eof()){
+		hStream >> hVolumeName;
+		candidatevolnames.insert(hVolumeName);
+		if(!hStream) continue;
+	}
+	
+	
+	for(set<G4String>::iterator pIt = candidatevolnames.begin(); pIt != candidatevolnames.end(); pIt++){
+		G4String hRequiredVolumeName = *pIt;
+		G4bool bMatch = false;
+		
+		if(bMatch = (hRequiredVolumeName.last('*') != std::string::npos)) hRequiredVolumeName = hRequiredVolumeName.strip(G4String::trailing, '*');
+		
+		for(G4int iVol=0; iVol<nVols; iVol++){
+			G4String hName = pPhysVolStore->at(iVol)->GetName();
+			
+			if( (hName == hRequiredVolumeName) || (bMatch && (hName.substr(0, hRequiredVolumeName.size())) == hRequiredVolumeName) ){
+				fOptPhAbsVolPtrs.insert(pPhysVolStore->at(iVol));
 			}
 		}
 	}

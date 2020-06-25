@@ -64,8 +64,9 @@ public:
 	
 	vector<Int_t> *fTrackId; //Id of the track
 	vector<Int_t> *fPartGener; //Generation of the particle
-	//Extended hit quantities for LUTs: these quantities are general both for "extended info" data level and for more stepping details. The only difference is that in "hit mode" the stuff is saved only when there is an absorption (useful for LUTs making) while in "steping mode" they are saved always, for any kind of process
 	
+	//Extended hit quantities for LUTs: these quantities are general both for "extended info" data level and for more stepping details. The only difference is that in "hit mode" the stuff is saved only when there is an absorption (useful for LUTs making) while in "steping mode" they are saved always, for any kind of process
+	vector<Double_t> *fEkin;
 	vector<Double_t> *fXpos, *fYpos, *fZpos; //Coordinates where the step occurred
 	vector<Double_t> *fXmom, *fYmom, *fZmom; //Momentum direction at the step
 	vector<Double_t> *fXpol, *fYpol, *fZpol; //Polarisation of the particle at the step

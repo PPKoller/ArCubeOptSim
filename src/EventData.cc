@@ -33,6 +33,8 @@ EventDataOptPh::EventDataOptPh()
 	
 	fParentId = new vector<Int_t>;
 	
+	fEkin = new vector<Double_t>;
+	
 	fXpos = new vector<Double_t>;
 	fYpos = new vector<Double_t>;
 	fZpos = new vector<Double_t>;
@@ -76,6 +78,8 @@ EventDataOptPh::~EventDataOptPh()
 	delete fPartGener;
 	
 	delete fParentId;
+	
+	delete fEkin;
 	
 	delete fXpos;
 	delete fYpos;
@@ -125,6 +129,8 @@ void EventDataOptPh::Reset()
 	
 	fPartGener->resize(0);
 	fParentId->resize(0);
+	
+	fEkin->resize(0);
 	
 	fXpos->resize(0);
 	fYpos->resize(0);
