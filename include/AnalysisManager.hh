@@ -56,6 +56,7 @@ public:
 	void SetRanSeed(G4int hRanSeed) { fRanSeed = hRanSeed; };
 	
 	void DefineOptPhSensDet(G4String volList);
+	void DefineOptPhAbsVols(G4String volList);
 	void SetSaveData(AnalysisManagerOptPh::datasave save){ fSave=save; };
 	void SetStepsDebug(G4bool dbg=true){ fStepsDebug=dbg; };
 	void SetDataFilename(const G4String &hFilename) { fDataFilename = hFilename; };
@@ -154,8 +155,8 @@ private:
 	std::map<G4VPhysicalVolume*, int> fPhysVolCpnmMap; //Map of all the existing physics volumes by copy number
 	std::map<G4VPhysicalVolume*, int> fOptPhSenDetVolPtrsMap; //Index of each physical volume
 	
-	std::set<G4VPhysicalVolume*> fOptPhSenDetVolPtrs;
-	
+	std::set<G4VPhysicalVolume*> fOptPhSenDetVolPtrs; //Sensitive volume where the tracking quantities are saved
+	std::set<G4VPhysicalVolume*> fOptPhAbsVolPtrs; //Volumes where the optical photon tracks get forcely absorbed (killed)
 	
 	
 	std::map<int, G4String> fOptPhPhysVolsMap;

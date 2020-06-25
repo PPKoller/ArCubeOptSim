@@ -55,6 +55,14 @@ AnalysisOptPhMessenger::AnalysisOptPhMessenger(AnalysisManagerOptPh *pAnManager)
 	fDefOptSDCmd->SetDefaultValue("NULL");
 	fDefOptSDCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 	
+	// Define optical sensitive volumes
+	fDefAbsVolCmd = new G4UIcmdWithAString("/argoncube/analysis/DefAbsVols", this);
+	fDefAbsVolCmd->SetGuidance("Defines a list of physical volume where the optical photons will be absorbed (killed) as soon as they enter in (NULL to unset).");
+	fDefAbsVolCmd->SetGuidance("DefAbsVols: detvol VolName1 VolName2 ...");
+	fDefAbsVolCmd->SetParameterName("AbsVolNames", true, true);
+	fDefAbsVolCmd->SetDefaultValue("NULL");
+	fDefAbsVolCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+	
 	// Autoflush and autosave for data tree
 	fAutoFlushCmd = new G4UIcmdWithAnInteger("/argoncube/analysis/SetAutoFlush",this);
 	fAutoFlushCmd->SetGuidance("Autoflush settings of the data TTree (see ROOT reference guide for more).");
@@ -82,6 +90,7 @@ AnalysisOptPhMessenger::~AnalysisOptPhMessenger()
 	delete fSaveDataCmd;
 	delete fFileNameCmd;
 	delete fDefOptSDCmd;
+	delete fDefAbsVolCmd;
 	
 	delete fAnalysisDir;
 	delete fAutoSaveCmd;
@@ -130,6 +139,14 @@ void AnalysisOptPhMessenger::SetNewValue(G4UIcommand *pUIcommand, G4String hNewV
 		fAnManager->DefineOptPhSensDet(hNewValue);
 		return;
 	}
+	
+	
+	if(pUIcommand == fDefAbsVolCmd){
+		std::cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fDefAbsVolCmd. Setting the optical photons detection volumes file name to: " << hNewValue << std::endl;
+		fAnManager->DefineOptPhAbsVols(hNewValue);
+		return;
+	}
+	
 	
 	if(pUIcommand == fAutoFlushCmd){
 		std::cout << "Info --> AnalysisOptPhMessenger::SetNewValue(...): called command fAutoFlushCmd. Setting the data TTree autoflush to " << hNewValue << std::endl;
