@@ -5,8 +5,8 @@
 /control/execute resources/macros/vis.mac
 /argoncube/gun/particle opticalphoton
 #/argoncube/gun/angtype direction
-#/argoncube/gun/direction 0 0 1
+/argoncube/gun/direction -2 -1.15 0
 #/argoncube/gun/polarization 0 1 0
-#/argoncube/gun/position 0 -50 309 mm
+#/argoncube/gun/position 0 -130 0 mm
 #/argoncube/gun/primaryNb 1
 /run/beamOn 1
