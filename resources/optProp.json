@@ -219,12 +219,7 @@
         "surfname": "EJ2802SiPM_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
-        "finish": "polished",
-        "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802SiPM.dat",
-          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_EJ2802SiPM.dat",
-          "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat"
-        }
+        "finish": "polished"
       }
     },
     {
