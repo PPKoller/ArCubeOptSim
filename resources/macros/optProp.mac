@@ -5,8 +5,19 @@
 /control/execute resources/macros/vis.mac
 /argoncube/gun/particle opticalphoton
 #/argoncube/gun/angtype direction
-/argoncube/gun/direction -2 -1.15 0
-#/argoncube/gun/direction 0 0 1
+
+### Hit a SiPM in ArCLight ###
+#/argoncube/gun/position 0 0 0
+#/argoncube/gun/direction -2 -1.15 0
+
+### Hit the TPB coating of ArCLight ###
+#/argoncube/gun/position 0 -15 25 cm
+#/argoncube/gun/direction 0 0.1 1
+
+### Hit the TPB coating of LCM ###
+#/argoncube/gun/position 0 15 25 cm
+#/argoncube/gun/direction 0 0.1 1
+
 #/argoncube/gun/polarization 0 1 0
 #/argoncube/gun/position 0 -130 0 mm
 #/argoncube/gun/primaryNb 1
