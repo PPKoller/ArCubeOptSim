@@ -1,2 +1,4 @@
 /argoncube/detector/optical/verbosity 1
 /argoncube/detector/setTpbThick 0.001 mm
+/argoncube/analysis/SaveData 0
+#/argoncube/analysis/stepsDebug 1
