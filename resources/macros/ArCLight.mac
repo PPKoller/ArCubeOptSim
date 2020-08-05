@@ -9,7 +9,7 @@
 /argoncube/detector/optical/loadOptSett resources/optProp.json
 
 ### Define volumes to kill photons ###
-/argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
+#/argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
 
 ### Define volumes to detect photons ###
 /argoncube/analysis/DefOptSD volSiPM_Sens_PV volSiPM_LCM_PV
@@ -34,7 +34,7 @@
 /control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
-/argoncube/gun/position 0 0 0.5 cm
+/argoncube/gun/position 0 0 0 cm
 /argoncube/gun/direction -2 -1.15 0
 
 ### Hit the TPB coating of ArCLight ###
@@ -46,4 +46,4 @@
 #/argoncube/gun/direction 0 0.1 1
 
 /argoncube/gun/primaryNb 1
-/run/beamOn 10
+/run/beamOn 100
