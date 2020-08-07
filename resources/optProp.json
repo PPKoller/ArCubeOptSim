@@ -67,7 +67,8 @@
       "obj": {
         "matname": "Silicon",
         "propfile": {
-          "RINDEX": "resources/datafiles/RINDEX_Silicon.dat"
+          "RINDEX": "resources/datafiles/RINDEX_Silicon.dat",
+          "ABSLENGTH": "resources/datafiles/ABSLENGTH_Silicon.dat"
         }
       }
     },
@@ -219,12 +220,7 @@
         "surfname": "EJ2802SiPM_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
-        "finish": "polished",
-        "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_EJ2802SiPM.dat",
-          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_EJ2802SiPM.dat",
-          "EFFICIENCY": "resources/datafiles/EFFICIENCY_EJ2802SiPM.dat"
-        }
+        "finish": "polished"
       }
     },
     {
@@ -237,6 +233,18 @@
         "propfile": {
           "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2TPB.dat",
           "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_WLS2TPB.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "WLS2LAr_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2LAr.dat"
         }
       }
     },
@@ -377,6 +385,15 @@
         "vol1": "volFiber_PV",
         "vol2": "volTPB_Fiber_PV",
         "optsurf": "WLS2TPB_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "Fiber2LAr_logsurf",
+        "vol1": "volFiber_PV",
+        "vol2": "volLCM_PV",
+        "optsurf": "WLS2LAr_optsurf"
       }
     },
     {
