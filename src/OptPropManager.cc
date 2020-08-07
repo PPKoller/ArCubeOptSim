@@ -978,12 +978,13 @@ void OptPropManager::buildoptsurf(const json keyval)
 			if(fVerbose>=OptPropManager::kDetails){
 				std::cout << "Detail --> OptPropManager::buildoptsurf(...): Setting property  <dichroicfile> from file <" << keyval.at("dichroicfile").get<std::string>() << "> for the optical surface <" << surfname << ">." << std::endl;
 			}
-			
+			auto old_buffer = std::cout.rdbuf(nullptr);			
 			setenv("G4DICHROICDATA",keyval.at("dichroicfile").get<std::string>().c_str(),1);
 			//std::cout << "G4DICHROICDATA: " << keyval.at("dichroicfile").get<std::string>().c_str() << std::endl;
 			optsurf->SetType( OptSurfTypeMap.at("dielectric_dichroic"));
 			//optsurf->ReadDichroicFile();
 			unsetenv("G4DICHROICDATA");
+			std::cout.rdbuf(old_buffer);
 		}else{
 			std::cout << "\nERROR --> OptPropManager::buildoptsurf(...): The field corresponding to the property <dichroicfile> is not a json string type!\n" << std::endl;
 		}
