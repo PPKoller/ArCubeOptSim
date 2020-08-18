@@ -31,7 +31,7 @@
 /argoncube/gun/position 0 0 0 cm
 
 ### Start visual interface ###
-#/control/execute resources/macros/vis.mac
+/control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
 #/argoncube/gun/position 0 0 0
@@ -42,7 +42,7 @@
 #/argoncube/gun/direction 0 0.1 1
 
 ### Hit the TPB coating of LCM ###
-#/argoncube/gun/position 0 15 25 cm
-#/argoncube/gun/direction 0 0.1 1
+/argoncube/gun/position 0 15 25 cm
+/argoncube/gun/direction 0 0.1 1
 
-/run/beamOn 10000
+#/run/beamOn 1000000

@@ -244,7 +244,8 @@
         "type": "dielectric_dielectric",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2LAr.dat"
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_WLS2LAr.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_WLS2LAr.dat"
         }
       }
     },
@@ -392,7 +393,7 @@
       "obj": {
         "surfname": "Fiber2LAr_logsurf",
         "vol1": "volFiber_PV",
-        "vol2": "volLCM_PV",
+        "vol2": "volLAr_PV",
         "optsurf": "WLS2LAr_optsurf"
       }
     },
