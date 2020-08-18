@@ -166,6 +166,12 @@ int main(int argc, char **argv)
 		pUImanager->ApplyCommand(hCommand);
 	}
 	
+	if(!hOutFileName.empty()){
+    pAnalysisManager->SetDataFilename(hOutFileName);
+  }else{
+    pAnalysisManager->SetDataFilename("events.root");
+  }
+
 	//Initialize the RunManager
 	pRunManager->Initialize();
 	
@@ -205,7 +211,6 @@ int main(int argc, char **argv)
 			G4String hCommand = "/control/execute " + hMacroFileName;
 			pUImanager->ApplyCommand(hCommand);
 		}
-		if(!hOutFileName.empty()) pAnalysisManager->SetDataFilename(hOutFileName);
 			
 		if(iNbEventsToSimulate){
 			pAnalysisManager->SetNbEventsToSimulate(iNbEventsToSimulate);

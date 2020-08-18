@@ -42,7 +42,8 @@
 #/argoncube/gun/direction 0 0.1 1
 
 ### Hit the TPB coating of LCM ###
-/argoncube/gun/position 0 15 25 cm
-/argoncube/gun/direction 0 0.1 1
+#/argoncube/gun/position 0 15 25 cm
+#/argoncube/gun/direction 0 0.1 1
 
-#/run/beamOn 1000000
+/argoncube/gun/primaryNb 100
+/run/beamOn 5

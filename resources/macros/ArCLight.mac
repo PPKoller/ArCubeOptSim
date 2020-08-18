@@ -9,7 +9,7 @@
 /argoncube/detector/optical/loadOptSett resources/optProp.json
 
 ### Define volumes to kill photons ###
-#/argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
+/argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
 
 ### Define volumes to detect photons ###
 /argoncube/analysis/DefOptSD volSiPM_Sens_PV volSiPM_LCM_PV
