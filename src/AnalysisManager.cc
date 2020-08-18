@@ -395,12 +395,17 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	if(fWasAtBoundary && (fOptPhAbsVolPtrs.find(Vol_pre)!=fOptPhAbsVolPtrs.end()) ){
 		//This is the first step inside the new volume where the optical photon gets absorbed
-		track->SetTrackStatus(fStopAndKill);
-		
-		if( (fSave>kOff) && (fSave<kSdSteps) && (fOptPhAbsVolPtrs.find(Vol_pre)!=fOptPhAbsVolPtrs.end()) ){
-			saveStepPoint = preStepPoint;
-			saveVol = Vol_pre; //This determines to save the point in "hit mode"
-			saveTouch = &touch_pre;
+		if(Vol!=fLastPrePhysVol){
+			
+			if( (fSave>kOff) && (fSave<kSdSteps) && (fOptPhAbsVolPtrs.find(Vol_pre)!=fOptPhAbsVolPtrs.end()) ){
+				track->SetTrackStatus(fStopAndKill);
+				
+				saveStepPoint = preStepPoint;
+				saveVol = Vol_pre; //This determines to save the point in "hit mode"
+				saveTouch = &touch_pre;
+			}
+		}else{
+			fLastPrePhysVol = NULL;
 		}
 	}
 	
@@ -460,6 +465,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	
 	if((postStepPoint->GetStepStatus()==fGeomBoundary) && (!fWasAtBoundary)){
 		fWasAtBoundary = true;
+		fLastPrePhysVol = Vol_pre;
 	}else{
 		//For optical photons it might happen that in successive steps they go from a boundary to another
 		if(postStepPoint->GetStepStatus()!=fGeomBoundary) fWasAtBoundary = false;

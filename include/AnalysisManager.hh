@@ -175,6 +175,10 @@ private:
 	//Stuff used to reduce the number of calls at stepping level
 	int fLastTrackId; //Track ID of the last step
 	G4VPhysicalVolume* fLastPhysVol; //Pointer of the physical volume seen at the last step.
+	
+	G4VPhysicalVolume* fLastPrePhysVol;
+	
+	
 	int fLastVolIdx;
 	int fLastCopyNum;
 	int fLastVolId;
