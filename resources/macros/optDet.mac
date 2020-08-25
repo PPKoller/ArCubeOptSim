@@ -28,7 +28,7 @@
 /argoncube/gun/halfx 15.13615 cm # shape of volTPCActive
 /argoncube/gun/halfy 63.0936 cm # shape of volLAr
 /argoncube/gun/halfz 31.015 cm # shape of volTPCActive
-/argoncube/gun/position 0 0 0 cm
+#/argoncube/gun/position 0 0 0 cm
 
 ### Start visual interface ###
 /control/execute resources/macros/vis.mac
@@ -46,4 +46,4 @@
 #/argoncube/gun/direction 0 0.1 1
 
 /argoncube/gun/primaryNb 100
-/run/beamOn 5
+/run/beamOn 1
