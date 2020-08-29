@@ -24,7 +24,7 @@ EventDataOptPh::EventDataOptPh()
 	
 	fVolIndex = new vector<Int_t>;
 	fHitVolCopyNum = new vector<Int_t>;
-	fHitVolId = new vector<Int_t>;
+	fHitVolId = new vector<Long64_t>;
 	fTime = new vector<Double_t>;
 	
 	fTrackId = new vector<Int_t>;

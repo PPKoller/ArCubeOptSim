@@ -194,7 +194,7 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("totalhits", &fEventData->fNbTotHits, "totalhits/L");
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_index", "vector<Int_t>", &fEventData->fVolIndex);//ID of the touchable volume (it is a whish!). //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_copy", "vector<Int_t>", &fEventData->fHitVolCopyNum);//This is the copy number of a specific physics volume. //Fill at step stage
-	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_id", "vector<Int_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_id", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_firstparentid", "vector<Int_t>", &fEventData->fFirstParentId); //Fill at step stage
 	
@@ -220,8 +220,8 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	//Full step mode
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("totsteps", &fEventData->fNbTotHits, "totsteps/I");//Fill at step stage
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_index", "vector<Int_t>", &fEventData->fVolIndex);//Fill at step stage
-	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_copy", "vector<Int_t>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
-	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_id", "vector<Int_t>", &fEventData->fHitVolCopyNum);//ID of the touchable volume//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_copy", "vector<Int_t>", &fEventData->fHitVolCopyNum);//ID of the touchable volume//Fill at step stage
+	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("vol_id", "vector<Long64_t>", &fEventData->fHitVolId);//ID of the touchable volume//Fill at step stage
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	
 	if(fSave >= AnalysisManagerOptPh::kSdSteps) fTree->Branch("trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at end of Event
@@ -881,10 +881,11 @@ int AnalysisManagerOptPh::FindVolId(G4TouchableHandle& touch)
 {
 	G4int nLevs = touch->GetHistoryDepth();
 	
-	int volId = 1;
+	Long64_t volId = 0;
 	for(int iLev=0; iLev<=nLevs; iLev++){
-		volId *= (touch->GetCopyNumber()+1);
+    volId += (Long64_t)(((int)(pow(10.,iLev)))*(touch->GetCopyNumber(iLev)));
+    if((touch->GetCopyNumber(iLev))<0) std::cout << " copynumber: " << touch->GetCopyNumber(iLev) << ", volname: " << touch->GetVolume(iLev)->GetName() << std::endl; 
 	}
 	
-	return volId;
+  return volId;
 }

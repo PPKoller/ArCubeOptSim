@@ -54,11 +54,11 @@ public:
 	
 	// Number of all the hits for the event
 	// Quantities for hits and for making LUTs 
-	Int_t fNbTotHits;
+	Long64_t fNbTotHits;
 	
 	vector<Int_t> *fVolIndex;
 	vector<Int_t> *fHitVolCopyNum;
-	vector<Int_t> *fHitVolId; //Id of the touchable where the step accurred (absorption volume if LUT table are needed)
+	vector<Long64_t> *fHitVolId; //Id of the touchable where the step accurred (absorption volume if LUT table are needed)
 	
 	vector<Double_t> *fTime; //Time of the step
 	

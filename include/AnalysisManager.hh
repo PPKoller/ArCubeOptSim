@@ -181,7 +181,7 @@ private:
 	
 	int fLastVolIdx;
 	int fLastCopyNum;
-	int fLastVolId;
+	Long64_t fLastVolId;
 };
 
 #endif
