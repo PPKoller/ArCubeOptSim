@@ -8,11 +8,14 @@ cmin = np.array(vox_tab.readline().split()).astype(np.float)
 cmax = np.array(vox_tab.readline().split()).astype(np.float)
 vdim = np.array(vox_tab.readline().split()).astype(np.float)
 nvox = np.array(vox_tab.readline().split()).astype(np.int)
+n = np.array(vox_tab.readline().split()).astype(np.int)
 
 print 'Number of voxels: %d' % np.prod(nvox)
+print 'Number of events: %d' % n[0]
+print 'Number of photons/evt: %d' % n[1]
 
-#for vox in range(np.prod(nvox)):
-for vox in range(10):
+for vox in range(np.prod(nvox)):
+#for vox in range(100):
 
     if (vox%1000 == 0):
         print "writing macro no. %d of %d..." % (vox, np.prod(nvox))
@@ -32,9 +35,9 @@ for vox in range(10):
     macro.write("/argoncube/gun/halfz " + str(vdim[2]/2.) + " mm\n")
 
     #number of photons per event
-    macro.write("/argoncube/gun/primaryNb 10000\n")
+    macro.write("/argoncube/gun/primaryNb %d\n" % n[1])
 
     #number of events
-    macro.write("/run/beamOn 100")
+    macro.write("/run/beamOn %d" % n[0])
 
     macro.close()

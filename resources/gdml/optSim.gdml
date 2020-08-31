@@ -1982,7 +1982,7 @@
         <positionref ref="OpticalDetR_pos_R"/>
         <rotationref ref="identity"/>
       </physvol>
-      <physvol copynumber="0">
+      <physvol copynumber="1">
         <volumeref ref="volOpticalDetL"/>
         <positionref ref="OpticalDetL_pos_L"/>
         <rotationref ref="OpticalDetL_rot"/>

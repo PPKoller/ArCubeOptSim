@@ -11,11 +11,11 @@ nvox = np.array(vox_tab.readline().split()).astype(np.int)
 
 print 'Number of voxels: %d' % np.prod(nvox)
 
-gdml    = "./optSim.gdml"
+gdml    = "./OptSim.gdml"
 preinit = "./preinit.mac"
 
-#for vox in range(np.prod(nvox)):
-for vox in range(10):
+for vox in range(np.prod(nvox)):
+#for vox in range(100):
 
     infile  = "./macros/OptSim_%08d.mac" % vox
     outfile = "./out/OptSim_%08d.root" % vox

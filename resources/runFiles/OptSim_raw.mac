@@ -6,7 +6,7 @@
 #/tracking/verbose 1
 
 ### Load optical properties from JSON file ###
-/argoncube/detector/optical/loadOptSett optProp.json
+/argoncube/detector/optical/loadOptSett OptSim.json
 
 ### Define volumes to kill photons ###
 /argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
