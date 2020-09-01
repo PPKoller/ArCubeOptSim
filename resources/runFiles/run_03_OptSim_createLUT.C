@@ -1,7 +1,7 @@
 #include<math.h>
 #include<vector>
 
-void O3_OptSim_createLUT(){
+void run_03_OptSim_createLUT(){
 
   int i = 0, j = 0; //iterator
   int n_evt = 0; //number of events
