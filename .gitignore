@@ -3,7 +3,6 @@ build
 
 *.root
 
-resources/runFiles/datafiles/
-resources/runFiles/log/
-resources/runFiles/macros/
-resources/runFiles/out/
+resources/runFiles/log/*
+resources/runFiles/macros/*
+resources/runFiles/out/*
