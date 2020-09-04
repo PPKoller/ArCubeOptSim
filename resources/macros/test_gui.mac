@@ -31,7 +31,7 @@
 /argoncube/gun/position 0 0 0 cm
 
 ### Start visual interface ###
-#/control/execute resources/macros/vis.mac
+/control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
 #/argoncube/gun/position 0 0 0
