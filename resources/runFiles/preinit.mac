@@ -1,5 +1,0 @@
-### Set the thickness of the ArCLight TPB layer ###
-/argoncube/detector/setTpbThick 0.001 mm
-
-### Set the level of how many details to save in ROOT tree ###
-/argoncube/analysis/SaveData 2

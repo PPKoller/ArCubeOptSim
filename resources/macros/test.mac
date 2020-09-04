@@ -28,10 +28,10 @@
 /argoncube/gun/halfx 15.13615 cm # shape of volTPCActive
 /argoncube/gun/halfy 63.0936 cm # shape of volLAr
 /argoncube/gun/halfz 31.015 cm # shape of volTPCActive
-#/argoncube/gun/position 0 0 0 cm
+/argoncube/gun/position 0 0 0 cm
 
 ### Start visual interface ###
-#/control/execute resources/macros/vis.mac
+/control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
 #/argoncube/gun/position 0 0 0
@@ -45,5 +45,5 @@
 #/argoncube/gun/position 0 15 25 cm
 #/argoncube/gun/direction 0 0.1 1
 
-/argoncube/gun/primaryNb 10000
-/run/beamOn 1000
+/argoncube/gun/primaryNb 1000
+/run/beamOn 1
