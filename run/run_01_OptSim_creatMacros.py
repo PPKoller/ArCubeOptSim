@@ -29,8 +29,8 @@ for vox in range(np.prod(nvox)):
         print "writing macro no. %d of %d..." % (vox, np.prod(nvox))
 
     #create new macro file
-    shutil.copy2('macros/OptSim_template.mac','macros/OptSim_%08d.mac' % nv)
-    macro = open('macros/OptSim_%08d.mac' % nv, 'a')
+    shutil.copy2('macros/OptSim_template.mac','/output/macros/OptSim_%08d.mac' % nv)
+    macro = open('/output/macros/OptSim_%08d.mac' % nv, 'a')
 
     #write GEANT4 commands into macro file
     macro.write("/argoncube/gun/center %f %f %f mm\n" % (cv[0],cv[1],cv[2]))

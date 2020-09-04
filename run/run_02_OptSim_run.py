@@ -17,10 +17,10 @@ preinit = "../resources/macros/preinit.mac"
 #only process voxels asked for
 for vox in range(0,10):
 
-    infile  = "./macros/OptSim_%08d.mac" % vox
-    outfile = "./out/OptSim_%08d.root" % vox
-    logfile = "./log/OptSim_%08d.log" % vox
-    errfile = "./log/OptSim_%08d.txt" % vox
+    infile  = "/output/macros/OptSim_%08d.mac" % vox
+    outfile = "/output/root_files/OptSim_%08d.root" % vox
+    logfile = "/output/log_files/OptSim_%08d.log" % vox
+    errfile = "/output/log_files/OptSim_%08d.txt" % vox
 
     with open(logfile,"wb") as out, open(errfile, "wb") as err:
         subprocess.Popen(["../build/ArgonCubeOptPh",
