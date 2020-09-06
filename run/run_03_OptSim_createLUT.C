@@ -9,9 +9,9 @@ void run_03_OptSim_createLUT(){
   char buffer[100]; //read buffer to skip lines
 
   //read input tree
-  TFile * in_file = new TFile("out/OptSim_00000000.root", "READ");
+  TFile * in_file = new TFile("/output/root_files/OptSim_00000000.root", "READ");
   TChain * in_tree = new TChain("t1");
-  in_tree->Add("out/*.root");
+  in_tree->Add("/output/root_files/*.root");
 
   n_evt = in_tree->GetEntries();
   n_ph = ((TParameter<int>*)in_file->Get("PrimNb"))->GetVal();
@@ -58,7 +58,7 @@ void run_03_OptSim_createLUT(){
   fclose(format);
 
   //write LUT tree
-  TFile * out_file = new TFile("OptSim_LUT_ArgonCube2x2.root", "RECREATE");
+  TFile * out_file = new TFile("/output/OptSim_LUT_ArgonCube2x2.root", "RECREATE");
   TTree * out_tree = new TTree("PhotonLibraryData","ArgonCube 2x2 LUT data");
 
   //define branch variables
