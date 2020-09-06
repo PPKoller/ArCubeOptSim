@@ -2,8 +2,8 @@ import os
 import subprocess
 import numpy as np
 
-vox1 = int(os.environ['VOX1']
-vox2 = int(os.environ['VOX2']
+vox1 = int(os.environ['VOX1'])
+vox2 = int(os.environ['VOX2'])
 
 #read voxel table
 vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
