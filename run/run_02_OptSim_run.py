@@ -1,5 +1,9 @@
+import os
 import subprocess
 import numpy as np
+
+vox1 = int(os.environ['VOX1']
+vox2 = int(os.environ['VOX2']
 
 #read voxel table
 vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
@@ -15,9 +19,9 @@ gdml    = "../resources/gdml/OptSim.gdml"
 preinit = "../resources/macros/preinit.mac"
 
 #only process voxels asked for
-for vox in range(0,10):
+for vox in range(vox1,vox2+1):
 
-    infile  = "/output/macros/OptSim_%08d.mac" % vox
+    infile  = "/output/macro_files/OptSim_%08d.mac" % vox
     outfile = "/output/root_files/OptSim_%08d.root" % vox
     logfile = "/output/log_files/OptSim_%08d.log" % vox
     errfile = "/output/log_files/OptSim_%08d.txt" % vox

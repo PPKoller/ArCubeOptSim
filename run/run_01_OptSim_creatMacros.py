@@ -1,5 +1,9 @@
+import os
 import shutil
 import numpy as np
+
+vox1 = int(os.environ['VOX1']
+vox2 = int(os.environ['VOX2']
 
 #read voxel table
 vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
@@ -22,15 +26,15 @@ for vox in range(np.prod(nvox)):
     cv = line[1:4] # voxel coordinates origin
 
     #only write macros asked for
-    if nv not in range(0,10):
+    if nv not in range(vox1,vox2+1):
         continue;
 
     if (vox%100 == 0):
         print "writing macro no. %d of %d..." % (vox, np.prod(nvox))
 
     #create new macro file
-    shutil.copy2('macros/OptSim_template.mac','/output/macros/OptSim_%08d.mac' % nv)
-    macro = open('/output/macros/OptSim_%08d.mac' % nv, 'a')
+    shutil.copy2('macros/OptSim_template.mac','/output/macro_files/OptSim_%08d.mac' % nv)
+    macro = open('/output/macro_files/OptSim_%08d.mac' % nv, 'a')
 
     #write GEANT4 commands into macro file
     macro.write("/argoncube/gun/center %f %f %f mm\n" % (cv[0],cv[1],cv[2]))
