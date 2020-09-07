@@ -2,11 +2,17 @@ import os
 import shutil
 import numpy as np
 
+#read environent variables
+usrg = bool(os.environ['USRG'])
+usro = bool(os.environ['USRO'])
 vox1 = int(os.environ['VOX1'])
 vox2 = int(os.environ['VOX2'])
 
 #read voxel table
-vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
+if usrg:
+    vox_tab = open('/input/OptSim_LUT_voxel_table.txt', 'r')
+else:
+    vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
 
 cmin = np.array(vox_tab.readline().split()).astype(np.float)
 cmax = np.array(vox_tab.readline().split()).astype(np.float)
@@ -33,7 +39,11 @@ for vox in range(np.prod(nvox)):
         print "writing macro no. %d of %d..." % (vox, np.prod(nvox))
 
     #create new macro file
-    shutil.copy2('macros/OptSim_template.mac','/output/macro_files/OptSim_%08d.mac' % nv)
+    if usro:
+        shutil.copy2('macros/OptSim_template_usr.mac','/output/macro_files/OptSim_%08d.mac' % nv)
+    else:
+        shutil.copy2('macros/OptSim_template.mac','/output/macro_files/OptSim_%08d.mac' % nv)
+
     macro = open('/output/macro_files/OptSim_%08d.mac' % nv, 'a')
 
     #write GEANT4 commands into macro file

@@ -2,11 +2,17 @@ import os
 import subprocess
 import numpy as np
 
+#read environent variables
+usrg = bool(os.environ['USRG'])
+usro = bool(os.environ['USRO'])
 vox1 = int(os.environ['VOX1'])
 vox2 = int(os.environ['VOX2'])
 
 #read voxel table
-vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
+if usrg:
+    vox_tab = open('/input/OptSim_LUT_voxel_table.txt', 'r')
+else:
+    vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
 
 cmin = np.array(vox_tab.readline().split()).astype(np.float)
 cmax = np.array(vox_tab.readline().split()).astype(np.float)
