@@ -3,8 +3,8 @@ import subprocess
 import numpy as np
 
 #read environent variables
-usrg = bool(os.environ['USRG'])
-usro = bool(os.environ['USRO'])
+usrg = int(os.environ['USRG'])
+usro = int(os.environ['USRO'])
 vox1 = int(os.environ['VOX1'])
 vox2 = int(os.environ['VOX2'])
 
