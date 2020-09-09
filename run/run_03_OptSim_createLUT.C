@@ -42,6 +42,8 @@ void run_03_OptSim_createLUT(){
   in_tree->SetBranchAddress("hit_time", &hit_time);
 
   //read format file
+  FILE * format;
+
   if(usrg){
     FILE * format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
   }else{
