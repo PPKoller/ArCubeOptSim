@@ -45,9 +45,9 @@ void run_03_OptSim_createLUT(){
   FILE * format;
 
   if(usrg){
-    FILE * format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
+    format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
   }else{
-    FILE * format = fopen("OptSim_LUT_voxel_table.txt", "r");
+    format = fopen("OptSim_LUT_voxel_table.txt", "r");
   }
   
   double xyz_min[3] = {0,0,0}; //minimum coordinates
