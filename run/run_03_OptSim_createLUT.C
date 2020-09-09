@@ -1,7 +1,13 @@
 #include<math.h>
 #include<vector>
+#include<stdio.h>
+#include<stdlib.h>
 
 void run_03_OptSim_createLUT(){
+
+  //read environment variables
+  char temp = (getenv("USRG"))[0];
+  int usrg = atoi(&temp);
 
   int i = 0, j = 0; //iterator
   int n_evt = 0; //number of events
@@ -36,7 +42,11 @@ void run_03_OptSim_createLUT(){
   in_tree->SetBranchAddress("hit_time", &hit_time);
 
   //read format file
-  FILE * format = fopen("OptSim_LUT_voxel_table.txt", "r");
+  if(usrg){
+    FILE * format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
+  }else{
+    FILE * format = fopen("OptSim_LUT_voxel_table.txt", "r");
+  }
   
   double xyz_min[3] = {0,0,0}; //minimum coordinates
   double xyz_max[3] = {0,0,0}; //maximum coordinates
@@ -141,10 +151,10 @@ void run_03_OptSim_createLUT(){
       hitVolID = hit_vol_id->at(j);
       
       hitVolIdx = hit_vol_index->at(j);
-      if(hitVolIdx==11 or hitVolIdx==17) hitVolIdx += 1;
+      if(hitVolIdx==19 or hitVolIdx==25) hitVolIdx += 1;
 
       switch(hitVolIdx){
-        case 12: //LCM
+        case 20: //LCM
           channelID = 0;
           sipmID = 0;
 
@@ -202,7 +212,7 @@ void run_03_OptSim_createLUT(){
 
           break;//case 11
         
-        case 18: //ArCLight
+        case 26: //ArCLight
           channelID = 0;
           sipmID = 0;
       
