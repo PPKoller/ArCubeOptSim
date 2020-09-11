@@ -46,4 +46,4 @@
 #/argoncube/gun/direction 0 0.1 1
 
 /argoncube/gun/primaryNb 1000
-/run/beamOn 1
+/run/beamOn 10

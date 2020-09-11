@@ -173,20 +173,20 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	//Primary particle savings
 	//if(!fLite) fTree->Branch("type_pri", "vector<string>", &fEventData->m_pPrimaryParticleType);
 	
-	fTree->Branch("prim_vol_index", &fEventData->fPrimaryVolumeIndex, "prim_vol_idx/I");//Fill at start of Event
-	fTree->Branch("prim_vol_cpnm", &fEventData->fPrimaryVolumeCopyNum, "prim_vol_cpnm/I");//Fill at start of Event
-	fTree->Branch("prim_vol_id", &fEventData->fPrimaryVolumeId, "prim_vol_id/I");//Fill at start of Event
-	fTree->Branch("prim_Xpos", &fEventData->fPrimary_Xpos, "prim_Xpos/D");//Fill at start of Event
-	fTree->Branch("prim_Ypos", &fEventData->fPrimary_Ypos, "prim_Ypos/D");//Fill at start of Event
-	fTree->Branch("prim_Zpos", &fEventData->fPrimary_Zpos, "prim_Zpos/D");//Fill at start of Event
-	fTree->Branch("prim_id", "vector<Int_t>", &fEventData->fPrimary_Id);//Fill at step stage only once
-	fTree->Branch("prim_en", "vector<Double_t>", &fEventData->fPrimEn);//Fill at step stage only once
-	fTree->Branch("prim_Xmom", "vector<Double_t>", &fEventData->fPrimary_Xmom);//Fill at step stage only once
-	fTree->Branch("prim_Ymom", "vector<Double_t>", &fEventData->fPrimary_Ymom);//Fill at step stage only once
-	fTree->Branch("prim_Zmom", "vector<Double_t>", &fEventData->fPrimary_Zmom);//Fill at step stage only once
-	fTree->Branch("prim_Xpol", "vector<Double_t>", &fEventData->fPrimary_Xpol);//Fill at step stage only once
-	fTree->Branch("prim_Ypol", "vector<Double_t>", &fEventData->fPrimary_Ypol);//Fill at step stage only once
-	fTree->Branch("prim_Zpol", "vector<Double_t>", &fEventData->fPrimary_Zpol);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_vol_index", &fEventData->fPrimaryVolumeIndex, "prim_vol_idx/I");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_vol_cpnm", &fEventData->fPrimaryVolumeCopyNum, "prim_vol_cpnm/I");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_vol_id", &fEventData->fPrimaryVolumeId, "prim_vol_id/I");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Xpos", &fEventData->fPrimary_Xpos, "prim_Xpos/D");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Ypos", &fEventData->fPrimary_Ypos, "prim_Ypos/D");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Zpos", &fEventData->fPrimary_Zpos, "prim_Zpos/D");//Fill at start of Event
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_id", "vector<Int_t>", &fEventData->fPrimary_Id);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_en", "vector<Double_t>", &fEventData->fPrimEn);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Xmom", "vector<Double_t>", &fEventData->fPrimary_Xmom);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Ymom", "vector<Double_t>", &fEventData->fPrimary_Ymom);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Zmom", "vector<Double_t>", &fEventData->fPrimary_Zmom);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Xpol", "vector<Double_t>", &fEventData->fPrimary_Xpol);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Ypol", "vector<Double_t>", &fEventData->fPrimary_Ypol);//Fill at step stage only once
+	if(fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("prim_Zpol", "vector<Double_t>", &fEventData->fPrimary_Zpol);//Fill at step stage only once
 	
 	
 	
@@ -196,7 +196,7 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_copy", "vector<Int_t>", &fEventData->fHitVolCopyNum);//This is the copy number of a specific physics volume. //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_id", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
-	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_firstparentid", "vector<Int_t>", &fEventData->fFirstParentId); //Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps && fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("hit_firstparentid", "vector<Int_t>", &fEventData->fFirstParentId); //Fill at step stage
 	
 	//Extended information of hits related data
 	if(fSave == AnalysisManagerOptPh::kHitsExt) fTree->Branch("hit_trackid", "vector<Int_t>", &fEventData->fTrackId);//Fill at step stage
