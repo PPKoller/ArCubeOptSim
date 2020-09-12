@@ -10,28 +10,35 @@ void run_03_OptSim_createLUT(){
   int usrg = atoi(&temp);
 
   int i = 0, j = 0; //iterator
-  int n_ph = 0; //number of photons per event
   int n_evt = 0; //number of events
-  int n_entries = 0; //number of events total
+  int n_ph = 0; //number of photons per event
   char buffer[100]; //read buffer to skip lines
 
   //read input tree
+  TFile * in_file = new TFile("/output/root_files/OptSim_00000000.root", "READ");
   TChain * in_tree = new TChain("t1");
   in_tree->Add("/output/root_files/*.root");
 
-  n_entries = in_tree->GetEntries();
+  n_evt = in_tree->GetEntries();
+  n_ph = ((TParameter<int>*)in_file->Get("PrimNb"))->GetVal();
 
   //set branch addresses
+  double prim_pos[3] = {0., 0., 0.};
   Long64_t totalhits = 0;
   vector<Int_t> * hit_vol_index = 0;
   vector<Int_t> * hit_vol_copy = 0;
   vector<Long64_t> * hit_vol_id = 0;
   vector<Double_t> * hit_time = 0;
+  vector<Double_t> * hit_ypos = 0;
 
+  in_tree->SetBranchAddress("prim_Xpos", &prim_pos[0]);
+  in_tree->SetBranchAddress("prim_Ypos", &prim_pos[1]);
+  in_tree->SetBranchAddress("prim_Zpos", &prim_pos[2]);
   in_tree->SetBranchAddress("totalhits", &totalhits);
   in_tree->SetBranchAddress("hit_vol_index", &hit_vol_index);
   in_tree->SetBranchAddress("hit_vol_copy", &hit_vol_copy);
   in_tree->SetBranchAddress("hit_vol_id", &hit_vol_id);
+  in_tree->SetBranchAddress("hit_ypos", &hit_ypos);
   in_tree->SetBranchAddress("hit_time", &hit_time);
 
   //read format file
@@ -56,9 +63,9 @@ void run_03_OptSim_createLUT(){
   printf("voxel dimensions (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",dim_vox[0],dim_vox[1],dim_vox[2]);
   fscanf(format,"%d %d %d",&n_vox[0],&n_vox[1],&n_vox[2]);
   printf("number of voxels (x,y,z): %d x %d x %d\n",n_vox[0],n_vox[1],n_vox[2]);
-  fscanf(format,"%d %d",&n_evt,&n_ph);
-  printf("number of events per voxel: %d \n", n_evt);
-  printf("number of photons per event: %d \n", n_ph);
+  //fgets(buffer, 100, format); //fscanf(format,"%d %d",&n_evt,&n_ph);
+  printf("number of events: %d \n", n_evt);
+  //printf("number of photons per event: %d \n", n_ph);
   
   fclose(format);
 
@@ -70,35 +77,51 @@ void run_03_OptSim_createLUT(){
   int Voxel = -1;
   int OpChannel = -1;
   float Visibility = -1.;
+  int VolID = -1;
+  int VolIdx = -1;
+  float YPos = -1.;
   float Time = -1.;
 
   //create branches
   out_tree->Branch("Voxel", &Voxel);
   out_tree->Branch("OpChannel", &OpChannel);
   out_tree->Branch("Visibility", &Visibility);
+  out_tree->Branch("VolID", &VolID);
+  out_tree->Branch("VolIdx", &VolIdx);
+  out_tree->Branch("YPos", &YPos);
   out_tree->Branch("Time", &Time);
   
   int voXYZ[3] = {0, 0, 0};
   int voxelID = -1;
   int channelID = -1;
   int sipmID = -1;
-  int hitVolID = 0;
+  int hitVolID = -1;
   int hitVolIdx = -1;
   int n = 0;
   int nChannel = 48;
   int hits[nChannel];
+  int volID[nChannel];
+  int volIdx[nChannel];
+  float ypos[nChannel];
 
   for(i=0; i<nChannel; i++){
     hits[i] = 0;
+    volID[i] = -1;
+    volIdx[i] = -1;
+    ypos[i] = -999.;
   }
 
   //write branches
   //loop over events
-  for(i=0; i<n_entries; i++){
+  for(i=0; i<n_evt; i++){
     in_tree->GetEntry(i);
-
-    if(!(i%n_evt)) voxelID += 1;
-
+  
+    //calculate voxel ID based on primary position
+    voXYZ[0] = int(floor((prim_pos[0]-xyz_min[0])/dim_vox[0]));
+    voXYZ[1] = int(floor((prim_pos[1]-xyz_min[1])/dim_vox[1]));
+    voXYZ[2] = int(floor((prim_pos[2]-xyz_min[2])/dim_vox[2]));
+    voxelID = voXYZ[0]+voXYZ[1]*n_vox[0]+voXYZ[2]*n_vox[0]*n_vox[1];
+    
     //fill tree and reset values
     if(Voxel!=voxelID){
       if(voxelID==0){
@@ -108,8 +131,14 @@ void run_03_OptSim_createLUT(){
         for(j=0; j<nChannel; j++){
           OpChannel = j;
           Visibility = (float)hits[j]/(float)(n*n_ph);
+          VolID = volID[j];
+          VolIdx = volIdx[j];
+          YPos = ypos[j];
           if(Visibility>0) out_tree->Fill();
           hits[j] = 0;
+          volID[j] = -1;
+          volIdx[j] = -1;
+          ypos[j] = -999.;
         }
 
         //reset values
@@ -246,6 +275,9 @@ void run_03_OptSim_createLUT(){
       }//switch(hit_vol_index)
       
       hits[channelID] += 1;
+      volID[channelID] = hitVolID;
+      volIdx[channelID] = hitVolIdx;
+      ypos[channelID] = hit_ypos->at(j);
     }
 
     n += 1;
@@ -270,14 +302,14 @@ void run_03_OptSim_createLUT(){
   NDivisions.Write("NDivisions");
 
   //print tree
-  std::cout << "\nTree (" << n_entries << " evts, " << n_ph << " ph/evt) PhotonLibraryData is as follows\n" << std::endl;
+  std::cout << "\nTree (" << n_evt << " evts, " << n_ph << " ph/evt) PhotonLibraryData is as follows\n" << std::endl;
   out_tree->Print();
   Min.Print("Min");
   Max.Print("Max");
   NDivisions.Print("NDivisions");
 
   //free memory
-  delete out_tree;
+  delete in_file;
   delete out_file;
 
 }
