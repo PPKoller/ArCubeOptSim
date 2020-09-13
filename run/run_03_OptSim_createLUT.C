@@ -68,6 +68,7 @@ void run_03_OptSim_createLUT(){
 
   //define branch variables
   int Voxel = -1;
+  int Voxel_temp = -1;
   int OpChannel = -1;
   float Visibility = -1.;
   float Time = -1.;
@@ -86,6 +87,7 @@ void run_03_OptSim_createLUT(){
   int hitVolIdx = -1;
   int n = 0;
   int nChannel = 48;
+  int nVox = n_vox[2]*n_vox[0]*n_vox[1];
   int hits[nChannel];
 
   for(i=0; i<nChannel; i++){
@@ -100,21 +102,31 @@ void run_03_OptSim_createLUT(){
     if(!(i%n_evt)) voxelID += 1;
 
     //fill tree and reset values
-    if(Voxel!=voxelID){
+    if(Voxel!=voxelID || i==(n_entries-1)){
       if(voxelID==0){
         Voxel = voxelID;
-        std::cout << "processing voxel no. " << Voxel << " of " << n_vox[0]*n_vox[1]*n_vox[2] << " ..." << std::endl;
+        std::cout << "processing voxel no. " << Voxel << " of " << nVox << " ..." << std::endl;
       }else{
         for(j=0; j<nChannel; j++){
           OpChannel = j;
           Visibility = (float)hits[j]/(float)(n*n_ph);
-          if(Visibility>0) out_tree->Fill();
+          if(Visibility>0){
+            out_tree->Fill();
+
+            //Filly symmetry pair
+            Voxel_temp = Voxel;
+            Voxel += 2*nVox;
+            Voxel -= (2*(Voxel_temp/(n_vox[0]*n_vox[1]))+1)*(n_vox[0]*n_vox[1]);
+            OpChannel = (OpChannel+nChannel/2)%nChannel;
+            out_tree->Fill();
+            Voxel = Voxel_temp;
+          }
           hits[j] = 0;
         }
 
         //reset values
         Voxel = voxelID;
-        if(!(Voxel%10)) std::cout << "processing voxel no. " << Voxel << " of " << n_vox[0]*n_vox[1]*n_vox[2] << " ..." << std::endl;
+        if(!(Voxel%10)) std::cout << "processing voxel no. " << Voxel << " of " << nVox << " ..." << std::endl;
         n = 0;
       }
     }
@@ -257,6 +269,7 @@ void run_03_OptSim_createLUT(){
   TVectorT<Double_t> NDivisions= TVectorT<Double_t>(3);
 
   //fill vectors
+  n_vox[2] *= 2;
   for(i=0; i<3; i++){
     Min(i) = xyz_min[i];
     Max(i) = xyz_max[i];
