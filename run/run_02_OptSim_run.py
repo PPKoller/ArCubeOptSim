@@ -38,5 +38,5 @@ for vox in range(vox1,vox2+1):
             "-p", preinit,
             "-m", infile,
             "-o", outfile,
-            ], stdout=out, stderr=err)
+            ])#, stdout=out, stderr=err)
 
