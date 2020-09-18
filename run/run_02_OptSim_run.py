@@ -33,10 +33,10 @@ for vox in range(vox1,vox2+1):
     errfile = "/output/log_files/OptSim_%08d.txt" % vox
 
     with open(logfile,"wb") as out, open(errfile, "wb") as err:
-        subprocess.Popen(["../build/ArgonCubeOptPh",
+        subprocess.call(["../build/ArgonCubeOptPh",
             "-g", gdml,
             "-p", preinit,
             "-m", infile,
             "-o", outfile,
-            ])#, stdout=out, stderr=err)
+            ], stdout=out, stderr=err)
 
