@@ -173,6 +173,20 @@
     {
       "name": "buildoptsurf",
       "obj": {
+        "surfname": "LAr2SiPM_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "ground",
+        "sigma_alpha": 0.1,
+        "propfile": {
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_LAr2SiPM.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_LAr2SiPM.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
         "surfname": "TPB2LAr_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
@@ -220,6 +234,19 @@
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished"
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "TPB2WLS_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_TPB2WLS.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_TPB2WLS.dat"
+        }
       }
     },
     {
@@ -327,6 +354,15 @@
     {
       "name": "buildlogbordersurf",
       "obj": {
+        "surfname": "LAr2SiPM_logsurf",
+        "vol1": "volLCM_PV",
+        "vol2": "volSiPM_LCM_PV",
+        "optsurf": "LAr2SiPM_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
         "surfname": "TPBArCLight2LAr_logsurf",
         "vol1": "volTPB_PV",
         "vol2": "volTPB_LAr_PV",
@@ -376,6 +412,15 @@
         "vol1": "volWLS_PV",
         "vol2": "volSiPM_Sens_PV",
         "optsurf": "EJ2802SiPM_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "TPB2Fiber_logsurf",
+        "vol1": "volTPB_Fiber_PV",
+        "vol2": "volFiber_PV",
+        "optsurf": "TPB2WLS_optsurf"
       }
     },
     {
