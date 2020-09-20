@@ -117,6 +117,13 @@ void run_03_OptSim_createLUT(){
       //fill tree and reset values in case this is NOT the first voxel
       else{
         
+        //create mean for LCM SiPM pairs
+        for(j=0; j<18; j+=2){
+          if(j==6) j += 6;
+          hits[j] = (hits[j]+hits[j+1])/2;
+          hits[j+1] = hits[j];
+        }
+        
         //loop over optical channels
         for(j=0; j<nChannel; j++){
           OpChannel = j;
