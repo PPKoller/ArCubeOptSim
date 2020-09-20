@@ -172,8 +172,7 @@
         "surfname": "LAr2SiPM_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
-        "finish": "ground",
-        "sigma_alpha": 0.1,
+        "finish": "polished",
         "propfile": {
           "REFLECTIVITY": "../resources/datafiles/REFLECTIVITY_LAr2SiPM.dat",
           "TRANSMITTANCE": "../resources/datafiles/TRANSMITTANCE_LAr2SiPM.dat"
@@ -208,8 +207,7 @@
         "surfname": "TPB2Y11_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
-        "finish": "ground",
-        "sigma_alpha": 0.1,
+        "finish": "polished",
         "propfile": {
           "REFLECTIVITY": "../resources/datafiles/REFLECTIVITY_TPB2Y11.dat",
           "TRANSMITTANCE": "../resources/datafiles/TRANSMITTANCE_TPB2Y11.dat"
