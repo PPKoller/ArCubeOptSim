@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="ASCII"?>
 <gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
   <define>
-    <position name="Mirror_pos" unit="cm" x="0.2325" y="0.0" z="-0.005"/>
-    <position name="WLS_pos" unit="cm" x="0.2325" y="0.0" z="0.00135"/>
-    <position name="TPB_pos" unit="cm" x="0.2325" y="0.0" z="0.50635"/>
+    <position name="WLS_pos" unit="cm" x="0.2198" y="0.0" z="0.00135"/>
+    <position name="TPB_pos" unit="cm" x="0.2198" y="0.0" z="0.50635"/>
     <position name="SiPM_Mask_pos_0" unit="cm" x="-13.8627" y="-10.495" z="0.00135"/>
-    <position name="SiPM_Sens_pos_0" unit="cm" x="-14.0001" y="-12.845" z="0"/>
-    <position name="SiPM_Sens_pos_1" unit="cm" x="-14.0001" y="-8.145" z="0"/>
+    <position name="SiPM_Sens_pos_0" unit="cm" x="-13.9999" y="-12.845" z="0"/>
+    <position name="SiPM_Sens_pos_1" unit="cm" x="-13.9999" y="-8.145" z="0"/>
     <position name="SiPM_Mask_pos_1" unit="cm" x="-13.8627" y="0.0" z="0.00135"/>
-    <position name="SiPM_Sens_pos_2" unit="cm" x="-14.0001" y="-2.35" z="0"/>
-    <position name="SiPM_Sens_pos_3" unit="cm" x="-14.0001" y="2.35" z="0"/>
+    <position name="SiPM_Sens_pos_2" unit="cm" x="-13.9999" y="-2.35" z="0"/>
+    <position name="SiPM_Sens_pos_3" unit="cm" x="-13.9999" y="2.35" z="0"/>
     <position name="SiPM_Mask_pos_2" unit="cm" x="-13.8627" y="10.495" z="0.00135"/>
-    <position name="SiPM_Sens_pos_4" unit="cm" x="-14.0001" y="8.145" z="0"/>
-    <position name="SiPM_Sens_pos_5" unit="cm" x="-14.0001" y="12.845" z="0"/>
+    <position name="SiPM_Sens_pos_4" unit="cm" x="-13.9999" y="8.145" z="0"/>
+    <position name="SiPM_Sens_pos_5" unit="cm" x="-13.9999" y="12.845" z="0"/>
     <position name="SiPM_pos_0" unit="cm" x="0.009" y="-2.35" z="0"/>
     <position name="SiPM_pos_1" unit="cm" x="0.009" y="2.35" z="0"/>
     <position name="SiPM_PCB_pos_0" unit="cm" x="-14.0952" y="-10.495" z="0.00135"/>
@@ -578,7 +577,6 @@
   </materials>
   <solids>
     <box lunit="cm" name="ArCLight" x="28.4904" y="30.94" z="1.0227"/>
-    <box lunit="cm" name="Mirror_shape" x="28.0254" y="30.0254" z="1.0127"/>
     <box lunit="cm" name="WLS_panel_shape" x="28.0" y="30.0" z="1.0"/>
     <box lunit="cm" name="TPB_LAr_shape" x="28.0" y="30.0" z="0.01"/>
     <box lunit="cm" name="SiPM_Mask_shape" x="0.165" y="7.825" z="1.0"/>

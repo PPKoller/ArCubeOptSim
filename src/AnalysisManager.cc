@@ -195,6 +195,7 @@ void AnalysisManagerOptPh::BeginOfRun(const G4Run *pRun)
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_index", "vector<Int_t>", &fEventData->fVolIndex);//ID of the touchable volume (it is a whish!). //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_copy", "vector<Int_t>", &fEventData->fHitVolCopyNum);//This is the copy number of a specific physics volume. //Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_vol_id", "vector<Long64_t>", &fEventData->fHitVolId);//This MUST become the unique ID of the touchable volume. //Fill at step stage
+	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_ekin", "vector<Double_t>", &fEventData->fEkin);//Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps) fTree->Branch("hit_time", "vector<Double_t>", &fEventData->fTime);//Fill at step stage
 	if(fSave < AnalysisManagerOptPh::kSdSteps && fSave != AnalysisManagerOptPh::kLUT) fTree->Branch("hit_firstparentid", "vector<Int_t>", &fEventData->fFirstParentId); //Fill at step stage
 	
@@ -557,6 +558,7 @@ void AnalysisManagerOptPh::Step(const G4Step *pStep, const G4SteppingManager* pS
 	fEventData->fHitVolCopyNum->push_back( fLastCopyNum );//Copy number of the physical volume
 	fEventData->fHitVolId->push_back( fLastVolId );
 	fEventData->fFirstParentId->push_back( fFirstParentIDMap[fLastTrackId] );
+	fEventData->fEkin->push_back( saveStepPoint->GetKineticEnergy() );
 	fEventData->fTime->push_back( saveStepPoint->GetGlobalTime() );
 	
 	if(fSave>=kHitsExt){

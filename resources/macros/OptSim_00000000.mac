@@ -13,7 +13,6 @@
 
 ### Define volumes to detect photons ###
 /argoncube/analysis/DefOptSD volSiPM_Sens_PV volSiPM_LCM_PV
-#/argoncube/analysis/DefOptSD volSiPM_LCM_PV
 
 ### Define particle type and properties ###
 /argoncube/gun/particle opticalphoton
@@ -23,7 +22,7 @@
 #/argoncube/gun/angtype direction
 
 ### Start visual interface ###
-/control/execute resources/macros/vis.mac
+#/control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
 #/argoncube/gun/position 0 0 0
@@ -40,12 +39,11 @@
 ### Define particle source ###
 /argoncube/gun/sourceType Volume
 /argoncube/gun/shape Box
-/argoncube/gun/center -120.290000 -602.257091 -232.612500 mm
-/argoncube/gun/center 0 0 0 mm
+/argoncube/gun/center -120.290000 -152.257091 -232.612500 mm
 /argoncube/gun/halfx 25.227 mm
 /argoncube/gun/halfy 28.679 mm
 /argoncube/gun/halfz 25.846 mm
+#/argoncube/gun/position -135 22 -314.5 mm
 /argoncube/gun/position 0 0 0
-/argoncube/gun/direction -2 -1.15 0
-/argoncube/gun/primaryNb 1
-/run/beamOn 1
+/argoncube/gun/primaryNb 1000
+/run/beamOn 1000

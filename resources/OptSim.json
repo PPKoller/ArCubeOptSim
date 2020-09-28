@@ -169,13 +169,26 @@
     {
       "name": "buildoptsurf",
       "obj": {
-        "surfname": "LAr2SiPM_optsurf",
+        "surfname": "LAr2Silicon_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished",
         "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_LAr2SiPM.dat",
-          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_LAr2SiPM.dat"
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_LAr2Silicon.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_LAr2Silicon.dat"
+        }
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
+        "surfname": "LAr2Y11_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "polished",
+        "propfile": {
+          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_LAr2Y11.dat",
+          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_LAr2Y11.dat"
         }
       }
     },
@@ -225,7 +238,7 @@
     {
       "name": "buildoptsurf",
       "obj": {
-        "surfname": "EJ2802SiPM_optsurf",
+        "surfname": "EJ2802Silicon_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished"
@@ -260,7 +273,7 @@
     {
       "name": "buildoptsurf",
       "obj": {
-        "surfname": "Y112SiPM_optsurf",
+        "surfname": "Y112Silicon_optsurf",
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "polished"
@@ -323,7 +336,7 @@
     {
       "name": "buildlogbordersurf",
       "obj": {
-        "surfname": "LAr2TPBFibre_logsurf",
+        "surfname": "LAr2TPBFiber_logsurf",
         "vol1": "volLCM_PV",
         "vol2": "volTPB_Fiber_PV",
         "optsurf": "LAr2TPB_optsurf"
@@ -332,10 +345,10 @@
     {
       "name": "buildlogbordersurf",
       "obj": {
-        "surfname": "LAr2SiPM_logsurf",
+        "surfname": "LAr2SiPMLCM_logsurf",
         "vol1": "volLCM_PV",
         "vol2": "volSiPM_LCM_PV",
-        "optsurf": "LAr2SiPM_optsurf"
+        "optsurf": "LAr2Silicon_optsurf"
       }
     },
     {
@@ -350,7 +363,7 @@
     {
       "name": "buildlogbordersurf",
       "obj": {
-        "surfname": "TPBFibre2LAr_logsurf",
+        "surfname": "TPBFiber2LAr_logsurf",
         "vol1": "volTPB_Fiber_PV",
         "vol2": "volLCM_PV",
         "optsurf": "TPB2LAr_optsurf"
@@ -389,7 +402,7 @@
         "surfname": "EJ2802SiPM_logsurf",
         "vol1": "volWLS_PV",
         "vol2": "volSiPM_Sens_PV",
-        "optsurf": "EJ2802SiPM_optsurf"
+        "optsurf": "EJ2802Silicon_optsurf"
       }
     },
     {
@@ -399,6 +412,15 @@
         "vol1": "volFiber_PV",
         "vol2": "volLCM_PV",
         "optsurf": "Y112LAr_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "LAr2Fiber_logsurf",
+        "vol1": "volLCM_PV",
+        "vol2": "volFiber_PV",
+        "optsurf": "LAr2Y11_optsurf"
       }
     },
     {
@@ -416,7 +438,7 @@
         "surfname": "Fiber2SiPM_logsurf",
         "vol1": "volFiber_PV",
         "vol2": "volSiPM_LCM_PV",
-        "optsurf": "Y112SiPM_optsurf"
+        "optsurf": "Y112Silicon_optsurf"
       }
     }
   ]

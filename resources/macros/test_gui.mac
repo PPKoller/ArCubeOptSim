@@ -17,18 +17,15 @@
 ### Define particle type and properties ###
 /argoncube/gun/particle opticalphoton
 #/argoncube/gun/polarization 0 1 0
-#/argoncube/gun/position 0 -130 0 mm
-#/argoncube/gun/primaryNb 1
 #/argoncube/gun/angtype direction
 
 ### Define particle source ###
 /argoncube/gun/sourceType Volume
 /argoncube/gun/shape Box
-/argoncube/gun/center 0.584475 0 0 cm # pos of volTPCActive + pos of volTPC
-/argoncube/gun/halfx 15.13615 cm # shape of volTPCActive
-/argoncube/gun/halfy 63.0936 cm # shape of volLAr
-/argoncube/gun/halfz 31.015 cm # shape of volTPCActive
-/argoncube/gun/position 0 0 0 cm
+/argoncube/gun/center -120.290000 -152.257091 -232.612500 mm
+/argoncube/gun/halfx 25.227 mm
+/argoncube/gun/halfy 28.679 mm
+/argoncube/gun/halfz 25.846 mm
 
 ### Start visual interface ###
 /control/execute resources/macros/vis.mac
@@ -45,5 +42,7 @@
 #/argoncube/gun/position 0 15 25 cm
 #/argoncube/gun/direction 0 0.1 1
 
+#/argoncube/gun/position -135 22 -314.5 mm
+/argoncube/gun/position 0 0 0
 /argoncube/gun/primaryNb 1000
 /run/beamOn 1

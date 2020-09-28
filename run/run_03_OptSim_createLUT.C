@@ -27,12 +27,14 @@ void run_03_OptSim_createLUT(){
   vector<Int_t> * hit_vol_copy = 0;
   vector<Long64_t> * hit_vol_id = 0;
   vector<Double_t> * hit_time = 0;
+  vector<Double_t> * hit_ekin = 0;
 
   in_tree->SetBranchAddress("totalhits", &totalhits);
   in_tree->SetBranchAddress("hit_vol_index", &hit_vol_index);
   in_tree->SetBranchAddress("hit_vol_copy", &hit_vol_copy);
   in_tree->SetBranchAddress("hit_vol_id", &hit_vol_id);
   in_tree->SetBranchAddress("hit_time", &hit_time);
+  in_tree->SetBranchAddress("hit_ekin", &hit_ekin);
 
   //read format file
   FILE * format;
@@ -93,6 +95,9 @@ void run_03_OptSim_createLUT(){
   int hits[nChannel];
   vector<TH1F*> timeVec;
 
+  // SiPM efficiency for shifted spectrum
+  float effSiPM = 0.4;
+  
   //vector initialization
   for(i=0; i<nChannel; i++){
     hits[i] = 0;
@@ -127,7 +132,7 @@ void run_03_OptSim_createLUT(){
         //loop over optical channels
         for(j=0; j<nChannel; j++){
           OpChannel = j;
-          Visibility = (float)hits[j]/(float)(n_evt*n_ph);
+          Visibility = effSiPM*(float)hits[j]/(float)(n_evt*n_ph);
           Time = timeVec[j];
           T4 = Time->GetBinCenter(Time->FindFirstBinAbove(4));
 
@@ -170,6 +175,10 @@ void run_03_OptSim_createLUT(){
 
     //get optical channel ID
     for(j=0; j<totalhits; j++){
+      
+      //only count shifted photons
+      if(hit_ekin->at(j) > 9E-6) continue;
+
       hitVolID = hit_vol_id->at(j);
       
       hitVolIdx = hit_vol_index->at(j);
