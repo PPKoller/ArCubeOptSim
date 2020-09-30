@@ -28,7 +28,8 @@ print '==============================\n'
 
 for vox in range(np.prod(nvox)):
 
-    if (vox == np.prod(nvox)) break;
+    if (vox == np.prod(nvox)):
+        break
 
     #read voxel information (no. & center coordinates)
     line = np.array(vox_tab.readline().split()).astype(np.float)
@@ -37,7 +38,7 @@ for vox in range(np.prod(nvox)):
 
     #only write macros asked for
     if nv not in range(vox1,vox2):
-        continue;
+        continue
 
     if (vox%1 == 0):
         print "  writing macro no. %d..." % vox
