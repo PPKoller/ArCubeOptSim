@@ -28,6 +28,8 @@ print '==============================\n'
 
 for vox in range(np.prod(nvox)):
 
+    if (vox == np.prod(nvox)) break;
+
     #read voxel information (no. & center coordinates)
     line = np.array(vox_tab.readline().split()).astype(np.float)
     nv = line[0] # voxel number

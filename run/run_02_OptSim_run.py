@@ -28,6 +28,8 @@ preinit = "../resources/macros/preinit.mac"
 #only process voxels asked for
 for vox in range(vox1,vox2):
 
+    if (vox == np.prod(nvox)) break;
+
     if (vox%1 == 0):
         print "  running simulation on voxel no. %d..." % vox
 
