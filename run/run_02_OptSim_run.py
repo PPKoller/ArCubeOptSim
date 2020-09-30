@@ -19,13 +19,17 @@ cmax = np.array(vox_tab.readline().split()).astype(np.float)
 vdim = np.array(vox_tab.readline().split()).astype(np.float)
 nvox = np.array(vox_tab.readline().split()).astype(np.int)
 
-print 'Number of voxels: %d' % np.prod(nvox)
+print '\n------------------------------\n'
+#print 'Number of voxels: %d' % np.prod(nvox)
 
 gdml    = "../resources/gdml/OptSim.gdml"
 preinit = "../resources/macros/preinit.mac"
 
 #only process voxels asked for
-for vox in range(vox1,vox2+1):
+for vox in range(vox1,vox2):
+
+    if (vox%1 == 0):
+        print "  running simulation on voxel no. %d..." % vox
 
     infile  = "/output/macro_files/OptSim_%08d.mac" % vox
     outfile = "/output/root_files/OptSim_%08d.root" % vox

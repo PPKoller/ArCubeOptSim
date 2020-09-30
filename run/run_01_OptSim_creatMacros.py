@@ -20,9 +20,11 @@ vdim = np.array(vox_tab.readline().split()).astype(np.float)
 nvox = np.array(vox_tab.readline().split()).astype(np.int)
 n = np.array(vox_tab.readline().split()).astype(np.int)
 
-print 'Number of voxels: %d' % np.prod(nvox)
-print 'Number of events: %d' % n[0]
-print 'Number of photons/evt: %d' % n[1]
+print '\n=============================='
+print 'number of voxels: %d' % np.prod(nvox)
+print 'number of events: %d' % n[0]
+print 'number of photons/evt: %d' % n[1]
+print '==============================\n'
 
 for vox in range(np.prod(nvox)):
 
@@ -32,11 +34,11 @@ for vox in range(np.prod(nvox)):
     cv = line[1:4] # voxel coordinates origin
 
     #only write macros asked for
-    if nv not in range(vox1,vox2+1):
+    if nv not in range(vox1,vox2):
         continue;
 
-    if (vox%100 == 0):
-        print "writing macro no. %d of %d..." % (vox, np.prod(nvox))
+    if (vox%1 == 0):
+        print "  writing macro no. %d..." % vox
 
     #create new macro file
     if usro:
