@@ -2,8 +2,3 @@ build
 **/.DS_Store
 
 *.root
-
-run/log/*
-run/macros/*
-run/out/*
-run/scratch/*

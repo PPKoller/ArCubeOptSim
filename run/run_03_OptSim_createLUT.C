@@ -182,10 +182,10 @@ void run_03_OptSim_createLUT(){
       hitVolID = hit_vol_id->at(j);
       
       hitVolIdx = hit_vol_index->at(j);
-      if(hitVolIdx==10 or hitVolIdx==15) hitVolIdx += 1;
+      if(hitVolIdx==5 or hitVolIdx==29) hitVolIdx += 1;
 
       switch(hitVolIdx){
-        case 11: //LCM
+        case 30: //LCM
           channelID = 0;
           sipmID = 0;
 
@@ -243,7 +243,7 @@ void run_03_OptSim_createLUT(){
 
           break;//case 11
         
-        case 16: //ArCLight
+        case 6: //ArCLight
           channelID = 0;
           sipmID = 0;
       

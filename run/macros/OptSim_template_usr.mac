@@ -6,7 +6,7 @@
 #/tracking/verbose 1
 
 ### Load optical properties from JSON file ###
-/argoncube/detector/optical/loadOptSett resources/OptSim.json
+/argoncube/detector/optical/loadOptSett ../resources/OptSim_LUT_usr.json
 
 ### Define volumes to kill photons ###
 /argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
@@ -17,18 +17,12 @@
 ### Define particle type and properties ###
 /argoncube/gun/particle opticalphoton
 #/argoncube/gun/polarization 0 1 0
+#/argoncube/gun/position 0 -130 0 mm
+#/argoncube/gun/primaryNb 1
 #/argoncube/gun/angtype direction
 
-### Define particle source ###
-/argoncube/gun/sourceType Volume
-/argoncube/gun/shape Box
-/argoncube/gun/center -120.290000 -152.257091 -232.612500 mm
-/argoncube/gun/halfx 25.227 mm
-/argoncube/gun/halfy 28.679 mm
-/argoncube/gun/halfz 25.846 mm
-
 ### Start visual interface ###
-/control/execute resources/macros/vis.mac
+#/control/execute resources/macros/vis.mac
 
 ### Hit a SiPM in ArCLight ###
 #/argoncube/gun/position 0 0 0
@@ -42,7 +36,6 @@
 #/argoncube/gun/position 0 15 25 cm
 #/argoncube/gun/direction 0 0.1 1
 
-#/argoncube/gun/position -135 22 -314.5 mm
-/argoncube/gun/position 0 0 0
-/argoncube/gun/primaryNb 1
-/run/beamOn 1
+### Define particle source ###
+/argoncube/gun/sourceType Volume
+/argoncube/gun/shape Box
