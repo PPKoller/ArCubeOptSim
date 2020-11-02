@@ -7,7 +7,7 @@ usrg = int(os.environ['USRG'])
 
 #read voxel table
 if usrg:
-    vox_tab = open('input/OptSim_LUT_voxel_table.txt', 'r')
+    vox_tab = open('/input/OptSim_LUT_voxel_table.txt', 'r')
 else:
     vox_tab = open('OptSim_LUT_voxel_table.txt', 'r')
 
@@ -37,5 +37,5 @@ for bunch in range(np.prod(nvox)/vox_per_bunch+1):
 
     subprocess.call(["/Software/root_v6.22.02/bin/root.exe","-l","-q",root_call])
 
-subprocess.call(["rm", "output/OptSim_LUT_ArgonCube2x2.root"])
-subprocess.call('hadd output/OptSim_LUT_ArgonCube2x2.root output/*.root', shell=True)
+subprocess.call(["rm", "/output/OptSim_LUT_ArgonCube2x2.root"])
+subprocess.call('hadd /output/OptSim_LUT_ArgonCube2x2.root /output/*.root', shell=True)

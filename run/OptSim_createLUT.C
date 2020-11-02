@@ -21,7 +21,7 @@ void OptSim_createLUT(int run){
   FILE * format;
 
   if(usrg){
-    format = fopen("input/OptSim_LUT_voxel_table.txt", "r");
+    format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
   }else{
     format = fopen("OptSim_LUT_voxel_table.txt", "r");
   }
@@ -46,7 +46,7 @@ void OptSim_createLUT(int run){
   fclose(format);
 
   //recreate output root file with LUT tree
-  sprintf(file_name,"output/OptSim_LUT_ArgonCube2x2_%04d.root", run);
+  sprintf(file_name,"/output/OptSim_LUT_ArgonCube2x2_%04d.root", run);
   TFile * out_file = new TFile(file_name, "RECREATE");
   TTree * out_tree = new TTree("PhotonLibraryData","ArgonCube 2x2 LUT data");
 
@@ -86,7 +86,7 @@ void OptSim_createLUT(int run){
   k = run*n_files;
 
   //read sim output files
-  sprintf(files_dir,"output/root_files/OptSim_%05d*.root", k/n_files);
+  sprintf(files_dir,"/output/root_files/OptSim_%05d*.root", k/n_files);
   std::cout << "===== processing files " << files_dir << " =====" << std::endl;
   TChain * in_tree = new TChain("t1");
   in_tree->Add(files_dir);
