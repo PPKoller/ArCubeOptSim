@@ -3,44 +3,25 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-void run_03_OptSim_createLUT(){
+void OptSim_createLUT(int run){
 
   //read environment variables
   char temp = (getenv("USRG"))[0];
   int usrg = atoi(&temp);
 
-  int i = 0, j = 0; //iterator
+  int i = 0, j = 0, k = 0; //iterator
   int n_ph = 0; //number of photons per event
   int n_evt = 0; //number of events
   int n_entries = 0; //number of events total
-  char buffer[100]; //read buffer to skip lines
-
-  //read input tree
-  TChain * in_tree = new TChain("t1");
-  in_tree->Add("/output/root_files/*.root");
-
-  n_entries = in_tree->GetEntries();
-
-  //set branch addresses
-  Long64_t totalhits = 0;
-  vector<Int_t> * hit_vol_index = 0;
-  vector<Int_t> * hit_vol_copy = 0;
-  vector<Long64_t> * hit_vol_id = 0;
-  vector<Double_t> * hit_time = 0;
-  vector<Double_t> * hit_ekin = 0;
-
-  in_tree->SetBranchAddress("totalhits", &totalhits);
-  in_tree->SetBranchAddress("hit_vol_index", &hit_vol_index);
-  in_tree->SetBranchAddress("hit_vol_copy", &hit_vol_copy);
-  in_tree->SetBranchAddress("hit_vol_id", &hit_vol_id);
-  in_tree->SetBranchAddress("hit_time", &hit_time);
-  in_tree->SetBranchAddress("hit_ekin", &hit_ekin);
+  int n_files = 1000;
+  char files_dir[100]; //root files directory string
+  char file_name[100]; //root files directory string
 
   //read format file
   FILE * format;
 
   if(usrg){
-    format = fopen("/input/OptSim_LUT_voxel_table.txt", "r");
+    format = fopen("input/OptSim_LUT_voxel_table.txt", "r");
   }else{
     format = fopen("OptSim_LUT_voxel_table.txt", "r");
   }
@@ -64,27 +45,27 @@ void run_03_OptSim_createLUT(){
   
   fclose(format);
 
-  //write LUT tree
-  TFile * out_file = new TFile("/output/OptSim_LUT_ArgonCube2x2.root", "RECREATE");
+  //recreate output root file with LUT tree
+  sprintf(file_name,"output/OptSim_LUT_ArgonCube2x2_%04d.root", run);
+  TFile * out_file = new TFile(file_name, "RECREATE");
   TTree * out_tree = new TTree("PhotonLibraryData","ArgonCube 2x2 LUT data");
 
-  //define branch variables
+  //define LUT tree branch variables
   int Voxel = -1;
   int Voxel_temp = -1;
   int OpChannel = -1;
   float Visibility = -1.;
-  float T4 = -1.;
+  float T1 = -1.;
   TH1F * Time = NULL;
-  //float Time = -1.;
 
-  //create branches
+  //create LUT tree branches
   out_tree->Branch("Voxel", &Voxel);
   out_tree->Branch("OpChannel", &OpChannel);
   out_tree->Branch("Visibility", &Visibility);
-  out_tree->Branch("T4",&T4);
+  out_tree->Branch("T1",&T1);
   out_tree->Branch("Time", "TH1F", &Time);
   
-  //variable declaration
+  //variables used for LUT creation
   int voxelID = -1;
   int channelID = -1;
   int sipmID = -1;
@@ -94,9 +75,6 @@ void run_03_OptSim_createLUT(){
   int nVox = n_vox[2]*n_vox[0]*n_vox[1];
   int hits[nChannel];
   vector<TH1F*> timeVec;
-
-  // SiPM efficiency for shifted spectrum
-  float effSiPM = 0.4;
   
   //vector initialization
   for(i=0; i<nChannel; i++){
@@ -104,7 +82,40 @@ void run_03_OptSim_createLUT(){
     timeVec.push_back(new TH1F(Form("Voxel%06d_OpChannel%02d",voxelID+1,i),"Hit time distribution",100,0.,100.));
   }
 
-  //write branches
+  //files to process
+  k = run*n_files;
+
+  //read sim output files
+  sprintf(files_dir,"output/root_files/OptSim_%05d*.root", k/n_files);
+  std::cout << "===== processing files " << files_dir << " =====" << std::endl;
+  TChain * in_tree = new TChain("t1");
+  in_tree->Add(files_dir);
+
+  //sim file variable declaration
+  Long64_t totalhits = 0;
+  vector<Int_t> * hit_vol_index = 0;
+  vector<Int_t> * hit_vol_copy = 0;
+  vector<Long64_t> * hit_vol_id = 0;
+  vector<Double_t> * hit_time = 0;
+  vector<Double_t> * hit_ekin = 0;
+
+  //set sim file branch addresses
+  in_tree->SetBranchAddress("totalhits", &totalhits);
+  in_tree->SetBranchAddress("hit_vol_index", &hit_vol_index);
+  in_tree->SetBranchAddress("hit_vol_copy", &hit_vol_copy);
+  in_tree->SetBranchAddress("hit_vol_id", &hit_vol_id);
+  in_tree->SetBranchAddress("hit_time", &hit_time);
+  in_tree->SetBranchAddress("hit_ekin", &hit_ekin);
+
+  // SiPM efficiency for shifted spectrum
+  float effSiPM = 0.4;
+ 
+  //voxelID initialization
+  voxelID = k-1;
+  
+  //number of entries to loop over
+  n_entries = in_tree->GetEntries();
+
   //loop over events (<= to make sure last voxel will be filled!)
   for(i=0; i<=n_entries; i++){
     in_tree->GetEntry(i);
@@ -114,13 +125,14 @@ void run_03_OptSim_createLUT(){
       voxelID += 1;
 
       //accept voxelID in case this is the first voxel
-      if(voxelID==0){
+      if(voxelID==k){
         Voxel = voxelID;
         std::cout << "processing voxel no. " << Voxel << " of " << nVox << " ..." << std::endl;
       }
       
       //fill tree and reset values in case this is NOT the first voxel
       else{
+        //std::cout << Voxel << std::endl;
         
         //create mean for LCM SiPM pairs
         for(j=0; j<18; j+=2){
@@ -134,7 +146,7 @@ void run_03_OptSim_createLUT(){
           OpChannel = j;
           Visibility = effSiPM*(float)hits[j]/(float)(n_evt*n_ph);
           Time = timeVec[j];
-          T4 = Time->GetBinCenter(Time->FindFirstBinAbove(4));
+          T1 = Time->GetBinCenter(Time->FindFirstBinAbove(0));
 
           //only fill if vixibility > 0
           if(Visibility>0){
@@ -333,8 +345,6 @@ void run_03_OptSim_createLUT(){
   Max.Print("Max");
   NDivisions.Print("NDivisions");
 
-  //free memory
-  delete out_tree;
-  delete out_file;
+  out_file->Close();
 
 }

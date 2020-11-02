@@ -45,4 +45,4 @@
 #/argoncube/gun/position -135 22 -314.5 mm
 /argoncube/gun/position 0 0 0
 /argoncube/gun/primaryNb 1000
-/run/beamOn 1000
+/run/beamOn 10000
