@@ -135,8 +135,8 @@ void OptSim_createLUT(int run){
         //std::cout << Voxel << std::endl;
         
         //create mean for LCM SiPM pairs
-        for(j=0; j<18; j+=2){
-          if(j==6) j += 6;
+        for(j=0; j<nChannel-6; j+=2){
+          if(j>0 && !(j%6)) j += 6;
           hits[j] = (hits[j]+hits[j+1])/2;
           hits[j+1] = hits[j];
         }
