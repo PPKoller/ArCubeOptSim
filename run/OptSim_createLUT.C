@@ -13,7 +13,7 @@ void OptSim_createLUT(int run){
   int n_ph = 0; //number of photons per event
   int n_evt = 0; //number of events
   int n_entries = 0; //number of events total
-  int n_files = 1000;
+  int n_files = 100;
   char files_dir[100]; //root files directory string
   char file_name[100]; //root files directory string
 
@@ -32,21 +32,21 @@ void OptSim_createLUT(int run){
   int n_vox[3] = {0,0,0}; //number of voxels
 
   fscanf(format,"%lf %lf %lf",&xyz_min[0],&xyz_min[1],&xyz_min[2]);
-  printf("minimum coordinates (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",xyz_min[0],xyz_min[1],xyz_min[2]);
+  //printf("minimum coordinates (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",xyz_min[0],xyz_min[1],xyz_min[2]);
   fscanf(format,"%lf %lf %lf",&xyz_max[0],&xyz_max[1],&xyz_max[2]);
-  printf("maximum coordinates (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",xyz_max[0],xyz_max[1],xyz_max[2]);
+  //printf("maximum coordinates (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",xyz_max[0],xyz_max[1],xyz_max[2]);
   fscanf(format,"%lf %lf %lf",&dim_vox[0],&dim_vox[1],&dim_vox[2]);
-  printf("voxel dimensions (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",dim_vox[0],dim_vox[1],dim_vox[2]);
+  //printf("voxel dimensions (x,y,z) [mm]: %.3lf x %.3lf x %.3lf\n",dim_vox[0],dim_vox[1],dim_vox[2]);
   fscanf(format,"%d %d %d",&n_vox[0],&n_vox[1],&n_vox[2]);
-  printf("number of voxels (x,y,z): %d x %d x %d\n",n_vox[0],n_vox[1],n_vox[2]);
+  //printf("number of voxels (x,y,z): %d x %d x %d\n",n_vox[0],n_vox[1],n_vox[2]);
   fscanf(format,"%d %d",&n_evt,&n_ph);
-  printf("number of events per voxel: %d \n", n_evt);
-  printf("number of photons per event: %d \n", n_ph);
+  //printf("number of events per voxel: %d \n", n_evt);
+  //printf("number of photons per event: %d \n", n_ph);
   
   fclose(format);
 
   //recreate output root file with LUT tree
-  sprintf(file_name,"/output/OptSim_LUT_ArgonCube2x2_%04d.root", run);
+  sprintf(file_name,"/output/OptSim_LUT_ArgonCube2x2_%06d.root", run);
   TFile * out_file = new TFile(file_name, "RECREATE");
   TTree * out_tree = new TTree("PhotonLibraryData","ArgonCube 2x2 LUT data");
 
@@ -86,8 +86,8 @@ void OptSim_createLUT(int run){
   k = run*n_files;
 
   //read sim output files
-  sprintf(files_dir,"/output/root_files/OptSim_%05d*.root", k/n_files);
-  std::cout << "===== processing files " << files_dir << " =====" << std::endl;
+  sprintf(files_dir,"/output/root_files/OptSim_%06d*.root", k/n_files);
+  std::cout << "loading files " << files_dir << "..." << std::endl;
   TChain * in_tree = new TChain("t1");
   in_tree->Add(files_dir);
 

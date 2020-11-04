@@ -38,4 +38,4 @@ for bunch in range(np.prod(nvox)/vox_per_bunch+1):
     subprocess.call(["/Software/root_v6.22.02/bin/root.exe","-l","-q",root_call])
 
 subprocess.call(["rm", "/output/OptSim_LUT_ArgonCube2x2.root"])
-subprocess.call('hadd /output/OptSim_LUT_ArgonCube2x2.root /output/*.root', shell=True)
+subprocess.call('/Software/root_v6.22.02/bin/hadd /output/OptSim_LUT_ArgonCube2x2.root /output/*.root', shell=True)
