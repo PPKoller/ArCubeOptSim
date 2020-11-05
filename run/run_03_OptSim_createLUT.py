@@ -17,9 +17,9 @@ vdim = np.array(vox_tab.readline().split()).astype(np.float)
 nvox = np.array(vox_tab.readline().split()).astype(np.int)
 print '\n------------------------------'
 
-vox_per_bunch = 1000
+vox_per_bunch = 100
 
-#only LUT sim files as bunches of 1000
+#only LUT sim files as bunches of 100
 for bunch in range(np.prod(nvox)/vox_per_bunch+1):
 
     vox_min = bunch*vox_per_bunch
@@ -31,7 +31,7 @@ for bunch in range(np.prod(nvox)/vox_per_bunch+1):
     else:
         vox_max = np.prod(nvox)%vox_min
 
-    print "\n===> processing voxels %d to %d..." % (vox_min, vox_max-1)
+    print "\n===> processing voxels %d to %d..." % (vox_min, vox_min+vox_max-1)
 
     root_call = "OptSim_createLUT.C(%d)" % bunch
 

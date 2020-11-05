@@ -339,11 +339,11 @@ void OptSim_createLUT(int run){
   NDivisions.Write("NDivisions");
 
   //print tree
-  std::cout << "\nTree (" << n_entries << " evts, " << n_ph << " ph/evt) PhotonLibraryData is as follows\n" << std::endl;
-  out_tree->Print();
-  Min.Print("Min");
-  Max.Print("Max");
-  NDivisions.Print("NDivisions");
+  //std::cout << "\nTree (" << n_entries << " evts, " << n_ph << " ph/evt) PhotonLibraryData is as follows\n" << std::endl;
+  //out_tree->Print();
+  //Min.Print("Min");
+  //Max.Print("Max");
+  //NDivisions.Print("NDivisions");
 
   out_file->Close();
 
