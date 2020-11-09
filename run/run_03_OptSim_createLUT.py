@@ -23,13 +23,10 @@ vox_per_bunch = 100
 for bunch in range(np.prod(nvox)/vox_per_bunch+1):
 
     vox_min = bunch*vox_per_bunch
-    if (vox_min==0):
-        if (np.prod(nvox)<vox_per_bunch):
-            vox_max = np.prod(nvox)
-        else:
-            vox_max = vox_per_bunch
-    else:
+    if (bunch==np.prod(nvox)/vox_per_bunch):
         vox_max = np.prod(nvox)%vox_min
+    else:
+        vox_max = vox_per_bunch
 
     print "\n===> processing voxels %d to %d..." % (vox_min, vox_min+vox_max-1)
 
