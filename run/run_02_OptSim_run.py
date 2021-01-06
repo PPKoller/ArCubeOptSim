@@ -22,8 +22,13 @@ nvox = np.array(vox_tab.readline().split()).astype(np.int)
 print '\n------------------------------\n'
 #print 'Number of voxels: %d' % np.prod(nvox)
 
-gdml    = "../resources/gdml/OptSim.gdml"
-preinit = "../resources/macros/preinit.mac"
+gdml = "../resources/gdml/OptSim.gdml"
+
+if os.path.isfile('/input/preinit.mac'):
+    print '\nuser-defined preinit macro (TPC thickness)...'
+    preinit = "/input/preinit.mac"
+else:
+    preinit = "../resources/macros/preinit.mac"
 
 #only process voxels asked for
 for vox in range(vox1,vox2):
