@@ -63,6 +63,15 @@ def GetTpcHeight(path_lut):
     return height
 
 
+def GetTpcDimension(path_lut):
+
+    f = ROOT.TFile.Open(path_lut)
+    dim = np.array([f.Max[0]-f.Min[0],f.Max[1]-f.Min[1],f.Max[2]-f.Min[2]])
+    f.Close()
+
+    return dim
+
+
 def GetLutGeometry(path_lut):
 
     f = ROOT.TFile.Open(path_lut)
@@ -181,7 +190,7 @@ def GetVerticalCosmicTrackEventNumbers(t_data):
 
         if(abs(entry_point[0])>150. or abs(exit_point[0])>150.):
             continue
-        if(entry_point[2]>300. or exit_point[2]>300.):
+        if(entry_point[2]<0. or exit_point[2]<0. or entry_point[2]>300. or exit_point[2]>300.):
             continue
 
         if(track.l_event not in event_numbers):
@@ -223,12 +232,49 @@ def GetTrackParameters(track):
 
 
 def LocalToGlobalCoord(vec):
-    return(pixelboard_global_coord+np.matmul(coord_transform_mask,vec))
+    return(pixelboard_global_coord*np.array([1.,1.,1.])+np.matmul(coord_transform_mask,vec))
 
 
 def GlobalToLocalCoord(vec):
-    return(np.matmul(coord_transform_mask,vec-pixelboard_global_coord))
+    return(np.matmul(coord_transform_mask,vec-pixelboard_global_coord*np.array([1.,1.,1.])))
 
+
+def GetEntryPoint(track_parameters):
+
+    ps_l = track_parameters[0] # start point
+    pe_l = track_parameters[1] # end point
+    pv_l = track_parameters[2] # pointing vector
+
+    ps_g = LocalToGlobalCoord(ps_l)
+    pe_g = LocalToGlobalCoord(pe_l)
+    pv_g = np.matmul(coord_transform_mask,pv_l)
+
+    pv_g[pv_g==0] = 1E-9
+
+    tpc_dim = GetTpcDimension(args.lut)
+    entry_factor = np.min((ps_g-np.sign(pv_g)*(-1)*tpc_dim/2)/pv_g)
+    entry_point = ps_g - entry_factor*pv_g
+
+    return(entry_point)
+
+
+def GetExitPoint(track_parameters):
+
+    ps_l = track_parameters[0] # start point
+    pe_l = track_parameters[1] # end point
+    pv_l = track_parameters[2] # pointing vector
+
+    ps_g = LocalToGlobalCoord(ps_l)
+    pe_g = LocalToGlobalCoord(pe_l)
+    pv_g = np.matmul(coord_transform_mask,pv_l)
+
+    pv_g[pv_g==0] = 1E-9
+
+    tpc_dim = GetTpcDimension(args.lut)
+    exit_factor = np.min((np.sign(pv_g)*(1)*tpc_dim/2-pe_g)/pv_g)
+    exit_point = pe_g + exit_factor*pv_g
+
+    return(exit_point)
 
 def SimulateEvent(t_lut,t_data,event_number,op_channel_hit_list_data,op_channel_hit_list_lut):
 
@@ -238,18 +284,21 @@ def SimulateEvent(t_lut,t_data,event_number,op_channel_hit_list_data,op_channel_
     t_data.GetEntry(entry_list_event.GetEntry(0))
 
     track_parameters = GetTrackParameters(t_data)
-    ps_l = track_parameters[0] # start point
-    pe_l = track_parameters[1] # end point
-    pv_l = track_parameters[2] # pointing vector
 
-    ps_g = LocalToGlobalCoord(ps_l)
-    pe_g = LocalToGlobalCoord(pe_l)
-    pv_g = np.matmul(coord_transform_mask,pv_l)
+    entry_point = GetEntryPoint(track_parameters)
+    exit_point = GetExitPoint(track_parameters)
 
-    tpc_height = GetTpcHeight(args.lut)
+    print(entry_point)
+    print(GlobalToLocalCoord(LocalToGlobalCoord(entry_point)))
+    print(LocalToGlobalCoord(entry_point))
+    print('\n')
+    print(exit_point)
+    print(GlobalToLocalCoord(LocalToGlobalCoord(exit_point)))
+    print(LocalToGlobalCoord(exit_point))
 
-    entry_point = ps_g+(tpc_height/2-ps_g[1])/pv_g[1]*pv_g
-    exit_point = pe_g-(tpc_height/2+pe_g[1])/pv_g[1]*pv_g
+    track_length = np.linalg.norm(exit_point-entry_point)
+
+    pv = (exit_point-entry_point)/track_length
 
     lut_geometry = GetLutGeometry(args.lut)
 
@@ -258,10 +307,10 @@ def SimulateEvent(t_lut,t_data,event_number,op_channel_hit_list_data,op_channel_
     voxel = 0
     entry_list_voxel = GetEntryListLUT(t_lut,voxel)
 
-    for step in range(int(tpc_height/(abs(pv_g[1])*sampling_step_size))+1):
-        pos = entry_point+(step+0.5/sampling_step_size)*pv_g*sampling_step_size
+    for step in range(int(track_length/sampling_step_size)+1):
+        pos = entry_point+(step+0.5/sampling_step_size)*pv*sampling_step_size
 
-        sys.stdout.write('\r    current position: ' + str(pos) + ('(%.1f %%)' % ((entry_point[1]-pos[1])/tpc_height*100)))
+        sys.stdout.write('\r    current position: ' + str(pos) + ('(%.1f %%)' % (np.linalg.norm(entry_point-pos)/track_length*100)))
         sys.stdout.flush()
 
         voxel_current = GetVoxel(pos,lut_geometry)
@@ -543,16 +592,15 @@ def WriteTree(t_lut,t_data,event_numbers,op_channel_hit_list_lut,op_channel_t1_l
         t_data.GetEntry(entry_list_event.GetEntry(0))
 
         track_parameters = GetTrackParameters(t_data)
-        ps_l = track_parameters[0] # start point
-        pe_l = track_parameters[1] # end point
-        pv_l = track_parameters[2] # pointing vector
 
-        ps_g = LocalToGlobalCoord(ps_l)
-        pe_g = LocalToGlobalCoord(pe_l)
-        pv_g = np.matmul(coord_transform_mask,pv_l)
+        entry_point = GetEntryPoint(track_parameters)
+        exit_point =GetExitPoint(track_parameters)
 
-        entry_point = ps_g+(tpc_height/2-ps_g[1])/pv_g[1]*pv_g
-        exit_point = pe_g-(tpc_height/2+pe_g[1])/pv_g[1]*pv_g
+        track_length = np.linalg.norm(exit_point-entry_point)
+
+        pv = (exit_point-entry_point)/track_length
+
+        lut_geometry = GetLutGeometry(args.lut)
 
         print('\n  sampling simulated track with step size of %.1f mm...\n' % sampling_step_size)
 
@@ -563,10 +611,10 @@ def WriteTree(t_lut,t_data,event_numbers,op_channel_hit_list_lut,op_channel_t1_l
             op_channel_hit_list_lut[op_channel] = 0
             op_channel_t1_list_lut[op_channel] = -999
 
-        for step in range(int(tpc_height/(abs(pv_g[1])*sampling_step_size))+1):
-            pos = entry_point+(step+0.5/sampling_step_size)*pv_g*sampling_step_size
+        for step in range(int(track_length/sampling_step_size)+1):
+            pos = entry_point+(step+0.5/sampling_step_size)*pv*sampling_step_size
 
-            sys.stdout.write('\r    current position: ' + str(pos) + ('(%.1f %%)' % ((entry_point[1]-pos[1])/tpc_height*100)))
+            sys.stdout.write('\r    current position: ' + str(pos) + ('(%.1f %%)' % (np.linalg.norm(entry_point-pos)/track_length*100)))
             sys.stdout.flush()
 
             voxel_current = GetVoxel(pos,lut_geometry)
@@ -607,9 +655,9 @@ def main():
     t_data = LoadDataFile(args.data)
 
     #event_numbers = GetEventNumbers(t_data)
-    #event_numbers = GetSingleTrackEventNumbers(t_data)
+    event_numbers = GetSingleTrackEventNumbers(t_data)
     #event_numbers = GetCosmicTrackEventNumbers(t_data)
-    event_numbers = GetVerticalCosmicTrackEventNumbers(t_data)
+    #event_numbers = GetVerticalCosmicTrackEventNumbers(t_data)
 
     op_channel_hit_list_data = []
     op_channel_hit_list_lut = []
