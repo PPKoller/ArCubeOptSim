@@ -6,7 +6,7 @@
 #/tracking/verbose 1
 
 ### Load optical properties from JSON file ###
-/argoncube/detector/optical/loadOptSett resources/OptSim.json
+/argoncube/detector/optical/loadOptSett resources/OptSim_noDCM.json
 
 ### Define volumes to kill photons ###
 /argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
@@ -35,15 +35,15 @@
 #/argoncube/gun/direction -2 -1.15 0
 
 ### Hit the TPB coating of ArCLight ###
-#/argoncube/gun/position 0 -15 25 cm
-#/argoncube/gun/direction 0 0.1 1
+/argoncube/gun/position 0 -15 25 cm
+/argoncube/gun/direction 0 0.1 1
 
 ### Hit the TPB coating of LCM ###
 #/argoncube/gun/position 0 15 25 cm
 #/argoncube/gun/direction 0 0.1 1
 
-/argoncube/gun/position -135 22 -314.5 mm
-/argoncube/gun/position 0 0 10 cm
-/argoncube/gun/direction 0.1 0.1 -1
+#/argoncube/gun/position -135 22 -314.5 mm
+#/argoncube/gun/position 0 0 10 cm
+#/argoncube/gun/direction 0.1 0.1 -1
 /argoncube/gun/primaryNb 1
 /run/beamOn 1
