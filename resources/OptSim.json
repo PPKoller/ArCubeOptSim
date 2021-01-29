@@ -230,6 +230,15 @@
     {
       "name": "buildoptsurf",
       "obj": {
+        "surfname": "EJ2802LAr_optsurf",
+        "model": "unified",
+        "type": "dielectric_dielectric",
+        "finish": "polished"
+      }
+    },
+    {
+      "name": "buildoptsurf",
+      "obj": {
         "surfname": "EJ2802TPB_optsurf",
         "model": "dichroic",
         "dichroicfile": "resources/datafiles/DICHROICFILE_dfpachill.data"
@@ -385,6 +394,15 @@
         "vol1": "volTPB_Fiber_PV",
         "vol2": "volFiber_PV",
         "optsurf": "TPB2Y11_optsurf"
+      }
+    },
+    {
+      "name": "buildlogbordersurf",
+      "obj": {
+        "surfname": "EJ2802LAr_logsurf",
+        "vol1": "volWLS_PV",
+        "vol2": "volArCLight_PV",
+        "optsurf": "EJ2802LAr_optsurf"
       }
     },
     {

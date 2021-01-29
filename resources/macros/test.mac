@@ -9,10 +9,10 @@
 /argoncube/detector/optical/loadOptSett resources/OptSim.json
 
 ### Define volumes to kill photons ###
-/argoncube/analysis/DefAbsVols volSiPM_Sens_PV volSiPM_LCM_PV
+/argoncube/analysis/DefAbsVols volSiPM_Sens_PV
 
 ### Define volumes to detect photons ###
-/argoncube/analysis/DefOptSD volSiPM_Sens_PV volSiPM_LCM_PV
+/argoncube/analysis/DefOptSD volSiPM_Sens_PV
 
 ### Define particle type and properties ###
 /argoncube/gun/particle opticalphoton
@@ -35,14 +35,14 @@
 #/argoncube/gun/direction -2 -1.15 0
 
 ### Hit the TPB coating of ArCLight ###
-#/argoncube/gun/position 0 -15 25 cm
-#/argoncube/gun/direction 0 0.1 1
+/argoncube/gun/position 0 -15 25 cm
+/argoncube/gun/direction 0 0.1 1
 
 ### Hit the TPB coating of LCM ###
 #/argoncube/gun/position 0 15 25 cm
 #/argoncube/gun/direction 0 0.1 1
 
 #/argoncube/gun/position -135 22 -314.5 mm
-/argoncube/gun/position 0 0 0
-/argoncube/gun/primaryNb 1000
-/run/beamOn 10000
+#/argoncube/gun/position 0 0 0
+/argoncube/gun/primaryNb
+/run/beamOn 100000
