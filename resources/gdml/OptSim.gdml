@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ASCII"?>
-<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/home/pkoller/cernbox/Research/ArgonCube/Optical_Simulation/ArCubeOptSim/resources/gdml/schema/gdml.xsd">
   <define>
     <position name="PCB_pos" unit="cm" x="0.06855" y="0.0" z="0.0"/>
     <position name="Asic_pos_0.0" unit="cm" x="-0.1613" y="-13.9455" z="-13.9455"/>
