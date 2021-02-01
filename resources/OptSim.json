@@ -199,11 +199,7 @@
         "model": "unified",
         "type": "dielectric_dielectric",
         "finish": "ground",
-        "sigma_alpha": 0.1,
-        "propfile": {
-          "REFLECTIVITY": "resources/datafiles/REFLECTIVITY_TPB2LAr.dat",
-          "TRANSMITTANCE": "resources/datafiles/TRANSMITTANCE_TPB2LAr.dat"
-        }
+        "sigma_alpha": 0.1
       }
     },
     {
@@ -231,9 +227,8 @@
       "name": "buildoptsurf",
       "obj": {
         "surfname": "EJ2802LAr_optsurf",
-        "model": "unified",
-        "type": "dielectric_dielectric",
-        "finish": "polished"
+        "model": "dichroic",
+        "dichroicfile": "resources/datafiles/DICHROICFILE_dfpachill.data"
       }
     },
     {
